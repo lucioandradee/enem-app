@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+    <title>ENEM Master — Estude, Evolua, Conquiste</title>
+    <meta name="description"
+        content="Plataforma gamificada de estudos para o ENEM com simulados, ranking escolar e conquistas." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+
+    <!-- ===================== APP WRAPPER ===================== -->
+    <div id="app">
+
+        <!-- ===================== SCREEN: DASHBOARD ===================== -->
+        <section id="screen-home" class="screen active">
+            <div class="screen-scroll">
+                <!-- Header -->
+                <div class="dashboard-header">
+                    <div class="user-info">
+                        <div class="avatar-wrap">
+                            <div class="avatar" id="dash-avatar">A</div>
+                            <span class="level-badge">LVL <span id="dash-level">15</span></span>
+                        </div>
+                        <div>
+                            <p class="greeting">Bom dia, <span id="dash-name">Alex</span>! 👋</p>
+                            <h2 class="goal-text">Rumo à Federal 🚀</h2>
+                        </div>
+                    </div>
+                    <button class="bell-btn" id="notif-btn" onclick="navigate('notifications')">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                        </svg>
+                        <span class="notif-badge" id="notif-count">3</span>
+                    </button>
+                </div>
+
+                <!-- Stats Row -->
+                <div class="stats-row">
+                    <div class="stat-card">
+                        <span class="stat-label">⚡ TOTAL XP</span>
+                        <span class="stat-value" id="dash-xp">2,450</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-label">🏆 RANKING GLOBAL</span>
+                        <span class="stat-value teal">Top 5%</span>
+                    </div>
+                </div>
+
+                <!-- Weekly Schedule -->
+                <div class="section-header">
+                    <span class="section-title">CRONOGRAMA DA SEMANA</span>
+                    <button class="link-btn">Ver tudo</button>
+                </div>
+                <div class="week-row" id="week-row"></div>
+
+                <!-- Today's Subject Card -->
+                <div class="subject-card" id="today-card">
+                    <div class="subject-tag" id="today-area">CIÊNCIAS DA NATUREZA</div>
+                    <div class="subject-icon" id="today-icon">🧬</div>
+                    <h3 class="subject-title" id="today-title">Biologia: Genética</h3>
+                    <p class="subject-sub" id="today-sub">Leis de Mendel e Heredogramas</p>
+                    <div class="progress-label-row">
+                        <span class="progress-label">Progresso do dia</span>
+                        <span class="progress-count teal" id="today-progress">4/10 Questões</span>
+                    </div>
+                    <div class="progress-bar-wrap">
+                        <div class="progress-bar" id="today-bar" style="width:40%"></div>
+                    </div>
+                </div>
+
+                <!-- CTA Button -->
+                <button class="cta-btn" onclick="startQuiz()">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+                        <polygon points="5,3 19,12 5,21" />
+                    </svg>
+                    COMEÇAR A ESTUDAR AGORA
+                </button>
+
+                <!-- Gamification Cards -->
+                <div class="mini-cards-row">
+                    <div class="mini-card">
+                        <span class="mini-card-label">🔥 Ofensiva</span>
+                        <span class="mini-card-value" id="dash-streak">15 Dias</span>
+                        <span class="mini-card-sub">Mantendo o ritmo! 🔥</span>
+                    </div>
+                    <div class="mini-card">
+                        <span class="mini-card-label">🎯 Próxima Meta</span>
+                        <span class="mini-card-value">Simulado</span>
+                        <span class="mini-card-sub">Daqui a 3 dias ⏳</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===================== SCREEN: QUIZ ===================== -->
+        <section id="screen-quiz" class="screen">
+            <div class="quiz-header">
+                <button class="back-btn" onclick="navigate('home')">✕</button>
+                <div class="quiz-meta">
+                    <span class="quiz-area" id="quiz-area-label">CIÊNCIAS HUMANAS</span>
+                    <span class="quiz-type">Simulado ENEM</span>
+                </div>
+                <div class="quiz-timer" id="quiz-timer">⏱ 12:45</div>
+            </div>
+            <div class="quiz-progress-wrap">
+                <div class="quiz-progress-bar" id="quiz-progress-bar" style="width:40%"></div>
+            </div>
+            <p class="quiz-question-count" id="quiz-q-count">Questão 4 de 10</p>
+
+            <div class="screen-scroll quiz-scroll">
+                <div class="quiz-tag-wrap"><span class="quiz-tag" id="quiz-tag">HISTÓRIA GERAL</span></div>
+                <p class="quiz-question" id="quiz-question">Carregando questão...</p>
+                <blockquote class="quiz-quote" id="quiz-quote"></blockquote>
+
+                <div class="quiz-options" id="quiz-options"></div>
+
+                <button class="hint-btn" id="hint-btn" onclick="showHint()">💡 Ver dica ou Revisar Conceito</button>
+                <div class="hint-box" id="hint-box" style="display:none"></div>
+            </div>
+
+            <div class="quiz-footer">
+                <button class="cta-btn" id="confirm-btn" onclick="confirmAnswer()">Confirmar Resposta →</button>
+                <p class="quiz-footer-hint" id="quiz-footer-hint">SELECIONE UMA ALTERNATIVA</p>
+            </div>
+        </section>
+
+        <!-- ===================== SCREEN: QUIZ RESULT ===================== -->
+        <section id="screen-result" class="screen">
+            <div class="screen-scroll result-screen">
+                <div class="result-emoji" id="result-emoji">🎉</div>
+                <h2 class="result-title" id="result-title">Simulado Concluído!</h2>
+                <p class="result-sub" id="result-sub">Você acertou 7 de 10 questões</p>
+                <div class="result-score-ring">
+                    <svg viewBox="0 0 120 120" width="140" height="140">
+                        <circle cx="60" cy="60" r="50" fill="none" stroke="#1a3a4a" stroke-width="10" />
+                        <circle cx="60" cy="60" r="50" fill="none" stroke="#00b4a6" stroke-width="10"
+                            stroke-dasharray="314" stroke-dashoffset="94" stroke-linecap="round"
+                            transform="rotate(-90 60 60)" id="result-ring" />
+                    </svg>
+                    <div class="result-score-text">
+                        <span class="result-pct" id="result-pct">70%</span>
+                        <span class="result-pct-label">Acertos</span>
+                    </div>
+                </div>
+                <div class="result-stats">
+                    <div class="result-stat"><span class="rs-icon">✅</span><span
+                            id="res-correct">7</span><span>Corretas</span></div>
+                    <div class="result-stat"><span class="rs-icon">❌</span><span
+                            id="res-wrong">3</span><span>Erradas</span></div>
+                    <div class="result-stat"><span class="rs-icon">⚡</span><span id="res-xp">+70</span><span>XP
+                            Ganho</span></div>
+                </div>
+                <button class="cta-btn" onclick="navigate('home')" style="margin-top:24px">Voltar ao Início</button>
+                <button class="outline-btn" onclick="startQuiz()" style="margin-top:12px">Novo Simulado</button>
+            </div>
+        </section>
+
+        <!-- ===================== SCREEN: RANKING ===================== -->
+        <section id="screen-ranking" class="screen">
+            <div class="inner-header">
+                <button class="back-btn" onclick="navigate('home')">←</button>
+                <h2 class="inner-title">Ranking da Sua Escola</h2>
+                <button class="icon-btn">🔍</button>
+            </div>
+            <div class="screen-scroll ranking-scroll">
+                <!-- Podium -->
+                <div class="podium">
+                    <div class="podium-item second">
+                        <div class="podium-avatar">J</div>
+                        <div class="podium-medal silver">2º</div>
+                        <p class="podium-name">Ana Costa</p>
+                        <p class="podium-pts">940 pts</p>
+                    </div>
+                    <div class="podium-item first">
+                        <div class="podium-crown">👑</div>
+                        <div class="podium-avatar gold-ring">L</div>
+                        <div class="podium-medal gold">OURO</div>
+                        <p class="podium-name">Lucas Silva</p>
+                        <p class="podium-pts gold-text">980 pts</p>
+                    </div>
+                    <div class="podium-item third">
+                        <div class="podium-avatar">M</div>
+                        <div class="podium-medal bronze">3º</div>
+                        <p class="podium-name">M. Santos</p>
+                        <p class="podium-pts">950 pts</p>
+                    </div>
+                </div>
+
+                <!-- Invite Banner -->
+                <div class="invite-banner">
+                    <div class="invite-icon">👥</div>
+                    <div class="invite-text">
+                        <strong>Convide seus amigos</strong>
+                        <p>Ganhe 50 pontos por cada amigo que entrar!</p>
+                    </div>
+                    <span class="invite-arrow">›</span>
+                </div>
+
+                <!-- Top 10 List -->
+                <div class="ranking-list-header">
+                    <span>TOP 10 ALUNOS</span>
+                    <span class="ranking-avg">Média: 740 pts</span>
+                </div>
+                <div class="ranking-list" id="ranking-list"></div>
+            </div>
+
+            <!-- User position sticky footer -->
+            <div class="user-rank-footer">
+                <div class="avatar small">A</div>
+                <div class="user-rank-info">
+                    <span class="user-rank-pos">42º Você</span>
+                    <span class="user-rank-sub">Sua Posição</span>
+                </div>
+                <div class="user-rank-right">
+                    <span class="user-rank-pts">842 pts</span>
+                    <span class="user-rank-gap">Faltam 58 pts p/ Top 30 📈</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===================== SCREEN: CONQUISTAS ===================== -->
+        <section id="screen-achievements" class="screen">
+            <div class="inner-header">
+                <button class="back-btn" onclick="navigate('home')">←</button>
+                <h2 class="inner-title">Minhas Conquistas</h2>
+                <button class="icon-btn teal-icon">🏅</button>
+            </div>
+            <div class="screen-scroll">
+                <!-- Next Big Achievement -->
+                <div class="next-achievement-card">
+                    <div class="na-icon">🎓</div>
+                    <div class="na-info">
+                        <span class="na-label">PRÓXIMA GRANDE CONQUISTA</span>
+                        <h3 class="na-title">Mestre das Humanas</h3>
+                        <p class="na-desc">Alcance 1000 questões corretas em Ciências Humanas.</p>
+                        <div class="progress-label-row">
+                            <span class="progress-label">Progresso Geral</span>
+                            <span class="progress-count teal">85%</span>
+                        </div>
+                        <div class="progress-bar-wrap">
+                            <div class="progress-bar" style="width:85%"></div>
+                        </div>
+                        <p class="na-remaining">Faltam 150 questões</p>
+                    </div>
+                </div>
+
+                <!-- Ofensiva Badges -->
+                <div class="badge-section">
+                    <div class="badge-section-header">
+                        <span>🔥 Ofensiva</span>
+                        <span class="badge-count teal">3/5 Desbloqueados</span>
+                    </div>
+                    <div class="badge-grid">
+                        <div class="badge-item unlocked">
+                            <div class="badge-icon">🔥</div><span>Início Feroz</span>
+                        </div>
+                        <div class="badge-item unlocked">
+                            <div class="badge-icon">⭐</div><span>Semana de Ouro</span>
+                        </div>
+                        <div class="badge-item unlocked">
+                            <div class="badge-icon">📅</div><span>Constante</span>
+                        </div>
+                        <div class="badge-item locked">
+                            <div class="badge-icon">🔒</div><span>Mês Imparável</span>
+                        </div>
+                        <div class="badge-item locked">
+                            <div class="badge-icon">🔒</div><span>Lendário</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Especialista Badges -->
+                <div class="badge-section">
+                    <div class="badge-section-header">
+                        <span>🎯 Especialista</span>
+                        <span class="badge-count teal">2/4 Desbloqueados</span>
+                    </div>
+                    <div class="badge-grid">
+                        <div class="badge-item unlocked">
+                            <div class="badge-icon">✍️</div><span>Gênio da Redação</span>
+                        </div>
+                        <div class="badge-item unlocked">
+                            <div class="badge-icon">🌿</div><span>Rei da Natureza</span>
+                        </div>
+                        <div class="badge-item locked">
+                            <div class="badge-icon">🔒</div><span>Calculadora Humana</span>
+                        </div>
+                        <div class="badge-item locked">
+                            <div class="badge-icon">🔒</div><span>Globalista</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Maratonista Badges -->
+                <div class="badge-section">
+                    <div class="badge-section-header">
+                        <span>🏃 Maratonista</span>
+                        <span class="badge-count teal">1/3 Desbloqueados</span>
+                    </div>
+                    <div class="badge-grid">
+                        <div class="badge-item unlocked">
+                            <div class="badge-icon">💯</div><span>100 Questões</span>
+                        </div>
+                        <div class="badge-item locked">
+                            <div class="badge-icon">🔒</div><span>500 Questões</span>
+                        </div>
+                        <div class="badge-item locked">
+                            <div class="badge-icon">🔒</div><span>O Maratonista</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===================== SCREEN: PERFIL ===================== -->
+        <section id="screen-profile" class="screen">
+            <div class="screen-scroll">
+                <!-- Profile Header -->
+                <div class="profile-header">
+                    <div class="profile-avatar-wrap">
+                        <div class="avatar large" id="profile-avatar">A</div>
+                        <span class="avatar-edit-btn">✏️</span>
+                    </div>
+                    <h2 class="profile-name" id="profile-name">Alex</h2>
+                    <div class="profile-badges-row">
+                        <span class="level-badge-lg">LVL <span id="profile-level">15</span></span>
+                        <span class="xp-badge">⚡ +<span id="profile-xp">1.250</span> XP</span>
+                    </div>
+                </div>
+
+                <!-- Performance by Area -->
+                <div class="section-header">
+                    <span class="section-title">Desempenho por Área</span>
+                    <button class="link-btn">Ver detalhes</button>
+                </div>
+                <div class="area-grid">
+                    <div class="area-card">
+                        <span class="area-icon">📚</span>
+                        <span class="area-name">HUMANAS</span>
+                        <span class="area-pct teal">75%</span>
+                        <div class="progress-bar-wrap thin">
+                            <div class="progress-bar" style="width:75%"></div>
+                        </div>
+                    </div>
+                    <div class="area-card">
+                        <span class="area-icon">🔬</span>
+                        <span class="area-name">NATUREZA</span>
+                        <span class="area-pct teal">60%</span>
+                        <div class="progress-bar-wrap thin">
+                            <div class="progress-bar" style="width:60%"></div>
+                        </div>
+                    </div>
+                    <div class="area-card">
+                        <span class="area-icon">📝</span>
+                        <span class="area-name">LINGUAGENS</span>
+                        <span class="area-pct teal">85%</span>
+                        <div class="progress-bar-wrap thin">
+                            <div class="progress-bar" style="width:85%"></div>
+                        </div>
+                    </div>
+                    <div class="area-card">
+                        <span class="area-icon">➗</span>
+                        <span class="area-name">MATEMÁTICA</span>
+                        <span class="area-pct teal">50%</span>
+                        <div class="progress-bar-wrap thin">
+                            <div class="progress-bar" style="width:50%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="section-header">
+                    <span class="section-title">Atividade Recente</span>
+                    <button class="link-btn">Ver todas</button>
+                </div>
+                <div class="recent-badges-scroll">
+                    <div class="recent-badge teal-bg">
+                        <div class="rb-icon">🔥</div><span>STREAK 7D</span>
+                    </div>
+                    <div class="recent-badge gold-bg">
+                        <div class="rb-icon">🏆</div><span>MESTRE MATH</span>
+                    </div>
+                    <div class="recent-badge purple-bg">
+                        <div class="rb-icon">✍️</div><span>1ª REDAÇÃO</span>
+                    </div>
+                    <div class="recent-badge locked-bg">
+                        <div class="rb-icon">🔒</div><span>???</span>
+                    </div>
+                </div>
+
+                <!-- Personal Goals -->
+                <div class="section-header">
+                    <span class="section-title">Metas Pessoais</span>
+                </div>
+                <div class="goals-list">
+                    <div class="goal-item">
+                        <div class="goal-icon teal-bg-sm">📋</div>
+                        <div class="goal-info">
+                            <span class="goal-title">Simulado Semanal</span>
+                            <span class="goal-sub">Concluir até domingo</span>
+                        </div>
+                        <span class="goal-progress">2/3</span>
+                    </div>
+                    <div class="goal-item">
+                        <div class="goal-icon green-bg-sm">🌿</div>
+                        <div class="goal-info">
+                            <span class="goal-title">Revisão de Biologia</span>
+                            <span class="goal-sub">Ecologia e Genética</span>
+                        </div>
+                        <span class="goal-check">✅</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===================== SCREEN: CONFIGURAÇÕES ===================== -->
+        <section id="screen-settings" class="screen">
+            <div class="inner-header">
+                <button class="back-btn" onclick="navigate('profile')">←</button>
+                <h2 class="inner-title">Configurações</h2>
+                <div></div>
+            </div>
+            <div class="screen-scroll">
+                <!-- Settings Profile Header -->
+                <div class="settings-profile-header">
+                    <div class="avatar large" id="settings-avatar">J</div>
+                    <h3 id="settings-name">João Silva</h3>
+                    <p class="settings-goal teal">Meta: Medicina • ENEM 2024</p>
+                </div>
+
+                <!-- Profile Section -->
+                <div class="settings-section">
+                    <div class="settings-section-title">👤 Perfil</div>
+                    <div class="settings-field">
+                        <label>NOME COMPLETO</label>
+                        <input type="text" id="input-name" value="João Silva" placeholder="Seu nome completo" />
+                    </div>
+                    <div class="settings-field">
+                        <label>E-MAIL</label>
+                        <input type="email" id="input-email" value="joao.silva@estudo.com"
+                            placeholder="seu@email.com" />
+                    </div>
+                    <div class="settings-field">
+                        <label>INSTITUIÇÃO DE ENSINO</label>
+                        <input type="text" id="input-school" value=""
+                            placeholder="Ex: Escola Estadual Machado de Assis" />
+                    </div>
+                </div>
+
+                <!-- Preferences Section -->
+                <div class="settings-section">
+                    <div class="settings-section-title">🔔 Preferências e Privacidade</div>
+                    <div class="settings-toggle-row">
+                        <div>
+                            <p class="toggle-label">Lembretes de Estudo</p>
+                            <p class="toggle-sub">Notificações diárias do cronograma</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="toggle-reminders" checked />
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="settings-toggle-row">
+                        <div>
+                            <p class="toggle-label">Alertas de Resultados</p>
+                            <p class="toggle-sub">Avisos sobre simulados e correção</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="toggle-alerts" checked />
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="settings-toggle-row">
+                        <div>
+                            <p class="toggle-label">Perfil Público</p>
+                            <p class="toggle-sub">Permitir que outros vejam seu progresso</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="toggle-public" />
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Security Section -->
+                <div class="settings-section">
+                    <div class="settings-section-title">🔒 Segurança</div>
+                    <button class="settings-link-row">
+                        <span>🔑 Alterar Senha</span>
+                        <span class="arrow">›</span>
+                    </button>
+                </div>
+
+                <button class="cta-btn" id="save-settings-btn" onclick="saveSettings()">Salvar Alterações</button>
+                <button class="settings-link-row" onclick="navigate('support')">
+                    <span>❓ Suporte e FAQ</span>
+                    <span class="arrow">›</span>
+                </button>
+                <button class="logout-btn" onclick="logout()">
+                    <span>🚪</span> Sair da Conta
+                </button>
+                <p class="app-version">ENEM Master v2.4.1</p>
+            </div>
+        </section>
+
+        <!-- ===================== SCREEN: SUPORTE E FAQ ===================== -->
+        <section id="screen-support" class="screen">
+            <div class="inner-header">
+                <button class="back-btn" onclick="navigate('home')">←</button>
+                <h2 class="inner-title">Suporte e FAQ</h2>
+                <button class="bell-btn" onclick="navigate('notifications')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                    </svg>
+                </button>
+            </div>
+            <div class="screen-scroll">
+                <!-- Search -->
+                <div class="support-search-wrap">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" class="support-search" placeholder="Como podemos ajudar?" id="faq-search"
+                        oninput="filterFAQ()" />
+                </div>
+
+                <!-- Popular Topics -->
+                <p class="support-label">TÓPICOS POPULARES</p>
+                <div class="chips-row">
+                    <button class="chip active">Gabaritos</button>
+                    <button class="chip">Cálculo TRI</button>
+                    <button class="chip">Redação</button>
+                    <button class="chip">Ranking</button>
+                    <button class="chip">Assinatura</button>
+                </div>
+
+                <!-- Categories -->
+                <p class="support-label">Categorias</p>
+                <div class="categories-grid">
+                    <div class="category-card"><span class="cat-icon">👤</span><strong>Conta</strong><span>Perfil e
+                            senha</span></div>
+                    <div class="category-card"><span class="cat-icon">📝</span><strong>Simulados</strong><span>Correção
+                            e tempo</span></div>
+                    <div class="category-card"><span class="cat-icon">🏆</span><strong>Ranking</strong><span>Pontuação e
+                            regras</span></div>
+                    <div class="category-card"><span class="cat-icon">💳</span><strong>Assinatura</strong><span>Planos e
+                            pagamentos</span></div>
+                </div>
+
+                <!-- FAQ -->
+                <p class="support-label">Dúvidas Frequentes</p>
+                <div class="faq-list" id="faq-list">
+                    <div class="faq-item">
+                        <button class="faq-question" onclick="toggleFAQ(this)">
+                            Como funciona a correção TRI?
+                            <span class="faq-arrow">›</span>
+                        </button>
+                        <div class="faq-answer">
+                            A Teoria de Resposta ao Item (TRI) avalia a consistência das suas respostas, dando pesos
+                            diferentes para questões fáceis, médias e difíceis. Acertar questões difíceis que a maioria
+                            erra vale mais pontos.
+                        </div>
+                    </div>
+                    <div class="faq-item">
+                        <button class="faq-question" onclick="toggleFAQ(this)">
+                            Quando sai o gabarito do Simulado?
+                            <span class="faq-arrow">›</span>
+                        </button>
+                        <div class="faq-answer">
+                            O gabarito é liberado imediatamente após você concluir o simulado. A correção detalhada com
+                            explicações fica disponível na tela de resultado.
+                        </div>
+                    </div>
+                    <div class="faq-item">
+                        <button class="faq-question" onclick="toggleFAQ(this)">
+                            Posso pausar um simulado em andamento?
+                            <span class="faq-arrow">›</span>
+                        </button>
+                        <div class="faq-answer">
+                            Sim! Você pode pausar o simulado a qualquer momento. O cronômetro para e suas respostas são
+                            salvas automaticamente. Basta retornar ao app para continuar de onde parou.
+                        </div>
+                    </div>
+                    <div class="faq-item">
+                        <button class="faq-question" onclick="toggleFAQ(this)">
+                            Como funciona o sistema de XP e níveis?
+                            <span class="faq-arrow">›</span>
+                        </button>
+                        <div class="faq-answer">
+                            Você ganha XP ao responder questões, completar simulados e manter sua ofensiva. Cada acerto
+                            vale 10 XP, e bônus são aplicados por sequência de acertos e dificuldade da questão.
+                        </div>
+                    </div>
+                    <div class="faq-item">
+                        <button class="faq-question" onclick="toggleFAQ(this)">
+                            Como entro no ranking da minha escola?
+                            <span class="faq-arrow">›</span>
+                        </button>
+                        <div class="faq-answer">
+                            Basta cadastrar sua instituição de ensino nas Configurações de Conta. Você será
+                            automaticamente incluído no ranking da sua escola e poderá competir com seus colegas.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Still need help? -->
+                <div class="help-section">
+                    <h3>Ainda precisa de ajuda?</h3>
+                    <p>Nossa equipe de suporte está pronta para te atender.</p>
+                    <button class="chat-btn">
+                        <span>💬</span> Chat ao Vivo
+                        <span class="online-badge">Online</span>
+                    </button>
+                    <button class="email-btn">
+                        <span>✉️</span> Enviar E-mail
+                        <span class="deadline-badge">Até 24h</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===================== SCREEN: NOTIFICAÇÕES ===================== -->
+        <section id="screen-notifications" class="screen">
+            <div class="inner-header">
+                <button class="back-btn" onclick="navigate('home')">←</button>
+                <h2 class="inner-title">Notificações</h2>
+                <button class="link-btn small" onclick="markAllRead()">Marcar todas como lidas</button>
+            </div>
+            <div class="notif-tabs">
+                <button class="notif-tab active" onclick="filterNotif('all', this)">Tudo</button>
+                <button class="notif-tab" onclick="filterNotif('unread', this)">Não lidas</button>
+            </div>
+            <div class="screen-scroll notif-scroll" id="notif-list"></div>
+        </section>
+
+        <!-- ===================== BOTTOM NAV ===================== -->
+        <nav class="bottom-nav" id="bottom-nav">
+            <button class="nav-btn active" id="nav-home" onclick="navigate('home')">
+                <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22">
+                    <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+                </svg>
+                <span>Início</span>
+            </button>
+            <button class="nav-btn" id="nav-quiz" onclick="startQuiz()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22">
+                    <path d="M12 20h9" />
+                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                </svg>
+                <span>Praticar</span>
+            </button>
+            <button class="nav-btn" id="nav-achievements" onclick="navigate('achievements')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22">
+                    <circle cx="12" cy="8" r="6" />
+                    <path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11" />
+                </svg>
+                <span>Conquistas</span>
+            </button>
+            <button class="nav-btn" id="nav-ranking" onclick="navigate('ranking')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22">
+                    <line x1="18" y1="20" x2="18" y2="10" />
+                    <line x1="12" y1="20" x2="12" y2="4" />
+                    <line x1="6" y1="20" x2="6" y2="14" />
+                </svg>
+                <span>Ranking</span>
+            </button>
+            <button class="nav-btn" id="nav-profile" onclick="navigate('profile')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                </svg>
+                <span>Perfil</span>
+            </button>
+        </nav>
+
+    </div><!-- end #app -->
+
+    <script src="app.js"></script>
+</body>
+
+</html>
