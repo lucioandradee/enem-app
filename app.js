@@ -13,23 +13,34 @@ const defaultState = {
         name: 'Alex',
         email: 'alex@estudo.com',
         school: 'Escola Estadual Machado de Assis',
-        level: 15,
-        xp: 2450,
-        streak: 15,
+        level: 1,
+        xp: 0,
+        streak: 0,
         goal: 'Rumo à Federal 🚀',
     },
     progress: {
-        humanas: 75, natureza: 60, linguagens: 85, matematica: 50,
-        questoesHoje: 4, totalHoje: 10,
-        totalCorretas: 850,
+        humanas: 0, natureza: 0, linguagens: 0, matematica: 0,
+        questoesHoje: 0, totalHoje: 10,
+        totalCorretas: 0,
+        // Histograma por disicplina: { correct, total }
+        stats: {
+            humanas: { correct: 0, total: 0 },
+            natureza: { correct: 0, total: 0 },
+            linguagens: { correct: 0, total: 0 },
+            matematica: { correct: 0, total: 0 },
+        },
     },
+    quizHistory: [],    // [{ date, discipline, correct, total, xp }]
+    wrongAnswers: [],   // [{ question, userAnswer, correctAnswer, date }]
+    onboardingDone: false,
+    weakSubjects: [],   // disciplinas prioritárias do onboarding
     badges: {
-        ofensiva: ['inicio_feroz', 'semana_ouro', 'constante'],
-        especialista: ['genio_redacao', 'rei_natureza'],
-        maratonista: ['100_questoes'],
+        ofensiva: [],
+        especialista: [],
+        maratonista: [],
     },
     notifications: [
-        { id: 1, type: 'blue', icon: '📝', title: 'Simulado disponível', body: 'Novo Simulado: Ciências da Natureza já está aberto para você. Prepare-se e comece agora!', time: '6h', unread: true, cta: 'Fazer Simulado', ctaAction: 'startQuiz', date: 'today' },
+        { id: 1, type: 'blue', icon: '📝', title: 'Simulado disponível', body: 'Novo Simulado: Ciências da Natureza já está aberto para você. Prepare-se e comece agora!', time: '6h', unread: true, cta: 'Fazer Simulado', ctaAction: "navigate('quiz-setup')", date: 'today' },
         { id: 2, type: 'orange', icon: '📊', title: 'Ranking Semanal', body: 'Eita! João Silva ultrapassou você no Ranking. Volte aos estudos para recuperar sua posição!', time: '1h', unread: true, date: 'today' },
         { id: 3, type: 'purple', icon: '🏅', title: 'Nova Conquista', body: 'Parabéns! Você desbloqueou o badge "Mestre da Redação" por 5 notas acima de 900.', time: '3h', unread: true, date: 'today' },
         { id: 4, type: 'green', icon: '📅', title: 'Lembrete de Estudo', body: 'Hora do Estudo: Seguindo seu cronograma, agora é vez de Matemática (Funções).', time: '6h', unread: false, date: 'today' },
@@ -38,7 +49,16 @@ const defaultState = {
     currentScreen: 'home',
 };
 
-let state = JSON.parse(localStorage.getItem('enem_state') || 'null') || JSON.parse(JSON.stringify(defaultState));
+let state;
+try {
+    const _saved = localStorage.getItem('enem_state');
+    state = _saved ? JSON.parse(_saved) : null;
+} catch (e) {
+    console.warn('⚠️ Estado corrompido, resetando:', e);
+    localStorage.removeItem('enem_state');
+    state = null;
+}
+state = state || JSON.parse(JSON.stringify(defaultState));
 
 function saveState() {
     localStorage.setItem('enem_state', JSON.stringify(state));
@@ -217,6 +237,7 @@ let quizState = {
     timerInterval: null,
     timeLeft: 0,
     totalTime: 0,
+    discipline: 'misto',
 };
 
 // =====================================================
@@ -224,33 +245,39 @@ let quizState = {
 // =====================================================
 const screenMap = {
     home: 'screen-home',
+    'quiz-setup': 'screen-quiz-setup',
     quiz: 'screen-quiz',
     result: 'screen-result',
     ranking: 'screen-ranking',
     achievements: 'screen-achievements',
+    review: 'screen-review',
     profile: 'screen-profile',
     settings: 'screen-settings',
     support: 'screen-support',
     notifications: 'screen-notifications',
+    onboarding: 'screen-onboarding',
 };
 
 const screensWithNav = ['home', 'ranking', 'achievements', 'profile'];
-const screensWithoutNav = ['quiz', 'result', 'settings', 'support', 'notifications'];
+const screensWithoutNav = ['quiz', 'quiz-setup', 'result', 'settings', 'support', 'notifications', 'review', 'onboarding'];
 
 function navigate(screenName) {
     const currentId = screenMap[state.currentScreen];
     const nextId = screenMap[screenName];
     if (!nextId || currentId === nextId) return;
 
-    const currentEl = document.getElementById(currentId);
+    const currentEl = currentId ? document.getElementById(currentId) : null;
     const nextEl = document.getElementById(nextId);
+    if (!nextEl) { console.error('Screen element not found:', nextId); return; }
 
     // Stop quiz timer if leaving quiz
     if (state.currentScreen === 'quiz') stopTimer();
 
-    currentEl.classList.remove('active');
-    currentEl.classList.add('slide-out');
-    setTimeout(() => currentEl.classList.remove('slide-out'), 300);
+    if (currentEl) {
+        currentEl.classList.remove('active');
+        currentEl.classList.add('slide-out');
+        setTimeout(() => currentEl.classList.remove('slide-out'), 300);
+    }
 
     nextEl.classList.add('active');
 
@@ -282,6 +309,10 @@ function renderScreen(screenName) {
         case 'home': renderDashboard(); break;
         case 'ranking': renderRanking(); break;
         case 'notifications': renderNotifications(); break;
+        case 'profile': renderProfile(); break;
+        case 'quiz-setup': renderQuizSetup(); break;
+        case 'review': renderReview(); break;
+        case 'achievements': renderAchievements(); break;
         default: break;
     }
 }
@@ -291,17 +322,29 @@ function renderScreen(screenName) {
 // =====================================================
 function renderDashboard() {
     const s = state.user;
-    document.getElementById('dash-name').textContent = s.name.split(' ')[0];
+
+    // Saudação baseada no horário
+    const hour = new Date().getHours();
+    const greeting = hour < 12 ? 'Bom dia' : hour < 18 ? 'Boa tarde' : 'Boa noite';
+    const greetingEl = document.querySelector('.greeting');
+    if (greetingEl) greetingEl.innerHTML = `${greeting}, <span id="dash-name">${s.name.split(' ')[0]}</span>! 👋`;
+
+    const goalEl = document.querySelector('.goal-text');
+    if (goalEl) goalEl.textContent = s.goal;
+
     document.getElementById('dash-level').textContent = s.level;
     document.getElementById('dash-xp').textContent = s.xp.toLocaleString('pt-BR');
     document.getElementById('dash-streak').textContent = s.streak + ' Dias';
     document.getElementById('dash-avatar').textContent = s.name[0].toUpperCase();
 
     // Unread notifications count
-    const unread = state.notifications.filter(n => n.unread).length;
+    const notifs = state.notifications || [];
+    const unread = notifs.filter(n => n.unread).length;
     const badge = document.getElementById('notif-count');
-    badge.textContent = unread;
-    badge.style.display = unread > 0 ? 'flex' : 'none';
+    if (badge) {
+        badge.textContent = unread;
+        badge.style.display = unread > 0 ? 'flex' : 'none';
+    }
 
     renderWeekRow();
     renderTodayCard();
@@ -322,7 +365,8 @@ function renderWeekRow() {
         const d = new Date(monday);
         d.setDate(monday.getDate() + i);
         const isToday = d.toDateString() === today.toDateString();
-        const hasDot = i < 3; // mock: first 3 days have activity
+        const dateStr = d.toISOString().split('T')[0];
+        const hasDot = state.quizHistory.some(h => h.date && h.date.startsWith(dateStr));
 
         const btn = document.createElement('button');
         btn.className = 'day-btn' + (isToday ? ' today' : '') + (hasDot ? ' has-dot' : '');
@@ -331,16 +375,40 @@ function renderWeekRow() {
     }
 }
 
-const todaySubjects = [
-    { area: 'CIÊNCIAS DA NATUREZA', icon: '🧬', title: 'Biologia: Genética', sub: 'Leis de Mendel e Heredogramas' },
-    { area: 'MATEMÁTICA', icon: '➗', title: 'Funções do 2º Grau', sub: 'Bhaskara e Vértice da Parábola' },
-    { area: 'LINGUAGENS', icon: '✍️', title: 'Redação ENEM', sub: 'Proposta de Intervenção' },
-    { area: 'CIÊNCIAS HUMANAS', icon: '🌍', title: 'Geopolítica Contemporânea', sub: 'Globalização e Blocos Econômicos' },
-];
+// Generar cronograma dinâmico baseado no desempenho
+function getDynamicSchedule() {
+    const allSubjects = [
+        { disc: 'humanas',    area: 'CIÊNCIAS HUMANAS',    icon: '🌍', title: 'Geopolítica Contemporânea', sub: 'Globalização e Blocos Econômicos' },
+        { disc: 'natureza',   area: 'CIÊNCIAS DA NATUREZA', icon: '🧬', title: 'Biologia: Genética',          sub: 'Leis de Mendel e Heredogramas' },
+        { disc: 'linguagens', area: 'LINGUAGENS',            icon: '✍️', title: 'Redação ENEM',               sub: 'Proposta de Intervenção' },
+        { disc: 'matematica', area: 'MATEMÁTICA',            icon: '➗', title: 'Funções do 2º Grau',          sub: 'Bhaskara e Vértice da Parábola' },
+    ];
+
+    // Ordenar: áreas com pior desempenho primeiro (mais frequentes)
+    const stats = state.progress.stats;
+    const withPct = allSubjects.map(s => {
+        const st = stats[s.disc];
+        const pct = st && st.total > 0 ? st.correct / st.total : 0.5;
+        return { ...s, pct };
+    });
+
+    // Se tem preferência do onboarding, priorizar essas
+    const weak = state.weakSubjects || [];
+    withPct.forEach(s => { if (weak.includes(s.disc)) s.pct -= 0.2; });
+
+    // Montar semana: 6 slots, distribuindo mais os mais fracos
+    withPct.sort((a, b) => a.pct - b.pct);
+    const schedule = [];
+    let pool = [...withPct, withPct[0], withPct[1]]; // fraquinhos aparecem 2x
+    pool = pool.sort(() => Math.random() - 0.5).slice(0, 6);
+    return pool;
+}
 
 function renderTodayCard() {
-    const dayIdx = new Date().getDay() % todaySubjects.length;
-    const subj = todaySubjects[dayIdx];
+    const schedule = getDynamicSchedule();
+    const dayIdx = new Date().getDay();
+    const subj = schedule[dayIdx % schedule.length];
+
     const done = state.progress.questoesHoje;
     const total = state.progress.totalHoje;
     const pct = Math.round((done / total) * 100);
@@ -354,23 +422,144 @@ function renderTodayCard() {
 }
 
 // =====================================================
+// QUIZ SETUP
+// =====================================================
+let quizSetup = { discipline: 'misto', count: 10 };
+
+function renderQuizSetup() {
+    // Restore selections
+    document.querySelectorAll('.disc-card').forEach(btn => {
+        btn.classList.toggle('selected', btn.dataset.disc === quizSetup.discipline);
+    });
+    document.querySelectorAll('.count-btn').forEach(btn => {
+        btn.classList.toggle('selected', parseInt(btn.dataset.count) === quizSetup.count);
+    });
+    // Check API status
+    checkAPIAvailability();
+}
+
+function selectDisc(btn) {
+    document.querySelectorAll('.disc-card').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    quizSetup.discipline = btn.dataset.disc;
+}
+
+function selectCount(btn) {
+    document.querySelectorAll('.count-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    quizSetup.count = parseInt(btn.dataset.count);
+}
+
+async function checkAPIAvailability() {
+    const subEl = document.getElementById('api-source-sub');
+    const statusEl = document.getElementById('api-source-status');
+    if (!subEl) return;
+
+    subEl.textContent = 'Verificando...';
+    statusEl.textContent = '⏳';
+
+    try {
+        const status = await window.enemAPI.checkAPIStatus();
+        if (status.ok) {
+            subEl.textContent = `ENEM ${status.latestYear} disponível — ${status.totalYears} anos de provas`;
+            statusEl.textContent = '✅';
+        } else {
+            subEl.textContent = 'API offline — usando banco local';
+            statusEl.textContent = '⚠️';
+        }
+    } catch {
+        subEl.textContent = 'Sem conexão — usando banco local';
+        statusEl.textContent = '⚠️';
+    }
+}
+
+async function initQuizFromSetup(forceLocal = false) {
+    if (!quizSetup.discipline) {
+        // Selecionar misto como padrão
+        quizSetup.discipline = 'misto';
+        document.querySelector('[data-disc="misto"]').classList.add('selected');
+    }
+
+    const btn = document.getElementById('start-quiz-btn');
+    btn.disabled = true;
+    btn.textContent = '⏳ Carregando...';
+
+    await startQuiz(quizSetup.discipline, quizSetup.count, forceLocal);
+
+    btn.disabled = false;
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><polygon points="5,3 19,12 5,21" /></svg> INICIAR SIMULADO';
+}
+
+// =====================================================
 // QUIZ ENGINE
 // =====================================================
-function startQuiz() {
-    // Pick 10 random questions
-    const shuffled = [...questions].sort(() => Math.random() - 0.5);
-    quizState.questions = shuffled.slice(0, 10);
+async function startQuiz(discipline = 'misto', count = 10, forceLocal = false) {
+    navigate('quiz');
+    showQuizLoading(true);
+
+    let selectedQuestions = null;
+
+    if (!forceLocal) {
+        try {
+            selectedQuestions = await window.enemAPI.getQuizQuestions(discipline, count);
+        } catch (e) {
+            console.warn('API error:', e);
+        }
+    }
+
+    // Fallback: banco local
+    if (!selectedQuestions || selectedQuestions.length === 0) {
+        selectedQuestions = getLocalQuestions(discipline, count);
+        console.log('📚 Usando banco local:', selectedQuestions.length, 'questões');
+    } else {
+        console.log('🌐 Questões API:', selectedQuestions.length);
+    }
+
+    quizState.questions = selectedQuestions;
     quizState.currentIndex = 0;
     quizState.correct = 0;
     quizState.wrong = 0;
     quizState.selectedOption = null;
     quizState.confirmed = false;
-    quizState.timeLeft = 12 * 60 + 45; // 12:45
+    quizState.discipline = discipline;
+    quizState.timeLeft = Math.max(5 * 60, count * 75); // 75s por questão
     quizState.totalTime = quizState.timeLeft;
 
-    navigate('quiz');
+    showQuizLoading(false);
     renderQuestion();
     startTimer();
+}
+
+function showQuizLoading(show) {
+    const overlay = document.getElementById('quiz-loading-overlay');
+    if (overlay) overlay.classList.toggle('visible', show);
+}
+
+function exitQuiz() {
+    stopTimer();
+    navigate('home');
+}
+
+// Pegar questões do banco local filtradas por disciplina
+function getLocalQuestions(discipline, count) {
+    let pool;
+    const discToArea = {
+        humanas: 'CIÊNCIAS HUMANAS',
+        natureza: 'CIÊNCIAS DA NATUREZA',
+        linguagens: 'LINGUAGENS',
+        matematica: 'MATEMÁTICA',
+    };
+
+    if (discipline === 'misto') {
+        pool = questions;
+    } else {
+        const area = discToArea[discipline];
+        pool = questions.filter(q => q.area === area);
+        if (pool.length < 3) pool = questions; // fallback
+    }
+
+    const shuffled = [...pool].sort(() => Math.random() - 0.5);
+    return shuffled.slice(0, count);
 }
 
 function renderQuestion() {
@@ -383,10 +572,53 @@ function renderQuestion() {
     document.getElementById('quiz-q-count').textContent = `Questão ${idx + 1} de ${total}`;
     document.getElementById('quiz-progress-bar').style.width = ((idx / total) * 100) + '%';
 
-    // Content
-    document.getElementById('quiz-tag').textContent = q.tag;
+    // Source badge
+    const sourceBadge = document.getElementById('quiz-source-badge');
+    if (sourceBadge) {
+        if (q.apiFormat) {
+            sourceBadge.textContent = q.tag || 'API ENEM';
+            sourceBadge.className = 'quiz-source-badge';
+            sourceBadge.style.display = 'inline';
+        } else {
+            sourceBadge.style.display = 'none';
+        }
+    }
+
+    // Tag
+    document.getElementById('quiz-tag').textContent = q.tag || q.area;
+
+    // Context images (API questions)
+    const imgsEl = document.getElementById('quiz-context-images');
+    if (imgsEl) {
+        imgsEl.innerHTML = '';
+        if (q.files && q.files.length > 0) {
+            q.files.forEach(src => {
+                const img = document.createElement('img');
+                img.className = 'quiz-context-img';
+                img.src = src;
+                img.alt = 'Imagem da questão';
+                img.loading = 'lazy';
+                imgsEl.appendChild(img);
+            });
+        }
+    }
+
+    // Context text (API) or classic quote (local)
+    const contextEl = document.getElementById('quiz-context');
+    if (contextEl) {
+        if (q.context) {
+            contextEl.innerHTML = renderMarkdown(q.context);
+            contextEl.style.display = '';
+        } else {
+            contextEl.style.display = 'none';
+            contextEl.innerHTML = '';
+        }
+    }
+
+    // Question text
     document.getElementById('quiz-question').textContent = q.question;
 
+    // Classic quote (local questions)
     const quoteEl = document.getElementById('quiz-quote');
     quoteEl.textContent = q.quote || '';
 
@@ -397,7 +629,16 @@ function renderQuestion() {
     q.options.forEach((opt, i) => {
         const btn = document.createElement('button');
         btn.className = 'quiz-option';
-        btn.innerHTML = `<span class="option-letter">${letters[i]}</span><span class="option-text">${opt}</span>`;
+
+        let innerHtml = `<span class="option-letter">${letters[i]}</span>`;
+        innerHtml += `<span class="option-text">${opt}</span>`;
+
+        // Alternative image (API)
+        if (q.alternativeFiles && q.alternativeFiles[i]) {
+            innerHtml += `<img class="option-img" src="${q.alternativeFiles[i]}" alt="Alternativa ${letters[i]}" loading="lazy" />`;
+        }
+
+        btn.innerHTML = innerHtml;
         btn.onclick = () => selectOption(i);
         optionsEl.appendChild(btn);
     });
@@ -409,6 +650,19 @@ function renderQuestion() {
     document.getElementById('confirm-btn').disabled = false;
     document.getElementById('quiz-footer-hint').textContent = 'SELECIONE UMA ALTERNATIVA';
     document.getElementById('hint-box').style.display = 'none';
+}
+
+// Markdown simples (bold, italic, quebras)
+function renderMarkdown(text) {
+    if (!text) return '';
+    return text
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.+?)\*/g, '<em>$1</em>')
+        .replace(/_(.+?)_/g, '<em>$1</em>')
+        .replace(/\n\n/g, '</p><p>')
+        .replace(/\n/g, '<br>')
+        .replace(/^/, '<p>')
+        .replace(/$/, '</p>');
 }
 
 function selectOption(index) {
@@ -478,11 +732,30 @@ function showResult() {
     const pct = Math.round((correct / total) * 100);
     const xpGained = correct * 10;
 
-    // Update today's progress
+    // Atualizar progresso do dia
     state.progress.questoesHoje = Math.min(state.progress.questoesHoje + total, state.progress.totalHoje);
     state.user.xp += xpGained;
+
+    // Calcular nível: 1 level por 500 XP
+    state.user.level = Math.max(1, Math.floor(state.user.xp / 500) + 1);
+
+    // Salvar no histórico
+    if (!state.quizHistory) state.quizHistory = [];
+    state.quizHistory.push({
+        date: new Date().toISOString(),
+        discipline: quizState.discipline || 'misto',
+        correct,
+        total,
+        pct,
+        xp: xpGained,
+    });
+
+    // Atualizar streak (verificar se já estudou hoje)
+    updateStreak();
+
     saveState();
 
+    // Renderizar tela de resultado
     document.getElementById('result-emoji').textContent = pct >= 70 ? '🎉' : pct >= 50 ? '👍' : '📚';
     document.getElementById('result-title').textContent = pct >= 70 ? 'Excelente Resultado!' : pct >= 50 ? 'Bom Trabalho!' : 'Continue Praticando!';
     document.getElementById('result-sub').textContent = `Você acertou ${correct} de ${total} questões`;
@@ -497,6 +770,29 @@ function showResult() {
     document.getElementById('result-ring').setAttribute('stroke-dashoffset', offset);
 
     navigate('result');
+
+    // Verificar conquistas DEPOIS de navegar
+    setTimeout(() => checkBadges(), 800);
+}
+
+function updateStreak() {
+    const today = new Date().toDateString();
+    const lastDate = state.user.lastStudyDate;
+
+    if (lastDate === today) return; // já contou hoje
+
+    if (lastDate) {
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        if (lastDate === yesterday.toDateString()) {
+            state.user.streak = (state.user.streak || 0) + 1;
+        } else {
+            state.user.streak = 1; // quebrou a sequencia
+        }
+    } else {
+        state.user.streak = 1;
+    }
+    state.user.lastStudyDate = today;
 }
 
 // =====================================================
@@ -541,7 +837,10 @@ function showHint() {
     const q = quizState.questions[quizState.currentIndex];
     const hintBox = document.getElementById('hint-box');
     if (hintBox.style.display === 'none' || hintBox.style.display === '') {
-        hintBox.textContent = '💡 ' + q.hint;
+        const hintText = q.hint
+            ? '💡 ' + q.hint
+            : '💡 Leia o enunciado com atenção e elimine as alternativas que contradizem o contexto. Analise cada opção antes de confirmar.';
+        hintBox.innerHTML = renderMarkdown(hintText);
         hintBox.style.display = 'block';
     } else {
         hintBox.style.display = 'none';
@@ -594,8 +893,9 @@ function renderNotifList(unreadOnly = false) {
     const list = document.getElementById('notif-list');
     list.innerHTML = '';
 
-    const todayItems = state.notifications.filter(n => n.date === 'today' && (!unreadOnly || n.unread));
-    const yesterdayItems = state.notifications.filter(n => n.date === 'yesterday' && (!unreadOnly || n.unread));
+    const notifs = state.notifications || [];
+    const todayItems = notifs.filter(n => n.date === 'today' && (!unreadOnly || n.unread));
+    const yesterdayItems = notifs.filter(n => n.date === 'yesterday' && (!unreadOnly || n.unread));
 
     if (todayItems.length > 0) {
         const header = document.createElement('div');
@@ -626,7 +926,7 @@ function createNotifItem(n) {
     <div class="notif-content">
       <div class="notif-title">${n.title}</div>
       <div class="notif-body">${n.body}</div>
-      ${n.cta ? `<span class="notif-cta" onclick="${n.ctaAction}()">${n.cta}</span>` : ''}
+      ${n.cta ? `<span class="notif-cta" onclick="${n.ctaAction}">${n.cta}</span>` : ''}
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">
       <span class="notif-time">${n.time}</span>
@@ -727,21 +1027,429 @@ document.addEventListener('click', (e) => {
 });
 
 // =====================================================
+// ACHIEVEMENTS — DINÂMICO
+// =====================================================
+const BADGE_DEFINITIONS = {
+    ofensiva: [
+        { id: 'inicio_feroz',   icon: '🔥', name: 'Início Feroz',     check: () => (state.quizHistory||[]).length >= 1 },
+        { id: 'semana_ouro',    icon: '⭐', name: 'Semana de Ouro',   check: () => (state.user.streak||0) >= 7 },
+        { id: 'constante',      icon: '📅', name: 'Constante',        check: () => (state.quizHistory||[]).length >= 5 },
+        { id: 'mes_imparavel',  icon: '💪', name: 'Mês Imparável',    check: () => (state.user.streak||0) >= 30 },
+        { id: 'lendario',       icon: '👑', name: 'Lendário',         check: () => (state.user.streak||0) >= 100 },
+    ],
+    especialista: [
+        { id: 'genio_redacao',       icon: '✍️', name: 'Gênio da Redação',      check: () => getAreaPct('linguagens') >= 70 },
+        { id: 'rei_natureza',        icon: '🌿', name: 'Rei da Natureza',         check: () => getAreaPct('natureza') >= 70 },
+        { id: 'calculadora_humana',  icon: '🔢', name: 'Calculadora Humana',      check: () => getAreaPct('matematica') >= 70 },
+        { id: 'globalista',          icon: '🌍', name: 'Globalista',              check: () => getAreaPct('humanas') >= 70 },
+    ],
+    maratonista: [
+        { id: '100_questoes',   icon: '💯', name: '100 Questões',    check: () => (state.progress.totalCorretas||0) >= 100 },
+        { id: '500_questoes',   icon: '🏅', name: '500 Questões',    check: () => (state.progress.totalCorretas||0) >= 500 },
+        { id: 'o_maratonista',  icon: '🏃', name: 'O Maratonista',   check: () => (state.progress.totalCorretas||0) >= 1000 },
+    ],
+};
+
+function getAreaPct(disc) {
+    const st = state.progress.stats && state.progress.stats[disc];
+    if (!st || st.total === 0) return 0;
+    return Math.round((st.correct / st.total) * 100);
+}
+
+function checkBadges() {
+    if (!state.badges) state.badges = { ofensiva: [], especialista: [], maratonista: [] };
+    const newlyUnlocked = [];
+
+    for (const [category, defs] of Object.entries(BADGE_DEFINITIONS)) {
+        for (const badge of defs) {
+            if (!state.badges[category].includes(badge.id) && badge.check()) {
+                state.badges[category].push(badge.id);
+                newlyUnlocked.push(badge);
+            }
+        }
+    }
+    if (newlyUnlocked.length > 0) {
+        saveState();
+        // Mostrar toasts em sequência
+        newlyUnlocked.forEach((badge, i) => {
+            setTimeout(() => showBadgeToast(badge), i * 2200);
+        });
+    }
+}
+
+function showBadgeToast(badge) {
+    const toast = document.getElementById('badge-toast');
+    document.getElementById('badge-toast-icon').textContent = badge.icon;
+    document.getElementById('badge-toast-name').textContent = badge.name;
+    toast.classList.add('visible');
+    setTimeout(() => toast.classList.remove('visible'), 3000);
+}
+
+function renderAchievements() {
+    if (!state.badges) state.badges = { ofensiva: [], especialista: [], maratonista: [] };
+
+    const categoryMap = {
+        ofensiva:      { el: null, title: '🔥 Ofensiva' },
+        especialista:  { el: null, title: '🎯 Especialista' },
+        maratonista:   { el: null, title: '🏃 Maratonista' },
+    };
+
+    // Atualizar badge-sections
+    document.querySelectorAll('.badge-section').forEach((section, idx) => {
+        const categories = ['ofensiva', 'especialista', 'maratonista'];
+        const cat = categories[idx];
+        if (!cat) return;
+        const defs = BADGE_DEFINITIONS[cat];
+        const unlocked = state.badges[cat] || [];
+
+        // Header count
+        const countEl = section.querySelector('.badge-count');
+        if (countEl) countEl.textContent = `${unlocked.length}/${defs.length} Desbloqueados`;
+
+        // Grid
+        const grid = section.querySelector('.badge-grid');
+        if (!grid) return;
+        grid.innerHTML = '';
+        defs.forEach(badge => {
+            const isUnlocked = unlocked.includes(badge.id);
+            const item = document.createElement('div');
+            item.className = 'badge-item ' + (isUnlocked ? 'unlocked' : 'locked');
+            item.innerHTML = `<div class="badge-icon">${isUnlocked ? badge.icon : '🔒'}</div><span>${badge.name}</span>`;
+            grid.appendChild(item);
+        });
+    });
+
+    // Próxima grande conquista
+    const allBadges = Object.entries(BADGE_DEFINITIONS).flatMap(([cat, defs]) =>
+        defs.map(b => ({ ...b, cat }))
+    );
+    const nextBadge = allBadges.find(b => !state.badges[b.cat]?.includes(b.id));
+    if (nextBadge) {
+        document.querySelector('.na-title').textContent = nextBadge.name;
+        document.querySelector('.na-icon').textContent = nextBadge.icon;
+        // progress estimate
+        const totalBadges = allBadges.length;
+        const totalUnlocked = Object.values(state.badges).flat().length;
+        const pct = Math.round((totalUnlocked / totalBadges) * 100);
+        document.querySelector('.progress-count.teal').textContent = pct + '%';
+        document.querySelector('.next-achievement-card .progress-bar').style.width = pct + '%';
+        document.querySelector('.na-remaining').textContent = `${totalUnlocked} de ${totalBadges} desbloqueados`;
+    }
+}
+
+// =====================================================
+// PROFILE — STATS DINÂMICAS
+// =====================================================
+function renderProfile() {
+    const s = state.user;
+    document.getElementById('profile-avatar').textContent = s.name[0].toUpperCase();
+    document.getElementById('profile-name').textContent = s.name;
+    document.getElementById('profile-level').textContent = s.level;
+    document.getElementById('profile-xp').textContent = s.xp.toLocaleString('pt-BR');
+
+    // Área grid dinâmica
+    renderAreaGrid();
+
+    // Atividade recente (últimos badges)
+    renderRecentActivity();
+}
+
+function renderAreaGrid() {
+    const grid = document.getElementById('area-grid');
+    if (!grid) return;
+
+    const areas = [
+        { disc: 'humanas',    icon: '📚', name: 'HUMANAS' },
+        { disc: 'natureza',   icon: '🔬', name: 'NATUREZA' },
+        { disc: 'linguagens', icon: '📝', name: 'LINGUAGENS' },
+        { disc: 'matematica', icon: '➗', name: 'MATEMÁTICA' },
+    ];
+
+    grid.innerHTML = '';
+    areas.forEach(a => {
+        const pct = getAreaPct(a.disc);
+        const st = state.progress.stats?.[a.disc] || { correct: 0, total: 0 };
+        const color = pct >= 70 ? 'var(--teal)' : pct >= 50 ? 'var(--orange)' : 'var(--red)';
+        const card = document.createElement('div');
+        card.className = 'area-card';
+        card.innerHTML = `
+            <span class="area-icon">${a.icon}</span>
+            <span class="area-name">${a.name}</span>
+            <span class="area-pct" style="color:${color}">${st.total > 0 ? pct + '%' : '—'}</span>
+            <div class="progress-bar-wrap thin">
+                <div class="progress-bar" style="width:${pct}%"></div>
+            </div>
+            <span class="area-questions">${st.total > 0 ? st.correct + '/' + st.total + ' acertos' : 'Nenhuma questão ainda'}</span>
+        `;
+        grid.appendChild(card);
+    });
+}
+
+function renderRecentActivity() {
+    const scroll = document.querySelector('.recent-badges-scroll');
+    if (!scroll) return;
+
+    const history = (state.quizHistory || []).slice(-6).reverse();
+    if (history.length === 0) return;
+
+    scroll.innerHTML = '';
+    const discColors = {
+        humanas: 'teal-bg', natureza: 'purple-bg', linguagens: 'gold-bg', matematica: 'teal-bg', misto: 'purple-bg'
+    };
+    const discIcons = { humanas: '🌍', natureza: '🔬', linguagens: '📝', matematica: '➗', misto: '🎯' };
+    const discNames = { humanas: 'HUMANAS', natureza: 'NATUREZA', linguagens: 'LINGUAGENS', matematica: 'MATEMÁTICA', misto: 'MISTO' };
+
+    history.forEach(h => {
+        const badge = document.createElement('div');
+        badge.className = `recent-badge ${discColors[h.discipline] || 'teal-bg'}`;
+        badge.innerHTML = `
+            <div class="rb-icon">${discIcons[h.discipline] || '🎯'}</div>
+            <span>${h.pct}% — ${discNames[h.discipline] || h.discipline.toUpperCase()}</span>
+        `;
+        scroll.appendChild(badge);
+    });
+}
+
+// =====================================================
+// REVIEW SCREEN
+// =====================================================
+function renderReview() {
+    const wrong = state.wrongAnswers || [];
+    const tabs = document.getElementById('review-tabs');
+    const list = document.getElementById('review-list');
+
+    // Filtros por disciplina
+    const disciplines = [...new Set(wrong.map(w => w.question.discipline || w.question.area))];
+    tabs.innerHTML = '<button class="review-tab active" data-filter="all" onclick="filterReview(this)">Todos</button>';
+    disciplines.forEach(d => {
+        const label = d.length > 15 ? d.substring(0, 12) + '...' : d;
+        tabs.innerHTML += `<button class="review-tab" data-filter="${d}" onclick="filterReview(this)">${label}</button>`;
+    });
+
+    renderReviewList('all');
+}
+
+function filterReview(btn) {
+    document.querySelectorAll('.review-tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    renderReviewList(btn.dataset.filter);
+}
+
+function renderReviewList(filter) {
+    const list = document.getElementById('review-list');
+    let wrong = (state.wrongAnswers || []).slice().reverse(); // mais recentes primeiro
+
+    if (filter !== 'all') {
+        wrong = wrong.filter(w => (w.question.discipline || w.question.area) === filter);
+    }
+
+    list.innerHTML = '';
+
+    if (wrong.length === 0) {
+        list.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-state-emoji">${filter === 'all' ? '🎉' : '✨'}</div>
+                <div class="empty-state-title">Tudo certo por aqui!</div>
+                <div class="empty-state-sub">Seus erros aparecerão aqui para você revisar.<br>Continue praticando!</div>
+            </div>`;
+        return;
+    }
+
+    const letters = ['A', 'B', 'C', 'D', 'E'];
+    wrong.forEach((w, idx) => {
+        const q = w.question;
+        const dateStr = w.date ? new Date(w.date).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) : '';
+        const disc = q.discipline || q.area;
+
+        const item = document.createElement('div');
+        item.className = 'review-item';
+        item.innerHTML = `
+            <div class="review-q-header">
+                <span class="review-q-tag">${q.tag || q.area}</span>
+                <span class="review-q-date">${dateStr}</span>
+            </div>
+            <p class="review-q-text">${q.question}</p>
+            <div class="review-answers">
+                <div class="review-ans user-wrong">
+                    <span class="review-ans-label">SEU</span>
+                    <span class="review-ans-text">${letters[w.userAnswer]}. ${q.options[w.userAnswer] || '—'}</span>
+                </div>
+                <div class="review-ans correct-ans">
+                    <span class="review-ans-label">CERTA</span>
+                    <span class="review-ans-text">${letters[q.correct]}. ${q.options[q.correct] || '—'}</span>
+                </div>
+            </div>
+            <button class="review-practice-btn" onclick="practiceDisc('${disc}')">
+                🎯 Praticar esta disciplina
+            </button>
+        `;
+        list.appendChild(item);
+    });
+}
+
+function clearWrongAnswers() {
+    if (!confirm('Limpar todo o histórico de erros?')) return;
+    state.wrongAnswers = [];
+    saveState();
+    renderReview();
+}
+
+function practiceDisc(disc) {
+    const discKey = {
+        'CIÊNCIAS HUMANAS': 'humanas',
+        'CIÊNCIAS DA NATUREZA': 'natureza',
+        'LINGUAGENS': 'linguagens',
+        'MATEMÁTICA': 'matematica',
+    }[disc] || disc;
+    quizSetup.discipline = discKey;
+    navigate('quiz-setup');
+}
+
+// =====================================================
+// ONBOARDING
+// =====================================================
+let obStep = 1;
+let obGoal = '';
+
+function onboardingNext() {
+    if (obStep === 1) {
+        const name = document.getElementById('ob-name').value.trim();
+        if (!name) {
+            document.getElementById('ob-name').focus();
+            document.getElementById('ob-name').style.borderColor = 'var(--red)';
+            setTimeout(() => { document.getElementById('ob-name').style.borderColor = ''; }, 2000);
+            return;
+        }
+        state.user.name = name;
+        goToObStep(2);
+    } else if (obStep === 2) {
+        if (!obGoal) { obGoal = 'Rumo à Federal 🚀'; }
+        state.user.goal = obGoal;
+        goToObStep(3);
+    } else if (obStep === 3) {
+        const selected = [...document.querySelectorAll('.ob-subj-btn.selected')].map(b => b.dataset.subj);
+        state.weakSubjects = selected;
+        finishOnboarding();
+    }
+}
+
+function goToObStep(step) {
+    document.getElementById(`ob-step-${obStep}`).classList.remove('active');
+    document.getElementById(`ob-step-${step}`).classList.add('active');
+
+    // Update dots
+    document.querySelectorAll('.ob-dot').forEach((dot, i) => {
+        dot.classList.toggle('active', i === step - 1);
+    });
+
+    if (step === 3) {
+        document.getElementById('ob-btn').textContent = 'Começar a Estudar 🚀';
+    }
+    obStep = step;
+}
+
+function selectGoal(btn) {
+    document.querySelectorAll('.ob-goal-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    obGoal = btn.dataset.goal;
+}
+
+function toggleSubj(btn) {
+    btn.classList.toggle('selected');
+}
+
+function skipOnboarding() {
+    finishOnboarding();
+}
+
+function finishOnboarding() {
+    state.onboardingDone = true;
+    if (!state.user.name || state.user.name === 'Alex') {
+        const inputName = document.getElementById('ob-name').value.trim();
+        if (inputName) state.user.name = inputName;
+    }
+    saveState();
+    navigate('home');
+}
+
+// =====================================================
 // INIT
 // =====================================================
+
+// Capturar erros globais para diagnóstico
+window.onerror = (msg, src, line, col, err) => {
+    console.error('🔴 Erro global:', msg, 'em', src, 'linha', line);
+    // Mostrar erro na tela se o app não carregou
+    const appEl = document.getElementById('app');
+    if (appEl && !document.querySelector('.screen.active')) {
+        appEl.insertAdjacentHTML('afterbegin',
+            `<div style="position:fixed;inset:0;background:#0a1929;color:#ef4444;padding:24px;font-family:monospace;z-index:9999;overflow:auto">
+            <b>❌ Erro ao carregar o app:</b><br>${msg}<br><small>${src}:${line}</small>
+            <br><br><button onclick="localStorage.clear();location.reload()" style="margin-top:16px;padding:10px 20px;background:#ef4444;color:white;border:none;border-radius:8px;cursor:pointer">Limpar dados e recarregar</button>
+            </div>`);
+    }
+    return false;
+};
+
 function init() {
-    // Set initial screen
+    // Garantir que apenas uma tela fique ativa
+    document.querySelectorAll('.screen.active').forEach(s => s.classList.remove('active'));
+
+    // Migrar state antigo se necessário
+    if (!state.quizHistory) state.quizHistory = [];
+    if (!state.wrongAnswers) state.wrongAnswers = [];
+    if (!state.progress.stats) {
+        state.progress.stats = {
+            humanas: { correct: 0, total: 0 },
+            natureza: { correct: 0, total: 0 },
+            linguagens: { correct: 0, total: 0 },
+            matematica: { correct: 0, total: 0 },
+        };
+        // Migrar progresso antigo
+        ['humanas','natureza','linguagens','matematica'].forEach(d => {
+            const pct = state.progress[d];
+            if (pct > 0) {
+                state.progress.stats[d] = { correct: pct, total: 100 };
+            }
+        });
+    }
+    if (!state.badges) state.badges = { ofensiva: [], especialista: [], maratonista: [] };
+    if (!state.notifications || !Array.isArray(state.notifications)) {
+        state.notifications = JSON.parse(JSON.stringify(defaultState.notifications));
+    }
+    if (!state.user.goal) state.user.goal = defaultState.user.goal;
+    if (state.user.streak === undefined) state.user.streak = 0;
+    if (state.user.xp === undefined) state.user.xp = 0;
+    if (state.user.level === undefined) state.user.level = 1;
+
+    // Reset para home se estava numa tela sem nav
     const nav = document.getElementById('bottom-nav');
     if (screensWithoutNav.includes(state.currentScreen)) {
+        state.currentScreen = 'home';
+    }
+
+    // Onboarding primeiro acesso
+    // Pular se usuário já tem dados (migração do estado antigo)
+    const isReturningUser = state.user.xp > 0 || (state.quizHistory && state.quizHistory.length > 0);
+    if (!state.onboardingDone && !isReturningUser) {
+        // Marcar como feito se for usuário antigo sem onboarding flag
+        document.getElementById('screen-onboarding').classList.add('active');
         nav.style.display = 'none';
-        state.currentScreen = 'home'; // Reset to home on reload
+        state.currentScreen = 'onboarding';
+        return;
+    }
+    if (isReturningUser && !state.onboardingDone) {
+        state.onboardingDone = true;
     }
 
     // Show home screen
     document.getElementById('screen-home').classList.add('active');
     state.currentScreen = 'home';
+    nav.style.display = 'flex';
     updateNavActive('home');
     renderDashboard();
+    saveState();
 }
 
 document.addEventListener('DOMContentLoaded', init);
+
