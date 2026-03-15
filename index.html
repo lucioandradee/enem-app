@@ -12,6 +12,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
         rel="stylesheet" />
     <link rel="stylesheet" href="style.css" />
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#00b4a6" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="ENEM Master" />
 </head>
 
 <body>
@@ -78,7 +83,7 @@
                 </div>
 
                 <!-- CTA Button -->
-                <button class="cta-btn" onclick="startQuiz()">
+                <button class="cta-btn" onclick="navigate('quiz-setup')">
                     <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
                         <polygon points="5,3 19,12 5,21" />
                     </svg>
@@ -101,10 +106,80 @@
             </div>
         </section>
 
+        <!-- ===================== SCREEN: QUIZ SETUP ===================== -->
+        <section id="screen-quiz-setup" class="screen">
+            <div class="inner-header">
+                <button class="back-btn" onclick="navigate('home')">←</button>
+                <h2 class="inner-title">Novo Simulado</h2>
+                <div></div>
+            </div>
+            <div class="screen-scroll">
+                <p class="setup-label">ESCOLHA A DISCIPLINA</p>
+                <div class="disc-grid">
+                    <button class="disc-card" data-disc="humanas" onclick="selectDisc(this)">
+                        <span class="disc-icon">🌍</span>
+                        <span class="disc-name">Ciências Humanas</span>
+                    </button>
+                    <button class="disc-card" data-disc="natureza" onclick="selectDisc(this)">
+                        <span class="disc-icon">🔬</span>
+                        <span class="disc-name">Ciências da Natureza</span>
+                    </button>
+                    <button class="disc-card" data-disc="linguagens" onclick="selectDisc(this)">
+                        <span class="disc-icon">📝</span>
+                        <span class="disc-name">Linguagens</span>
+                    </button>
+                    <button class="disc-card" data-disc="matematica" onclick="selectDisc(this)">
+                        <span class="disc-icon">➗</span>
+                        <span class="disc-name">Matemática</span>
+                    </button>
+                </div>
+                <button class="disc-card disc-card-full" data-disc="misto" onclick="selectDisc(this)">
+                    <span class="disc-icon">🎯</span>
+                    <div>
+                        <span class="disc-name">Misto — Todas as Áreas</span>
+                        <span class="disc-sub">Como no ENEM real</span>
+                    </div>
+                </button>
+
+                <p class="setup-label">QUANTAS QUESTÕES?</p>
+                <div class="count-row">
+                    <button class="count-btn" data-count="5" onclick="selectCount(this)">5</button>
+                    <button class="count-btn selected" data-count="10" onclick="selectCount(this)">10</button>
+                    <button class="count-btn" data-count="15" onclick="selectCount(this)">15</button>
+                    <button class="count-btn" data-count="20" onclick="selectCount(this)">20</button>
+                </div>
+
+                <div class="api-source-card" id="api-source-card">
+                    <span class="api-source-icon">🌐</span>
+                    <div>
+                        <p class="api-source-title">Questões Reais do ENEM</p>
+                        <p class="api-source-sub" id="api-source-sub">Verificando banco de dados...</p>
+                    </div>
+                    <span class="api-source-status" id="api-source-status">⏳</span>
+                </div>
+
+                <button class="cta-btn" id="start-quiz-btn" onclick="initQuizFromSetup()">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+                        <polygon points="5,3 19,12 5,21" />
+                    </svg>
+                    INICIAR SIMULADO
+                </button>
+                <button class="outline-btn" style="margin-top:10px" onclick="initQuizFromSetup(true)">
+                    Usar Banco Local
+                </button>
+            </div>
+        </section>
+
         <!-- ===================== SCREEN: QUIZ ===================== -->
         <section id="screen-quiz" class="screen">
+            <!-- Loading Overlay -->
+            <div class="quiz-loading-overlay" id="quiz-loading-overlay">
+                <div class="loading-spinner"></div>
+                <p class="loading-text">Buscando questões reais do ENEM...</p>
+                <p class="loading-sub" id="loading-sub-text">Aguarde um momento 🎓</p>
+            </div>
             <div class="quiz-header">
-                <button class="back-btn" onclick="navigate('home')">✕</button>
+                <button class="back-btn" onclick="exitQuiz()">✕</button>
                 <div class="quiz-meta">
                     <span class="quiz-area" id="quiz-area-label">CIÊNCIAS HUMANAS</span>
                     <span class="quiz-type">Simulado ENEM</span>
@@ -117,7 +192,12 @@
             <p class="quiz-question-count" id="quiz-q-count">Questão 4 de 10</p>
 
             <div class="screen-scroll quiz-scroll">
-                <div class="quiz-tag-wrap"><span class="quiz-tag" id="quiz-tag">HISTÓRIA GERAL</span></div>
+                <div class="quiz-tag-wrap">
+                    <span class="quiz-tag" id="quiz-tag">HISTÓRIA GERAL</span>
+                    <span class="quiz-source-badge" id="quiz-source-badge" style="display:none">API ENEM</span>
+                </div>
+                <div class="quiz-context-images" id="quiz-context-images"></div>
+                <div class="quiz-context" id="quiz-context"></div>
                 <p class="quiz-question" id="quiz-question">Carregando questão...</p>
                 <blockquote class="quiz-quote" id="quiz-quote"></blockquote>
 
@@ -160,7 +240,7 @@
                             Ganho</span></div>
                 </div>
                 <button class="cta-btn" onclick="navigate('home')" style="margin-top:24px">Voltar ao Início</button>
-                <button class="outline-btn" onclick="startQuiz()" style="margin-top:12px">Novo Simulado</button>
+                <button class="outline-btn" onclick="navigate('quiz-setup')" style="margin-top:12px">Novo Simulado</button>
             </div>
         </section>
 
@@ -321,6 +401,17 @@
             </div>
         </section>
 
+        <!-- ===================== SCREEN: REVISÃO DE ERROS ===================== -->
+        <section id="screen-review" class="screen">
+            <div class="inner-header">
+                <button class="back-btn" onclick="navigate('profile')">←</button>
+                <h2 class="inner-title">Revisão de Erros</h2>
+                <button class="icon-btn" onclick="clearWrongAnswers()" title="Limpar">🗑️</button>
+            </div>
+            <div class="review-tabs" id="review-tabs"></div>
+            <div class="screen-scroll" id="review-list"></div>
+        </section>
+
         <!-- ===================== SCREEN: PERFIL ===================== -->
         <section id="screen-profile" class="screen">
             <div class="screen-scroll">
@@ -340,9 +431,9 @@
                 <!-- Performance by Area -->
                 <div class="section-header">
                     <span class="section-title">Desempenho por Área</span>
-                    <button class="link-btn">Ver detalhes</button>
+                    <button class="link-btn" onclick="navigate('review')">Ver erros</button>
                 </div>
-                <div class="area-grid">
+                <div class="area-grid" id="area-grid">
                     <div class="area-card">
                         <span class="area-icon">📚</span>
                         <span class="area-name">HUMANAS</span>
@@ -641,6 +732,75 @@
             <div class="screen-scroll notif-scroll" id="notif-list"></div>
         </section>
 
+        <!-- ===================== SCREEN: ONBOARDING ===================== -->
+        <section id="screen-onboarding" class="screen">
+            <div class="onboarding-wrap">
+                <div class="onboarding-dots" id="ob-dots">
+                    <span class="ob-dot active"></span>
+                    <span class="ob-dot"></span>
+                    <span class="ob-dot"></span>
+                </div>
+
+                <!-- Step 1: Nome -->
+                <div class="ob-step active" id="ob-step-1">
+                    <div class="ob-emoji">🚀</div>
+                    <h2 class="ob-title">Bem-vindo ao ENEM Master!</h2>
+                    <p class="ob-desc">A plataforma que vai te levar para a sua universidade dos sonhos. Como você se chama?</p>
+                    <input class="ob-input" id="ob-name" type="text" placeholder="Seu nome completo" maxlength="40" />
+                </div>
+
+                <!-- Step 2: Meta -->
+                <div class="ob-step" id="ob-step-2">
+                    <div class="ob-emoji">🎯</div>
+                    <h2 class="ob-title">Qual é a sua meta?</h2>
+                    <p class="ob-desc">Isso vai personalizar seu cronograma de estudos.</p>
+                    <div class="ob-goals-grid">
+                        <button class="ob-goal-btn" data-goal="Medicina na Federal 🏥" onclick="selectGoal(this)">🩺<span>Medicina</span></button>
+                        <button class="ob-goal-btn" data-goal="Direito na Federal ⚖️" onclick="selectGoal(this)">⚖️<span>Direito</span></button>
+                        <button class="ob-goal-btn" data-goal="Engenharia na Federal ⚙️" onclick="selectGoal(this)">⚙️<span>Engenharia</span></button>
+                        <button class="ob-goal-btn" data-goal="Administração na Federal 📊" onclick="selectGoal(this)">📊<span>Administração</span></button>
+                        <button class="ob-goal-btn" data-goal="Ciências da Computação 💻" onclick="selectGoal(this)">💻<span>Computação</span></button>
+                        <button class="ob-goal-btn" data-goal="Rumo à Federal 🚀" onclick="selectGoal(this)">🌟<span>Outro</span></button>
+                    </div>
+                </div>
+
+                <!-- Step 3: Matérias fracas -->
+                <div class="ob-step" id="ob-step-3">
+                    <div class="ob-emoji">📚</div>
+                    <h2 class="ob-title">Quais áreas precisa melhorar?</h2>
+                    <p class="ob-desc">Vamos focar mais nessas disciplinas no seu cronograma diário.</p>
+                    <div class="ob-subjects-grid">
+                        <button class="ob-subj-btn" data-subj="humanas" onclick="toggleSubj(this)">
+                            <span>🌍</span><span>Humanas</span>
+                        </button>
+                        <button class="ob-subj-btn" data-subj="natureza" onclick="toggleSubj(this)">
+                            <span>🔬</span><span>Natureza</span>
+                        </button>
+                        <button class="ob-subj-btn" data-subj="linguagens" onclick="toggleSubj(this)">
+                            <span>📝</span><span>Linguagens</span>
+                        </button>
+                        <button class="ob-subj-btn" data-subj="matematica" onclick="toggleSubj(this)">
+                            <span>➗</span><span>Matemática</span>
+                        </button>
+                    </div>
+                </div>
+
+                <button class="cta-btn ob-btn" id="ob-btn" onclick="onboardingNext()">Continuar →</button>
+                <button class="ob-skip" onclick="skipOnboarding()">Pular configuração</button>
+            </div>
+        </section>
+
+        <!-- ===================== BADGE UNLOCK TOAST ===================== -->
+        <div class="badge-toast" id="badge-toast">
+            <div class="badge-toast-inner">
+                <span class="badge-toast-icon" id="badge-toast-icon">🏅</span>
+                <div>
+                    <p class="badge-toast-title">🎉 Conquista Desbloqueada!</p>
+                    <p class="badge-toast-name" id="badge-toast-name">Início Feroz</p>
+                </div>
+            </div>
+        </div>
+
         <!-- ===================== BOTTOM NAV ===================== -->
         <nav class="bottom-nav" id="bottom-nav">
             <button class="nav-btn active" id="nav-home" onclick="navigate('home')">
@@ -649,7 +809,7 @@
                 </svg>
                 <span>Início</span>
             </button>
-            <button class="nav-btn" id="nav-quiz" onclick="startQuiz()">
+            <button class="nav-btn" id="nav-quiz" onclick="navigate('quiz-setup')">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22">
                     <path d="M12 20h9" />
                     <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
@@ -682,7 +842,18 @@
 
     </div><!-- end #app -->
 
+    <script src="api.js"></script>
     <script src="app.js"></script>
+    <script>
+        // Registrar Service Worker (PWA)
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').then(reg => {
+                    console.log('✅ SW registrado:', reg.scope);
+                }).catch(err => console.log('SW erro:', err));
+            });
+        }
+    </script>
 </body>
 
 </html>

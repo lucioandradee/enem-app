@@ -1,0 +1,20 @@
+{
+  "name": "ENEM Master",
+  "short_name": "ENEM Master",
+  "description": "Estude, Evolua, Conquiste — Plataforma gamificada para o ENEM",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a1929",
+  "theme_color": "#00b4a6",
+  "lang": "pt-BR",
+  "categories": ["education"],
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
