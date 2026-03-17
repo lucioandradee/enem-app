@@ -1438,6 +1438,7 @@ a { color: inherit; text-decoration: none; }
   color: var(--text-primary);
   display: -webkit-box;
   -webkit-line-clamp: 3;
+  line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
