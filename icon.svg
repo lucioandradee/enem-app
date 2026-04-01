@@ -1,6 +1,21 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="80" fill="#0a1929"/>
-  <text x="256" y="340" font-family="Arial Black, sans-serif" font-size="280" font-weight="900" fill="#00b4a6" text-anchor="middle">E</text>
-  <rect x="60" y="390" width="392" height="18" rx="9" fill="#00b4a6" opacity="0.5"/>
-  <rect x="100" y="420" width="312" height="12" rx="6" fill="#00b4a6" opacity="0.25"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <!-- Background -->
+  <rect width="512" height="512" rx="96" fill="#0a1929"/>
+  <!-- Glow -->
+  <circle cx="256" cy="210" r="140" fill="#00b4a6" opacity="0.08"/>
+  <!-- Graduation cap board (diamond) -->
+  <polygon points="256,90 395,158 256,226 117,158" fill="#00b4a6"/>
+  <!-- Cap board shading -->
+  <polygon points="256,90 395,158 256,158" fill="#008f84" opacity="0.4"/>
+  <!-- Cap body -->
+  <path d="M146,172 L146,272 C146,320 196,354 256,354 C316,354 366,320 366,272 L366,172 L256,226 Z" fill="#00b4a6" opacity="0.92"/>
+  <!-- Cap body right shading -->
+  <path d="M256,226 L366,172 L366,272 C366,320 316,354 256,354 Z" fill="#008f84" opacity="0.3"/>
+  <!-- Tassel line -->
+  <line x1="395" y1="158" x2="395" y2="268" stroke="#f5c518" stroke-width="12" stroke-linecap="round"/>
+  <!-- Tassel ball -->
+  <circle cx="395" cy="284" r="20" fill="#f5c518"/>
+  <circle cx="395" cy="284" r="11" fill="#c9a000"/>
+  <!-- MASTER text -->
+  <text x="256" y="448" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-weight="900" font-size="70" fill="#00b4a6" letter-spacing="3">MASTER</text>
 </svg>

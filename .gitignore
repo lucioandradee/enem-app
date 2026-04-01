@@ -5,10 +5,16 @@ node_modules/
 .DS_Store
 Thumbs.db
 
+# Variáveis de ambiente — NUNCA commitar esses arquivos
+.env
+.env.local
+.env.production
+.env.*.local
+
+# Supabase credentials (não commitar — contém chaves reais)
+supabase-config.js
+migrate.js
+
 # Editor files
-.vscode/
 *.swp
 *.swo
-
-# Logs
-*.log

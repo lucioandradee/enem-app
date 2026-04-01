@@ -8,6 +8,26 @@
 const ENEM_API = 'https://api.enem.dev/v1';
 const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 horas
 
+/* ---- Controle de questões já vistas na sessão ---- */
+const SEEN_KEY = 'enem_seen_q';
+
+function getSeenIds() {
+    try { return new Set(JSON.parse(sessionStorage.getItem(SEEN_KEY) || '[]')); }
+    catch { return new Set(); }
+}
+
+function markSeen(questions) {
+    try {
+        const seen = getSeenIds();
+        questions.forEach(q => seen.add(`${q.year}-${q.index}`));
+        sessionStorage.setItem(SEEN_KEY, JSON.stringify([...seen]));
+    } catch { /* storage cheio: ignora */ }
+}
+
+function clearSeen() {
+    try { sessionStorage.removeItem(SEEN_KEY); } catch { /* noop */ }
+}
+
 /* ---- Mapa de disciplinas ---- */
 const DISC_MAP = {
     humanas: 'ciencias-humanas',
@@ -21,6 +41,20 @@ const DISC_LABELS = {
     'ciencias-natureza': 'CIÊNCIAS DA NATUREZA',
     'linguagens': 'LINGUAGENS',
     'matematica': 'MATEMÁTICA',
+};
+
+/* ---- Estrutura oficial do ENEM por dia ---- */
+// Dia 1: Linguagens (Q.1–45)  + Humanas (Q.46–90)   — 5h30min
+// Dia 2: Natureza  (Q.91–135) + Matemática (Q.136–180) — 5h30min
+const ENEM_DAY_CONFIG = {
+    1: [
+        { disc: 'linguagens',        label: 'LINGUAGENS, CÓDIGOS E SUAS TECNOLOGIAS',    start: 1  },
+        { disc: 'ciencias-humanas',  label: 'CIÊNCIAS HUMANAS E SUAS TECNOLOGIAS',       start: 46 },
+    ],
+    2: [
+        { disc: 'ciencias-natureza', label: 'CIÊNCIAS DA NATUREZA E SUAS TECNOLOGIAS',   start: 91  },
+        { disc: 'matematica',        label: 'MATEMÁTICA E SUAS TECNOLOGIAS',              start: 136 },
+    ],
 };
 
 /* ---- Cache helpers ---- */
@@ -42,7 +76,7 @@ function cacheSet(key, data) {
 }
 
 function clearOldCache() {
-    const keys = Object.keys(localStorage).filter(k => k.startsWith('enem_q_'));
+    const keys = Object.keys(localStorage).filter(k => /^enem_q[23]?_/.test(k));
     keys.sort();
     keys.slice(0, Math.max(1, keys.length - 2)).forEach(k => localStorage.removeItem(k));
 }
@@ -73,19 +107,21 @@ async function fetchAvailableYears() {
 
 /* ---- Buscar todas questões de um ano ---- */
 async function fetchAllQuestionsForYear(year) {
-    const cacheKey = `enem_q_${year}`;
+    // Chave v3 para invalidar cache antigo gerado com limit=90 (retornava 400)
+    const cacheKey = `enem_q3_${year}`;
     const cached = cacheGet(cacheKey);
     if (cached) return cached;
 
-    // Busca com paginação: 2 requests de 90 questões para cobrir as 180
-    const [r1, r2] = await Promise.all([
-        apiFetch(`/exams/${year}/questions?limit=90&offset=0`),
-        apiFetch(`/exams/${year}/questions?limit=90&offset=90`),
-    ]);
-    const questions = [
-        ...(r1.questions || []),
-        ...(r2.questions || []),
-    ];
+    // API aceita no máximo limit=45 por requesição; ENEM tem até 180 questões
+    // 4 páginas paralelas — erros individuais retornam vazio (não quebram o fetch)
+    const pages = await Promise.all(
+        [0, 45, 90, 135].map(offset =>
+            apiFetch(`/exams/${year}/questions?limit=45&offset=${offset}`)
+                .catch(() => ({ questions: [] }))
+        )
+    );
+    const questions = pages.flatMap(p => p.questions || []);
+    if (questions.length === 0) throw new Error(`Sem dados para ${year}`);
     cacheSet(cacheKey, questions);
     return questions;
 }
@@ -129,8 +165,8 @@ async function getQuizQuestions(discipline, count = 10) {
 
         let pool = [];
 
-        // Tenta ano mais recente, e se tiver poucas questões, pega o anterior também
-        for (let i = 0; i < Math.min(3, years.length); i++) {
+        // Busca até 5 anos para ter pool grande o suficiente
+        for (let i = 0; i < Math.min(5, years.length); i++) {
             const all = await fetchAllQuestionsForYear(years[i]);
             let filtered;
 
@@ -149,17 +185,88 @@ async function getQuizQuestions(discipline, count = 10) {
             );
 
             pool = [...pool, ...filtered];
-            if (pool.length >= count * 3) break; // Pool com margem suficiente
+            if (pool.length >= count * 8) break; // Pool com margem ampla
         }
 
         if (pool.length === 0) throw new Error('Pool vazio');
 
-        const shuffled = [...pool].sort(() => Math.random() - 0.5);
-        return shuffled.slice(0, count).map(normalizeQuestion);
+        // Deduplicação por sessão: preferir questões não vistas
+        const seen = getSeenIds();
+        const unseen = pool.filter(q => !seen.has(`${q.year}-${q.index}`));
+        const source = unseen.length >= count ? unseen : pool;
+
+        // Se usamos todo o pool sem questões novas, resetar o histórico
+        if (unseen.length < count) clearSeen();
+
+        const shuffled = [...source].sort(() => Math.random() - 0.5);
+        const selected = shuffled.slice(0, count);
+        const normalized = selected.map(normalizeQuestion);
+
+        markSeen(selected);
+        return normalized;
 
     } catch (err) {
         console.warn('⚠️ API indisponível, usando banco local:', err.message);
         return null; // null = usar questões locais
+    }
+}
+
+/* ---- ENEM Dia completo: 45 questões por caderno em ordem real ---- */
+async function getENEMDayQuestions(day = 1) {
+    try {
+        const config = ENEM_DAY_CONFIG[day];
+        if (!config) throw new Error(`Dia inválido: ${day}`);
+
+        const years = await fetchAvailableYears();
+        if (!years || years.length === 0) throw new Error('Nenhum ano disponível');
+
+        const result = [];
+
+        for (const caderno of config) {
+            // Acumula questões de anos diferentes até ter pelo menos 45 válidas
+            const globalSeen = new Set();
+            const accumulated = [];
+
+            for (let i = 0; i < Math.min(8, years.length) && accumulated.length < 45; i++) {
+                let all;
+                try {
+                    all = await fetchAllQuestionsForYear(years[i]);
+                } catch {
+                    continue; // ano indisponível, tenta o próximo
+                }
+
+                const filtered = all.filter(q =>
+                    q.discipline === caderno.disc &&
+                    q.alternatives &&
+                    q.alternatives.length >= 2 &&
+                    q.alternatives.some(a => a.text && a.text.trim().length > 5)
+                ).sort((a, b) => (a.index || 0) - (b.index || 0));
+
+                for (const q of filtered) {
+                    const key = `${q.year}-${q.index}`;
+                    if (globalSeen.has(key)) continue;
+                    globalSeen.add(key);
+                    accumulated.push(q);
+                    if (accumulated.length === 45) break;
+                }
+            }
+
+            if (accumulated.length === 0) throw new Error(`Pool vazio para ${caderno.disc}`);
+
+            const normalized = accumulated.map((q, i) => ({
+                ...normalizeQuestion(q),
+                enemNumber: caderno.start + i,  // número real na prova (1–45 ou 46–90)
+                enemArea: caderno.label,         // nome completo do caderno
+            }));
+
+            result.push(...normalized);
+        }
+
+        return result;
+
+    } catch (err) {
+        console.warn('⚠️ getENEMDayQuestions falhou:', err.message);
+        return null; // null → startQuiz usa banco local
     }
 }
 
@@ -176,8 +283,19 @@ async function checkAPIStatus() {
 /* ---- Exposição global ---- */
 window.enemAPI = {
     getQuizQuestions,
+    getENEMDayQuestions,
     fetchAvailableYears,
     checkAPIStatus,
     DISC_MAP,
     DISC_LABELS,
+    ENEM_DAY_CONFIG,
 };
+
+/* ---- Limpar cache de chaves geradas com limit=90 (formato antigo) ---- */
+(function purgeOldCache() {
+    try {
+        Object.keys(localStorage)
+            .filter(k => /^enem_q_/.test(k) || /^enem_q2_/.test(k))
+            .forEach(k => localStorage.removeItem(k));
+    } catch { /* noop */ }
+})();

@@ -3,13 +3,10 @@
    Cache-first para assets • Network-first para API
    ===================================================== */
 
-const CACHE_NAME = 'enem-master-v1';
+const CACHE_NAME = 'enem-master-v10';
 const STATIC_ASSETS = [
     '/',
-    '/index.html',
     '/style.css',
-    '/app.js',
-    '/api.js',
     '/manifest.json',
     'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap',
 ];
@@ -87,3 +84,34 @@ async function networkFirst(request) {
         });
     }
 }
+
+/* ---- Push Notifications ---- */
+self.addEventListener('push', (event) => {
+    let data = { title: 'ENEM Master', body: 'Hora de estudar! 💡', icon: '/favicon.ico' };
+    try {
+        if (event.data) data = { ...data, ...event.data.json() };
+    } catch { /* noop */ }
+
+    event.waitUntil(
+        self.registration.showNotification(data.title, {
+            body: data.body,
+            icon: data.icon || '/favicon.ico',
+            badge: '/favicon.ico',
+            tag: data.tag || 'enem-master',
+            data: { url: data.url || '/' },
+        })
+    );
+});
+
+self.addEventListener('notificationclick', (event) => {
+    event.notification.close();
+    const targetUrl = event.notification.data?.url || '/';
+    event.waitUntil(
+        clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clientList => {
+            for (const client of clientList) {
+                if (client.url === targetUrl && 'focus' in client) return client.focus();
+            }
+            if (clients.openWindow) return clients.openWindow(targetUrl);
+        })
+    );
+});
