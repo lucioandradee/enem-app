@@ -1,0 +1,132 @@
+/* =====================================================
+   ACHIEVEMENTS SCREEN — conquistas, badges, toast
+   ===================================================== */
+
+/* ---- Stats Strip ---- */
+.ach-stats-strip {
+  display: flex; align-items: center;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 16px 20px; margin-bottom: 16px;
+}
+.ach-stat { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.ach-stat-divider { width: 1px; height: 34px; background: var(--border-subtle); flex-shrink: 0; }
+.ach-stat-val     { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; }
+.ach-stat-val.gold { color: var(--gold); }
+.ach-stat-val.teal { color: var(--teal); }
+.ach-stat-label   { font-size: 10px; font-weight: 600; color: var(--text-muted); letter-spacing: 0.3px; }
+
+/* ---- Next Achievement Card ---- */
+.next-achievement-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 18px;
+  display: flex; gap: 16px; margin-bottom: 20px;
+  position: relative; overflow: hidden;
+}
+.next-achievement-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, var(--teal), var(--purple));
+}
+.na-icon-wrap {
+  position: relative; width: 60px; height: 60px;
+  flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+}
+.na-icon-wrap::before {
+  content: ''; position: absolute; inset: 0; border-radius: 50%;
+  background: var(--teal-glow); animation: ach-pulse 2.8s ease-in-out infinite;
+}
+.na-icon { font-size: 34px; position: relative; z-index: 1; }
+.na-info  { flex: 1; min-width: 0; }
+.na-label { font-size: 9px; font-weight: 800; color: var(--teal); letter-spacing: 1.2px; display: block; margin-bottom: 4px; }
+.na-title { font-size: 16px; font-weight: 800; margin-bottom: 4px; }
+.na-desc  { font-size: 12px; color: var(--text-secondary); margin-bottom: 10px; line-height: 1.4; }
+.na-footer-row { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+.na-remaining  { font-size: 11px; color: var(--text-muted); }
+.na-xp-reward  {
+  font-size: 11px; font-weight: 800; color: var(--gold);
+  background: rgba(245,197,24,0.12); border: 1px solid rgba(245,197,24,0.25);
+  padding: 2px 9px; border-radius: 20px;
+}
+
+/* ---- Badge Sections ---- */
+.badge-section { margin-bottom: 24px; }
+.badge-section-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 12px; font-size: 14px; font-weight: 700;
+}
+.badge-section-title { display: flex; align-items: center; gap: 8px; }
+.badge-count        { font-size: 12px; font-weight: 600; }
+.badge-count.teal   { color: var(--teal); }
+
+.badge-tier-pill { font-size: 8px; font-weight: 800; letter-spacing: 1px; padding: 2px 7px; border-radius: 20px; text-transform: uppercase; }
+.bronze-tier { background: rgba(205,127,50,0.14); color: var(--bronze); border: 1px solid rgba(205,127,50,0.28); }
+.silver-tier { background: rgba(168,178,192,0.14); color: var(--silver); border: 1px solid rgba(168,178,192,0.28); }
+.gold-tier   { background: rgba(245,197,24,0.14);  color: var(--gold);   border: 1px solid rgba(245,197,24,0.28); }
+
+/* ---- Badge Grid ---- */
+.badge-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+}
+.badge-item {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 14px 8px 12px;
+  border-radius: var(--radius-md); border: 1px solid var(--border-subtle);
+  background: var(--bg-card); font-size: 11px; font-weight: 600; text-align: center;
+  transition: all 0.22s; min-height: 96px; justify-content: center;
+}
+.badge-item.unlocked {
+  border-color: rgba(0,180,166,0.45);
+  background: rgba(0,180,166,0.07);
+  box-shadow: 0 0 14px rgba(0,180,166,0.1);
+}
+.badge-item.unlocked:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 24px rgba(0,180,166,0.28), 0 0 0 1px rgba(0,180,166,0.3);
+}
+.badge-item.unlocked .badge-icon { animation: badge-bob 3.2s ease-in-out infinite; }
+.badge-item.locked { opacity: 0.42; }
+.badge-icon { font-size: 28px; }
+
+.badge-xp-chip {
+  font-size: 9px; font-weight: 800; color: var(--gold);
+  background: rgba(245,197,24,0.12); border: 1px solid rgba(245,197,24,0.22);
+  padding: 1px 6px; border-radius: 10px; line-height: 1.6;
+}
+.badge-hint { font-size: 9px; color: var(--text-muted); line-height: 1.35; text-align: center; font-weight: 500; }
+
+/* ---- Badge Unlock Toast ---- */
+.badge-toast {
+  position: absolute; top: 16px; left: 16px; right: 16px;
+  z-index: 9999;
+  transform: translateY(-120%);
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  pointer-events: none;
+}
+.badge-toast.visible { transform: translateY(0); }
+.badge-toast-inner {
+  background: linear-gradient(135deg, var(--bg-card), #1a3a5a);
+  border: 1px solid var(--teal);
+  border-radius: var(--radius-md); padding: 14px 16px;
+  display: flex; align-items: center; gap: 14px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5), var(--shadow-teal);
+}
+.badge-toast-icon  { font-size: 32px; flex-shrink: 0; }
+.badge-toast-title { font-size: 10px; font-weight: 700; color: var(--teal); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 3px; }
+.badge-toast-name  { font-size: 15px; font-weight: 800; }
+
+/* Nav badge dot */
+.nav-btn .new-badge-dot {
+  position: absolute; top: 4px; right: 8px;
+  width: 8px; height: 8px;
+  background: var(--red); border-radius: 50%;
+  border: 2px solid var(--bg-secondary);
+}
+
+/* ---- Keyframes ---- */
+@keyframes badge-bob {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-4px); }
+}
+@keyframes ach-pulse {
+  0%, 100% { transform: scale(1);    opacity: 0.55; }
+  50%       { transform: scale(1.18); opacity: 1;    }
+}

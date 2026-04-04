@@ -62,9 +62,15 @@ Deno.serve(async (req: Request) => {
         const purchase = (body as any)?.data?.purchase;
         const buyer    = (body as any)?.data?.buyer;
         const status   = purchase?.status;
-        if (!['APPROVED', 'COMPLETE'].includes(status ?? '')) {
+
+        if (['APPROVED', 'COMPLETE'].includes(status ?? '')) {
+            planAction = 'activate';
+        } else if (['REFUNDED', 'CANCELLED', 'CHARGEBACK'].includes(status ?? '')) {
+            planAction = 'deactivate';
+        } else {
             return new Response(JSON.stringify({ ok: true, skipped: true }), { status: 200 });
         }
+
         buyerEmail   = buyer?.email ?? null;
         const offer  = purchase?.offer?.code ?? '';
         durationDays = offer.toLowerCase().includes('anual') ? 365 : 30;
@@ -74,9 +80,15 @@ Deno.serve(async (req: Request) => {
     else if (headers['x-kiwify-signature'] && body?.token === KIWIFY_TOKEN) {
         gateway = 'kiwify';
         const event = (body as any)?.order_status;
-        if (!['paid', 'authorized'].includes(event ?? '')) {
+
+        if (['paid', 'authorized'].includes(event ?? '')) {
+            planAction = 'activate';
+        } else if (['refunded', 'cancelled', 'chargedback'].includes(event ?? '')) {
+            planAction = 'deactivate';
+        } else {
             return new Response(JSON.stringify({ ok: true, skipped: true }), { status: 200 });
         }
+
         buyerEmail   = (body as any)?.Customer?.email ?? null;
         const freq   = (body as any)?.Product?.description ?? '';
         durationDays = freq.toLowerCase().includes('anual') ? 365 : 30;
@@ -86,9 +98,15 @@ Deno.serve(async (req: Request) => {
     else if (headers['x-signature'] || (body as any)?.type === 'payment') {
         gateway = 'mercadopago';
         const status = (body as any)?.data?.status ?? (body as any)?.status;
-        if (!['approved', 'authorized'].includes(status ?? '')) {
+
+        if (['approved', 'authorized'].includes(status ?? '')) {
+            planAction = 'activate';
+        } else if (['refunded', 'cancelled', 'charged_back'].includes(status ?? '')) {
+            planAction = 'deactivate';
+        } else {
             return new Response(JSON.stringify({ ok: true, skipped: true }), { status: 200 });
         }
+
         buyerEmail   = (body as any)?.payer?.email ?? null;
         durationDays = (body as any)?.metadata?.plan === 'anual' ? 365 : 30;
     }

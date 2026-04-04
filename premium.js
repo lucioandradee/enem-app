@@ -408,21 +408,6 @@ function closePaywall() {
     if (el) el.classList.remove('active');
 }
 
-// ── Dev helper — ativar premium de teste ─────────────────────────────────────
-async function ativarPremiumTeste() {
-    const user = await getCurrentUser();
-    if (!user) { alert('Faça login primeiro'); return; }
-    try {
-        const { error } = await supabase.rpc('process_payment', {
-            p_email: user.email, p_amount: 19.90, p_status: 'approved', p_method: 'pix',
-        });
-        if (error) { console.error('❌ ativarPremiumTeste:', error); return; }
-        alert('Premium ativado com sucesso');
-        location.reload();
-    } catch (e) {
-        console.error('❌ ativarPremiumTeste (catch):', e);
-    }
-}
 
 // ── Navegação/Auth ────────────────────────────────────────────────────────────
 function goToRegister() {

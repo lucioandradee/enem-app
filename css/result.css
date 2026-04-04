@@ -1,0 +1,105 @@
+/* =====================================================
+   RESULT SCREEN — resultado do quiz + análise + share
+   ===================================================== */
+.result-screen {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 40px 24px; text-align: center;
+}
+.result-emoji  { font-size: 56px; margin-bottom: 12px; }
+.result-title  { font-size: 26px; font-weight: 800; margin-bottom: 6px; }
+.result-sub    { font-size: 14px; color: var(--text-secondary); margin-bottom: 24px; }
+
+.result-score-ring {
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 24px;
+}
+.result-score-text {
+  position: absolute;
+  display: flex; flex-direction: column; align-items: center;
+}
+.result-pct       { font-size: 32px; font-weight: 900; color: var(--teal); }
+.result-pct-label { font-size: 11px; color: var(--text-secondary); font-weight: 600; }
+
+.result-stats {
+  display: flex; gap: 20px;
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: 20px 24px;
+  border: 1px solid var(--border-subtle);
+  width: 100%; justify-content: space-around;
+}
+.result-stat {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  font-size: 13px; color: var(--text-secondary);
+}
+.result-stat span:nth-child(2) { font-size: 22px; font-weight: 800; color: var(--text-primary); }
+.rs-icon { font-size: 20px; }
+
+/* Bônus XP */
+.result-xp-bonus  { opacity: 0.85; }
+.bonus-highlight  { font-size: 12px; font-weight: 700; color: var(--gold); }
+
+/* ---- Result Analysis (TRI, recomendações, área) ---- */
+#result-analysis { display: none; }
+
+.result-section-label {
+  font-size: 11px; font-weight: 700; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--text-secondary); margin: 20px 0 10px;
+}
+
+.result-area-row {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+}
+.result-area-icon { font-size: 18px; flex-shrink: 0; }
+.result-area-info { flex: 1; min-width: 0; }
+.result-area-name {
+  font-size: 12px; font-weight: 600; color: var(--text-primary);
+  display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px;
+}
+.result-area-bar-wrap { background: var(--bg-card); border-radius: 99px; height: 6px; overflow: hidden; }
+.result-area-bar      { height: 100%; border-radius: 99px; transition: width .6s ease; }
+.result-area-pct      { font-size: 13px; font-weight: 700; flex-shrink: 0; min-width: 36px; text-align: right; }
+
+.result-tri-card {
+  background: linear-gradient(135deg, #0f2a3f 0%, #1a3e58 100%);
+  border: 1px solid var(--teal);
+  border-radius: var(--radius-lg);
+  padding: 16px 20px;
+  display: flex; align-items: center; gap: 16px; margin-bottom: 4px;
+}
+.result-tri-label-col { flex: 1; }
+.result-tri-title {
+  font-size: 11px; font-weight: 700; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--text-secondary); margin: 0 0 4px;
+}
+.result-tri-desc { font-size: 12px; color: var(--text-secondary); line-height: 1.4; margin: 0; }
+.result-tri-score { font-size: 36px; font-weight: 900; color: var(--teal); line-height: 1; flex-shrink: 0; }
+
+.result-rec-card {
+  background: var(--bg-card); border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md); padding: 12px 14px;
+  display: flex; align-items: flex-start; gap: 10px; margin-bottom: 8px;
+}
+.rec-icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+.rec-text { flex: 1; font-size: 13px; color: var(--text-primary); line-height: 1.45; margin: 0; }
+.rec-action-btn {
+  background: transparent; border: 1px solid var(--teal); color: var(--teal);
+  font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 99px;
+  cursor: pointer; flex-shrink: 0; white-space: nowrap;
+}
+.rec-action-btn:hover { background: var(--teal); color: #fff; }
+
+/* ---- Share Button ---- */
+.share-btn {
+  width: 100%;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 13px 20px;
+  background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
+  color: #fff; border: none; border-radius: var(--radius-lg);
+  font-size: 15px; font-weight: 700; cursor: pointer;
+  margin: 12px 0 4px;
+  box-shadow: 0 4px 14px rgba(37,211,102,.3);
+  transition: opacity .2s;
+}
+.share-btn:hover { opacity: .88; }

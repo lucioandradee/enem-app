@@ -1,0 +1,118 @@
+/* =====================================================
+   REDAÇÃO ENEM — tema, textarea, correção IA, histórico
+   ===================================================== */
+
+/* ---- Abas de categoria ---- */
+.rt-tabs { display: flex; gap: 8px; }
+.rt-tab-btn {
+  flex: 1; padding: 10px 8px; border-radius: 12px;
+  border: 2px solid rgba(124,58,237,0.25); background: transparent;
+  color: var(--text-secondary); font-size: 12px; font-weight: 700;
+  letter-spacing: 0.3px; cursor: pointer; transition: all 0.2s;
+}
+.rt-tab-btn.active            { border-color: #7c3aed; background: rgba(124,58,237,0.15); color: #a78bfa; }
+.rt-tab-btn:not(.active):hover { border-color: rgba(124,58,237,0.5); color: #c4b5fd; }
+
+/* ---- Tema card ---- */
+.redacao-tema-card {
+  background: linear-gradient(135deg, #1a1040, #251a55);
+  border: 2px solid #7c3aed; border-radius: 16px; padding: 18px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.rt-label  { font-size: 10px; font-weight: 800; letter-spacing: 1.5px; color: #a78bfa; text-transform: uppercase; }
+.rt-year   { font-size: 13px; font-weight: 700; color: #c4b5fd; margin: 0; }
+.rt-theme  { font-size: 15px; font-weight: 700; color: var(--text-primary); line-height: 1.5; margin: 4px 0 6px; }
+.rt-change-btn { align-self: flex-start; font-size: 12px; padding: 6px 14px; border-color: #7c3aed; color: #a78bfa; }
+.rt-change-btn:hover { background: rgba(124,58,237,0.15); }
+
+/* ---- Textarea ---- */
+.redacao-textarea {
+  width: 100%; min-height: 260px;
+  background: var(--bg-card); border: 2px solid var(--border-subtle);
+  border-radius: 12px; color: var(--text-primary);
+  font-family: inherit; font-size: 14px; line-height: 1.7;
+  padding: 14px; resize: vertical; box-sizing: border-box; transition: border-color 0.2s;
+}
+.redacao-textarea:focus       { outline: none; border-color: #7c3aed; }
+.redacao-textarea::placeholder { color: var(--text-muted); }
+.redacao-counter { display: flex; justify-content: space-between; margin-top: 6px; font-size: 11px; color: var(--text-muted); }
+
+/* ---- Config IA ---- */
+.redacao-ai-config {
+  background: var(--bg-card); border: 1px solid var(--border-subtle);
+  border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 10px;
+}
+.redacao-ai-label { font-size: 13px; font-weight: 600; color: var(--text-primary); margin: 0; }
+.redacao-api-row  { display: flex; gap: 8px; align-items: center; }
+.redacao-api-input {
+  flex: 1; background: #0a1520;
+  border: 1.5px solid var(--border-subtle); border-radius: 8px;
+  color: var(--text-primary); font-size: 13px; padding: 8px 12px;
+}
+.redacao-api-input:focus { outline: none; border-color: #7c3aed; }
+.redacao-api-hint { font-size: 11px; color: var(--text-muted); margin: 0; }
+
+.redacao-ai-status {
+  display: flex; align-items: center; justify-content: space-between;
+  background: rgba(124,58,237,0.12); border: 1px solid rgba(124,58,237,0.35);
+  border-radius: 10px; padding: 10px 14px; font-size: 13px; font-weight: 600; color: #a78bfa;
+}
+.link-btn {
+  background: none; border: none; color: var(--text-muted);
+  font-size: 12px; cursor: pointer; text-decoration: underline; padding: 0;
+}
+.link-btn:hover { color: var(--text-secondary); }
+
+/* ---- Competência Card ---- */
+.comp-card {
+  background: var(--bg-card); border: 1.5px solid var(--border-subtle);
+  border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 8px;
+}
+.comp-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+.comp-label  { font-size: 12px; font-weight: 700; color: #a78bfa; text-transform: uppercase; letter-spacing: 0.8px; }
+.comp-desc   { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.comp-nota   { font-size: 20px; font-weight: 800; color: var(--text-primary); white-space: nowrap; }
+.comp-nota span { font-size: 12px; font-weight: 500; color: var(--text-muted); }
+.comp-bar-wrap { height: 6px; background: var(--border-subtle); border-radius: 99px; overflow: hidden; }
+.comp-bar { height: 100%; background: linear-gradient(90deg, #7c3aed, #a78bfa); border-radius: 99px; transition: width 0.6s ease; }
+.comp-feedback {
+  font-size: 13px; color: var(--text-secondary); line-height: 1.5;
+  border-top: 1px solid var(--border-subtle); padding-top: 8px;
+}
+
+/* ---- Total Card ---- */
+.redacao-total-card {
+  background: linear-gradient(135deg, #1a1040, #251a55);
+  border: 2px solid #7c3aed; border-radius: 16px; padding: 24px; text-align: center;
+}
+.redacao-total-label { font-size: 10px; font-weight: 800; letter-spacing: 1.5px; color: #a78bfa; text-transform: uppercase; margin: 0 0 6px; }
+.redacao-total-score { font-size: 52px; font-weight: 900; color: #c4b5fd; margin: 0 0 4px; line-height: 1; }
+.redacao-total-sub   { font-size: 13px; color: var(--text-muted); margin: 0; }
+
+.redacao-comment-card {
+  background: var(--bg-card); border: 1.5px solid var(--border-subtle);
+  border-radius: 14px; padding: 16px; font-size: 13px; color: var(--text-secondary); line-height: 1.7;
+}
+
+/* ---- Histórico ---- */
+.redacao-hist-card {
+  background: var(--bg-card); border-radius: var(--radius-md); padding: 14px;
+  border: 1px solid var(--border-subtle); display: flex; align-items: center; gap: 12px;
+}
+.redacao-hist-nota {
+  min-width: 52px; height: 52px;
+  background: linear-gradient(135deg, #7c3aed, #a78bfa);
+  border-radius: 12px; display: flex; align-items: center; justify-content: center;
+  font-size: 18px; font-weight: 900; color: #fff; flex-shrink: 0;
+}
+.redacao-hist-info  { flex: 1; min-width: 0; }
+.redacao-hist-theme {
+  font-size: 12px; font-weight: 600; color: var(--text-primary);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.redacao-hist-date         { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+.redacao-hist-competencias { display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap; }
+.redacao-hist-c {
+  font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 6px;
+  background: rgba(124,58,237,0.15); color: #a78bfa;
+}

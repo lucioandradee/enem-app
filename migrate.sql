@@ -112,3 +112,79 @@ $$;
 -- Revogar acesso público direto — apenas funções/triggers devem chamar
 REVOKE ALL ON FUNCTION public.process_payment(TEXT, NUMERIC, TEXT, TEXT) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.process_payment(TEXT, NUMERIC, TEXT, TEXT) TO authenticated;
+
+-- ─── 7. Tabela webhook_logs (usada pelo admin.html) ──────────────────────────
+CREATE TABLE IF NOT EXISTS public.webhook_logs (
+  id          BIGSERIAL   PRIMARY KEY,
+  provider    TEXT        NOT NULL,                 -- hotmart | kiwify | cakto | mercadopago
+  event_type  TEXT,                                 -- ex: PURCHASE_COMPLETE
+  status      TEXT        DEFAULT 'ok',             -- ok | error | ignored | pending
+  buyer_email TEXT,
+  payload     JSONB,
+  created_at  TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE public.webhook_logs ENABLE ROW LEVEL SECURITY;
+
+-- Apenas service_role (Edge Functions) pode inserir
+CREATE POLICY "Service role can insert webhook_logs" ON public.webhook_logs
+  FOR INSERT TO service_role WITH CHECK (true);
+
+-- Usuários autenticados podem LER os logs (necessário para o admin.html via anon key)
+-- Para produção, substitua por: USING (auth.jwt() ->> 'role' = 'service_role')
+CREATE POLICY "Authenticated can read webhook_logs" ON public.webhook_logs
+  FOR SELECT TO authenticated USING (true);
+
+-- ─── 8. RPCs de admin: admin_set_premium e admin_remove_premium ──────────────
+-- Chamadas pelo admin.js. SECURITY DEFINER permite o UPDATE mesmo sob RLS.
+-- Para restringir por e-mail admin, adicione:
+--   IF auth.jwt() ->> 'email' NOT IN ('admin@seudominio.com') THEN RAISE EXCEPTION …
+
+CREATE OR REPLACE FUNCTION public.admin_set_premium(
+    p_email TEXT,
+    p_days  INTEGER DEFAULT 30
+)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+BEGIN
+    UPDATE public.users
+    SET plan            = 'premium',
+        plan_expires_at = NOW() + (p_days || ' days')::INTERVAL,
+        updated_at      = NOW()
+    WHERE email = p_email;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Usuário não encontrado: %', p_email;
+    END IF;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.admin_set_premium(TEXT, INTEGER) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.admin_set_premium(TEXT, INTEGER) TO authenticated;
+
+CREATE OR REPLACE FUNCTION public.admin_remove_premium(
+    p_email TEXT
+)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+BEGIN
+    UPDATE public.users
+    SET plan            = 'free',
+        plan_expires_at = NULL,
+        updated_at      = NOW()
+    WHERE email = p_email;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Usuário não encontrado: %', p_email;
+    END IF;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.admin_remove_premium(TEXT) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.admin_remove_premium(TEXT) TO authenticated;

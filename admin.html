@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ENEM Master — Admin Dashboard</title>
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; connect-src 'self' https://*.supabase.co https://fonts.googleapis.com https://fonts.gstatic.com; img-src 'self' data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com; font-src 'self' https://fonts.gstatic.com data:; object-src 'none'; base-uri 'self'; form-action 'self';" />
+  <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+  <meta http-equiv="X-Frame-Options" content="DENY" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    /* ── Reset & Base ────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:         #0d0f14;
+      --surface:    #161922;
+      --surface-2:  #1e2130;
+      --border:     rgba(255,255,255,.07);
+      --border-2:   rgba(255,255,255,.12);
+      --text:       #e8eaf0;
+      --text-2:     #8b92a8;
+      --text-3:     #5a6075;
+      --teal:       #00c4b4;
+      --teal-dim:   rgba(0,196,180,.12);
+      --teal-glow:  rgba(0,196,180,.25);
+      --red:        #ff4d6a;
+      --red-dim:    rgba(255,77,106,.12);
+      --green:      #34d399;
+      --green-dim:  rgba(52,211,153,.12);
+      --amber:      #fbbf24;
+      --amber-dim:  rgba(251,191,36,.12);
+      --blue:       #60a5fa;
+      --blue-dim:   rgba(96,165,250,.12);
+      --radius:     12px;
+      --radius-sm:  8px;
+      --shadow:     0 4px 24px rgba(0,0,0,.4);
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 14px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Gate / Auth ─────────────────────────────────── */
+    #gate {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 24px;
+      background: radial-gradient(ellipse 70% 50% at 50% 40%, rgba(0,196,180,.06) 0%, transparent 60%);
+    }
+
+    .gate-card {
+      background: var(--surface);
+      border: 1px solid var(--border-2);
+      border-radius: var(--radius);
+      padding: 40px 36px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: var(--shadow);
+    }
+
+    .gate-card .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 28px;
+    }
+
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, var(--teal) 0%, #0099dd 100%);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+
+    .gate-card h1 {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .gate-card p {
+      color: var(--text-2);
+      font-size: 13px;
+      margin-bottom: 28px;
+    }
+
+    .field-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-2);
+      text-transform: uppercase;
+      letter-spacing: .6px;
+      margin-bottom: 6px;
+    }
+
+    .field-input {
+      width: 100%;
+      background: var(--surface-2);
+      border: 1px solid var(--border-2);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 14px;
+      outline: none;
+      transition: border-color .2s;
+    }
+
+    .field-input:focus {
+      border-color: var(--teal);
+      box-shadow: 0 0 0 3px var(--teal-dim);
+    }
+
+    .field-wrap { margin-bottom: 16px; }
+
+    #gate-error {
+      color: var(--red);
+      font-size: 12px;
+      margin-top: 10px;
+      display: none;
+    }
+
+    /* ── Buttons ─────────────────────────────────────── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 9px 16px;
+      border-radius: var(--radius-sm);
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: opacity .15s, transform .1s, box-shadow .15s;
+      white-space: nowrap;
+    }
+
+    .btn:active { transform: scale(.97); }
+    .btn:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+
+    .btn-primary {
+      background: var(--teal);
+      color: #000;
+      width: 100%;
+      justify-content: center;
+      padding: 11px 16px;
+      font-size: 14px;
+    }
+    .btn-primary:hover:not(:disabled) { opacity: .87; }
+
+    .btn-success {
+      background: var(--green-dim);
+      color: var(--green);
+      border: 1px solid rgba(52,211,153,.25);
+    }
+    .btn-success:hover:not(:disabled) { background: rgba(52,211,153,.2); }
+
+    .btn-danger {
+      background: var(--red-dim);
+      color: var(--red);
+      border: 1px solid rgba(255,77,106,.25);
+    }
+    .btn-danger:hover:not(:disabled) { background: rgba(255,77,106,.2); }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-2);
+      border: 1px solid var(--border-2);
+    }
+    .btn-ghost:hover:not(:disabled) { background: var(--surface-2); color: var(--text); }
+
+    .btn-sm { padding: 5px 10px; font-size: 12px; border-radius: 6px; }
+
+    /* ── Layout ──────────────────────────────────────── */
+    #app { display: none; min-height: 100vh; flex-direction: column; }
+
+    /* Topbar */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0 24px;
+      height: 58px;
+      background: rgba(13,15,20,.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .topbar .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-right: auto;
+    }
+
+    .topbar .logo span {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -.3px;
+    }
+
+    .topbar .badge-admin {
+      padding: 2px 8px;
+      border-radius: 100px;
+      font-size: 10px;
+      font-weight: 700;
+      background: var(--teal-dim);
+      color: var(--teal);
+      border: 1px solid rgba(0,196,180,.2);
+      letter-spacing: .5px;
+      text-transform: uppercase;
+    }
+
+    .topbar .user-chip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 10px;
+      border-radius: 100px;
+      background: var(--surface-2);
+      border: 1px solid var(--border-2);
+      font-size: 12px;
+      color: var(--text-2);
+    }
+
+    .topbar .user-chip .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 6px var(--green);
+    }
+
+    /* Main content */
+    .main {
+      padding: 28px 24px 48px;
+      max-width: 1160px;
+      margin: 0 auto;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+
+    /* Stats row */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 14px;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .stat-card .stat-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-3);
+      text-transform: uppercase;
+      letter-spacing: .6px;
+    }
+
+    .stat-card .stat-value {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1.1;
+    }
+
+    .stat-card .stat-value.teal { color: var(--teal); }
+    .stat-card .stat-value.green { color: var(--green); }
+    .stat-card .stat-value.amber { color: var(--amber); }
+
+    /* Section cards */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--border);
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .card-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .card-title .icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+
+    .card-title .icon.teal  { background: var(--teal-dim); }
+    .card-title .icon.green { background: var(--green-dim); }
+    .card-title .icon.amber { background: var(--amber-dim); }
+    .card-title .icon.blue  { background: var(--blue-dim); }
+
+    .card-title h2 {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .card-title p {
+      font-size: 12px;
+      color: var(--text-2);
+    }
+
+    /* Tables */
+    .table-wrap {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    thead th {
+      padding: 10px 16px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-3);
+      text-transform: uppercase;
+      letter-spacing: .6px;
+      background: var(--surface-2);
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background .12s;
+    }
+
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: var(--surface-2); }
+
+    tbody td {
+      padding: 12px 16px;
+      font-size: 13px;
+      color: var(--text);
+      vertical-align: middle;
+    }
+
+    tbody td.mono {
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 12px;
+      color: var(--text-2);
+    }
+
+    .td-actions {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    /* Badges */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: 100px;
+      font-size: 11px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .badge::before {
+      content: '';
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+    }
+
+    .badge-premium {
+      background: var(--amber-dim);
+      color: var(--amber);
+      border: 1px solid rgba(251,191,36,.2);
+    }
+    .badge-premium::before { background: var(--amber); }
+
+    .badge-free {
+      background: var(--surface-2);
+      color: var(--text-3);
+      border: 1px solid var(--border-2);
+    }
+    .badge-free::before { background: var(--text-3); }
+
+    .badge-success {
+      background: var(--green-dim);
+      color: var(--green);
+      border: 1px solid rgba(52,211,153,.2);
+    }
+    .badge-success::before { background: var(--green); }
+
+    .badge-error {
+      background: var(--red-dim);
+      color: var(--red);
+      border: 1px solid rgba(255,77,106,.2);
+    }
+    .badge-error::before { background: var(--red); }
+
+    .badge-pending {
+      background: var(--amber-dim);
+      color: var(--amber);
+      border: 1px solid rgba(251,191,36,.2);
+    }
+    .badge-pending::before { background: var(--amber); }
+
+    .badge-info {
+      background: var(--blue-dim);
+      color: var(--blue);
+      border: 1px solid rgba(96,165,250,.2);
+    }
+    .badge-info::before { background: var(--blue); }
+
+    /* Manual activation form */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 160px auto;
+      gap: 12px;
+      align-items: flex-end;
+      padding: 20px 24px;
+    }
+
+    @media (max-width: 640px) {
+      .form-grid { grid-template-columns: 1fr 1fr; }
+      .form-grid .btn-activate { grid-column: 1 / -1; width: 100%; justify-content: center; }
+    }
+
+    /* Empty state */
+    .empty-state {
+      padding: 48px 24px;
+      text-align: center;
+      color: var(--text-3);
+      font-size: 13px;
+    }
+
+    .empty-state .emoji { font-size: 32px; margin-bottom: 8px; }
+
+    /* Loading spinner */
+    .spinner {
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      border: 2px solid var(--border-2);
+      border-top-color: var(--teal);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .loading-row td {
+      text-align: center;
+      padding: 32px;
+      color: var(--text-3);
+    }
+
+    /* Toast notifications */
+    #toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: none;
+    }
+
+    .toast {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      border-radius: var(--radius-sm);
+      background: var(--surface-2);
+      border: 1px solid var(--border-2);
+      box-shadow: var(--shadow);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+      pointer-events: auto;
+      animation: slideIn .25s ease;
+      min-width: 260px;
+      max-width: 380px;
+    }
+
+    .toast.toast-success { border-color: rgba(52,211,153,.35); }
+    .toast.toast-success .toast-dot { background: var(--green); }
+    .toast.toast-error   { border-color: rgba(255,77,106,.35); }
+    .toast.toast-error   .toast-dot { background: var(--red); }
+    .toast.toast-info    { border-color: rgba(0,196,180,.35); }
+    .toast.toast-info    .toast-dot { background: var(--teal); }
+
+    .toast-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(20px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    /* Refresh button */
+    .btn-refresh {
+      background: transparent;
+      border: 1px solid var(--border-2);
+      color: var(--text-2);
+      border-radius: var(--radius-sm);
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background .15s, color .15s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-refresh:hover { background: var(--surface-2); color: var(--text); }
+    .btn-refresh:disabled { opacity: .5; cursor: not-allowed; }
+    .btn-refresh.spinning .refresh-icon { animation: spin .7s linear infinite; }
+
+    /* Scrollbar minimal */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text-3); }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .topbar { padding: 0 16px; }
+      .main { padding: 20px 16px 40px; gap: 20px; }
+      .card-header { padding: 14px 16px; }
+      thead th, tbody td { padding: 10px 12px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Auth Gate ─────────────────────────────────────── -->
+<div id="gate">
+  <div class="gate-card">
+    <div class="logo">
+      <div class="logo-icon">🎓</div>
+      <div>
+        <div style="font-size:16px;font-weight:800;letter-spacing:-.3px">ENEM Master</div>
+        <div style="font-size:11px;color:var(--text-2);font-weight:500">Admin Dashboard</div>
+      </div>
+    </div>
+    <h1>Acesso Restrito</h1>
+    <p>Faça login com sua conta de administrador para continuar.</p>
+    <div class="field-wrap">
+      <label class="field-label" for="gate-email">Email</label>
+      <input id="gate-email" class="field-input" type="email" placeholder="admin@email.com" autocomplete="username" />
+    </div>
+    <div class="field-wrap">
+      <label class="field-label" for="gate-pass">Senha</label>
+      <input id="gate-pass" class="field-input" type="password" placeholder="••••••••" autocomplete="current-password" />
+    </div>
+    <button id="gate-btn" class="btn btn-primary" onclick="adminLogin()">
+      <span id="gate-btn-text">Entrar</span>
+    </button>
+    <p id="gate-error">E-mail ou senha incorretos.</p>
+  </div>
+</div>
+
+<!-- ── App Shell ─────────────────────────────────────── -->
+<div id="app">
+
+  <!-- Topbar -->
+  <header class="topbar">
+    <div class="logo">
+      <div class="logo-icon" style="width:30px;height:30px;font-size:15px;border-radius:8px">🎓</div>
+      <span>ENEM Master</span>
+      <span class="badge-admin">Admin</span>
+    </div>
+    <div class="user-chip">
+      <span class="dot"></span>
+      <span id="topbar-email">—</span>
+    </div>
+    <button class="btn btn-ghost btn-sm" onclick="adminLogout()">Sair</button>
+  </header>
+
+  <!-- Main -->
+  <main class="main">
+
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <span class="stat-label">Total Usuários</span>
+        <span class="stat-value" id="stat-total">—</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Usuários Premium</span>
+        <span class="stat-value amber" id="stat-premium">—</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Premium Ativo</span>
+        <span class="stat-value teal" id="stat-active">—</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Eventos Webhook</span>
+        <span class="stat-value green" id="stat-webhooks">—</span>
+      </div>
+    </div>
+
+    <!-- ── Seção: Ativar Manual ─────────────────────── -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <div class="icon green">⚡</div>
+          <div>
+            <h2>Ativar Premium Manual</h2>
+            <p>Conceder acesso premium diretamente por e-mail</p>
+          </div>
+        </div>
+      </div>
+      <div class="form-grid">
+        <div class="field-wrap" style="margin:0">
+          <label class="field-label" for="manual-email">E-mail do usuário</label>
+          <input id="manual-email" class="field-input" type="email" placeholder="usuario@email.com" />
+        </div>
+        <div class="field-wrap" style="margin:0">
+          <label class="field-label" for="manual-days">Dias</label>
+          <input id="manual-days" class="field-input" type="number" min="1" max="3650" placeholder="30" value="30" />
+        </div>
+        <div>
+          <button class="btn btn-success btn-activate" onclick="manualActivate()" id="btn-activate">
+            <span id="btn-activate-txt">✓ Ativar Premium</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Seção: Usuários Premium ──────────────────── -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <div class="icon amber">👑</div>
+          <div>
+            <h2>Usuários Premium</h2>
+            <p>Todos os usuários com plano premium ou free</p>
+          </div>
+        </div>
+        <button class="btn-refresh" id="btn-refresh-users" onclick="loadUsers()">
+          <svg class="refresh-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M23 4v6h-6M1 20v-6h6"/>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+          </svg>
+          Atualizar
+        </button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>E-mail</th>
+              <th>Nome</th>
+              <th>Plano</th>
+              <th>Premium até</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="users-tbody">
+            <tr class="loading-row"><td colspan="5"><span class="spinner"></span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div id="users-empty" class="empty-state" style="display:none">
+        <div class="emoji">👤</div>
+        <div>Nenhum usuário encontrado.</div>
+      </div>
+    </div>
+
+    <!-- ── Seção: Logs de Webhook ───────────────────── -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <div class="icon blue">🔗</div>
+          <div>
+            <h2>Logs de Webhook</h2>
+            <p>Últimos 50 eventos recebidos dos gateways de pagamento</p>
+          </div>
+        </div>
+        <button class="btn-refresh" id="btn-refresh-logs" onclick="loadWebhookLogs()">
+          <svg class="refresh-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M23 4v6h-6M1 20v-6h6"/>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+          </svg>
+          Atualizar
+        </button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Provider</th>
+              <th>Evento</th>
+              <th>Status</th>
+              <th>E-mail</th>
+              <th>Data</th>
+            </tr>
+          </thead>
+          <tbody id="logs-tbody">
+            <tr class="loading-row"><td colspan="5"><span class="spinner"></span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div id="logs-empty" class="empty-state" style="display:none">
+        <div class="emoji">📭</div>
+        <div>Nenhum log encontrado. A tabela <code style="font-size:12px;color:var(--teal)">webhook_logs</code> pode ainda não existir.</div>
+        <div style="margin-top:8px;font-size:12px">Execute o SQL de migração em <strong>SUPABASE_SETUP.md</strong> para criar a tabela.</div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Toast container -->
+<div id="toast-container"></div>
+
+<!-- Supabase CDN -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<!-- Config -->
+<script src="supabase-config.js"></script>
+<!-- Admin logic -->
+<script src="admin.js"></script>
+
+</body>
+</html>
