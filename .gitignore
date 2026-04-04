@@ -10,10 +10,13 @@ Thumbs.db
 .env.local
 .env.production
 .env.*.local
+.env.*
+!.env.example
 
 # Supabase credentials (não commitar — contém chaves reais)
 supabase-config.js
 migrate.js
+deploy-function.js
 
 # Editor files
 *.swp
