@@ -1413,27 +1413,15 @@
                     <!-- PIX -->
                     <div class="checkout-method-content" id="method-pix" role="tabpanel">
                         <div class="pix-card">
-                            <p class="pix-label">💚 Chave PIX — E-mail</p>
-                            <div class="pix-key-row">
-                                <span class="pix-key" id="pix-key-text">contato@enemmaster.com.br</span>
-                                <button class="outline-btn pix-copy-btn" onclick="copyPixKey()" aria-label="Copiar chave PIX">📋 Copiar</button>
-                            </div>
-                            <p id="pix-price-display" style="font-size:22px;font-weight:900;color:var(--teal);text-align:center;margin:8px 0 2px" aria-live="polite">R$ 19,90</p>
-                            <p style="font-size:11px;color:var(--text-muted);text-align:center;margin:0 0 10px">valor a transferir</p>
-                            <div class="pix-instruction">
-                                <strong style="font-size:12px;color:var(--text-secondary);display:block;margin-bottom:6px">Como pagar:</strong>
-                                1. Abra o app do seu banco<br>
-                                2. Escolha <strong>Pagar com PIX</strong><br>
-                                3. Cole a chave acima<br>
-                                4. Transfira o valor exato<br>
-                                5. Envie o comprovante pelo WhatsApp abaixo
-                            </div>
-                            <a class="checkout-whatsapp-btn" id="pix-whatsapp-btn"
-                               href="https://wa.me/5511999999999?text=Ol%C3%A1!%20Realizei%20o%20pagamento%20do%20ENEM%20Master%20Premium%20(R%24%2019%2C90)%20via%20PIX.%20Segue%20o%20comprovante."
-                               target="_blank" rel="noopener noreferrer" aria-label="Enviar comprovante no WhatsApp">
-                                📲 Enviar comprovante no WhatsApp
-                            </a>
-                            <button class="pix-verify-btn" onclick="verifyPixPayment()" style="margin-top:10px;">
+                            <p style="text-align:center;font-size:13px;color:var(--text-secondary);margin:0 0 10px;line-height:1.6">
+                                Você será redirecionado para o checkout seguro da <strong>Cakto</strong>.<br>
+                                O QR Code PIX é gerado automaticamente — é só escanear e pagar.
+                            </p>
+                            <p id="pix-price-display" style="font-size:26px;font-weight:900;color:var(--teal);text-align:center;margin:0 0 14px" aria-live="polite">R$ 19,90</p>
+                            <button class="cta-btn" onclick="goToCaktoCheckout('pix')">
+                                💚 Pagar com PIX →
+                            </button>
+                            <button class="outline-btn" id="pix-verify-btn" onclick="verifyPayment()" style="margin-top:10px;display:none;">
                                 ✅ Já paguei — verificar acesso
                             </button>
                             <p class="pix-hint">Acesso liberado automaticamente após confirmação · geralmente em minutos</p>
@@ -1444,20 +1432,19 @@
                     <div class="checkout-method-content" id="method-card" style="display:none" role="tabpanel">
                         <div class="card-checkout-info">
                             <p class="card-info-text">
-                                Você será redirecionado para uma página de pagamento <strong>100% segura</strong>.
-                                Aceitamos cartão de crédito, débito e PIX.
+                                Você será redirecionado para uma página de pagamento <strong>100% segura</strong> processada pela Cakto.
+                                Aceitamos cartão de crédito em até 12×.
                             </p>
                             <div class="card-logos" aria-label="Bandeiras aceitas">
                                 <span class="card-logo">VISA</span>
                                 <span class="card-logo">MASTER</span>
                                 <span class="card-logo">ELO</span>
-                                <span class="card-logo">PIX</span>
                                 <span class="card-logo">AMEX</span>
                             </div>
-                            <button class="cta-btn" id="card-checkout-btn" onclick="goToCardCheckout()">
+                            <button class="cta-btn" id="card-checkout-btn" onclick="goToCaktoCheckout('card')">
                                 💳 Pagar com Cartão →
                             </button>
-                            <button class="outline-btn" id="card-verify-btn" onclick="verifyCardPayment()" style="margin-top:10px;display:none;">
+                            <button class="outline-btn" id="card-verify-btn" onclick="verifyPayment()" style="margin-top:10px;display:none;">
                                 ✅ Já paguei — verificar acesso
                             </button>
                             <p class="card-info-sub">🔒 Criptografia SSL · Seus dados nunca são armazenados</p>
@@ -1481,7 +1468,7 @@
                                 🔑 Ativar Premium Agora
                             </button>
                             <p id="code-feedback" class="code-feedback" style="display:none" aria-live="polite"></p>
-                            <p class="code-hint" style="margin-top:8px">Não recebeu o código? <a class="link-inline" href="https://wa.me/5511999999999?text=N%C3%A3o%20recebi%20meu%20c%C3%B3digo%20de%20ativa%C3%A7%C3%A3o%20ENEM%20Master" target="_blank" rel="noopener noreferrer">Falar no WhatsApp</a></p>
+                            <p class="code-hint" style="margin-top:8px">Não recebeu o código? <button class="link-inline" onclick="navigate('support')">Falar com o suporte</button></p>
                         </div>
                     </div>
                 </div>
@@ -1574,12 +1561,19 @@
                         <li class="plan-feat ok">✅ Ranking nacional</li>
                         <li class="plan-feat ok">✅ Questões ENEM 2010–2024</li>
                         <li class="plan-feat ok">✅ Suporte prioritário</li>
+                        <li class="plan-feat section-divider" style="list-style:none;padding:6px 0 2px;font-size:11px;font-weight:700;color:var(--teal);letter-spacing:.5px;border-top:1px solid rgba(255,255,255,.08);margin-top:4px">📚 ABA CONTEÚDO</li>
+                        <li class="plan-feat ok">✅ <strong>Flashcards</strong> — domine cada tema com repetição espaçada</li>
+                        <li class="plan-feat ok">✅ <strong>Resumos</strong> — revisão rápida de todas as disciplinas</li>
+                        <li class="plan-feat ok">✅ <strong>Tutor IA</strong> — tire dúvidas 24h sobre qualquer assunto do ENEM</li>
+                        <li class="plan-feat ok">✅ <strong>Progresso detalhado</strong> — veja sua evolução por disciplina</li>
                     </ul>
 
                     <button class="cta-btn plans-cta" id="plans-subscribe-btn" onclick="openCheckoutFromPlans()" style="margin-top:14px">
                         Assinar Premium →
                     </button>
                     <p class="plans-guarantee">🔒 Pagamento seguro · Cancele quando quiser</p>
+                    <!-- Status premium — visibilidade controlada por renderPlans() -->
+                    <div id="plans-premium-msg" style="display:none;margin-top:12px"></div>
                 </div>
 
                 <p class="plans-footer-note">Ao assinar, você concorda com os
@@ -1587,6 +1581,14 @@
                     e nossa
                     <button class="link-inline" onclick="navigate('privacy')">Política de Privacidade</button>.
                 </p>
+
+                <!-- BOTÃO DE TESTE — remover antes de publicar em produção -->
+                <div style="margin-top:24px;padding:12px;border:2px dashed #f59e0b;border-radius:12px;text-align:center">
+                    <p style="font-size:12px;color:#92400e;font-weight:600;margin-bottom:8px">⚠️ SOMENTE PARA TESTES</p>
+                    <button class="outline-btn" onclick="ativarPremiumTeste()" style="background:#fef3c7;color:#92400e;border-color:#f59e0b">
+                        🧪 Ativar Premium (Teste)
+                    </button>
+                </div>
             </div>
         </section>
 
@@ -1994,7 +1996,18 @@
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
     <script src="api.js?v=5"></script>
     <script src="questions.js?v=4"></script>
-    <script src="app.js?v=12"></script>
+    <script src="quiz.js?v=1"></script>
+    <script src="ranking.js?v=1"></script>
+    <script src="notifications-ui.js?v=1"></script>
+    <script src="settings.js?v=1"></script>
+    <script src="profile.js?v=1"></script>
+    <script src="achievements.js?v=1"></script>
+    <script src="premium.js?v=1"></script>
+    <script src="redacao.js?v=1"></script>
+    <script src="onboarding.js?v=1"></script>
+    <script src="conteudo.js?v=1"></script>
+    <script src="social.js?v=1"></script>
+    <script src="app.js?v=14"></script>
     <script src="supabase-config.js?v=12"></script>
     <script>
         // Registrar Service Worker (PWA)

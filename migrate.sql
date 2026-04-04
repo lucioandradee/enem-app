@@ -76,3 +76,39 @@ FROM auth.users au
 WHERE u.id = au.id
   AND (u.name = 'Alex' OR u.name IS NULL OR u.name = '')
   AND au.raw_user_meta_data->>'full_name' IS NOT NULL;
+
+-- ─── 6. Corrigir "Function Search Path Mutable" em process_payment ────────────
+-- Aviso de segurança do Supabase: a função não tinha search_path fixo,
+-- o que permite ataques de injeção de search_path (OWASP: Injection).
+-- A correção declara o search_path como vazio, forçando qualificação
+-- explícita de todos os objetos do banco dentro da função.
+--
+-- Como recriar corretamente:
+-- 1. Acesse: https://supabase.com/dashboard/project/nkuiwdolkluetsadauwb/database/functions
+-- 2. Abra process_payment e copie a definição atual
+-- 3. Substitua pela versão abaixo (ajuste o corpo se necessário)
+
+CREATE OR REPLACE FUNCTION public.process_payment(
+    p_email  TEXT,
+    p_amount NUMERIC,
+    p_status TEXT,
+    p_method TEXT
+)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''          -- ← fixa o search_path (elimina o aviso)
+AS $$
+BEGIN
+    -- Ativa plano premium para o usuário com o e-mail informado
+    UPDATE public.users
+    SET plan            = 'premium',
+        plan_expires_at = NOW() + INTERVAL '30 days',
+        updated_at      = NOW()
+    WHERE email = p_email;
+END;
+$$;
+
+-- Revogar acesso público direto — apenas funções/triggers devem chamar
+REVOKE ALL ON FUNCTION public.process_payment(TEXT, NUMERIC, TEXT, TEXT) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.process_payment(TEXT, NUMERIC, TEXT, TEXT) TO authenticated;
