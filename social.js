@@ -1,21 +1,21 @@
 // =====================================================
-// COUNTDOWN ENEM 2026 + MOTIVA├ç├âO
+// COUNTDOWN ENEM 2026 + MOTIVAÇÃO
 // =====================================================
 let _countdownInterval = null;
 
 // Mensagens motivacionais baseadas nos dias restantes
 function _getCountdownMotivation(days) {
-    if (days > 300) return { msg: 'Comece agora ÔÇö cada dia conta! ­ƒÆ¬', color: '#00b4a6' };
-    if (days > 180) return { msg: 'Ainda h├í muito tempo ÔÇö foco na base! ­ƒôÜ', color: '#00b4a6' };
-    if (days > 90)  return { msg: 'Reta final chegando ÔÇö intensifique os estudos! ­ƒöÑ', color: '#fbbf24' };
-    if (days > 30)  return { msg: 'Um m├¬s! Revise os t├│picos mais dif├¡ceis ­ƒôØ', color: '#f97316' };
-    if (days > 7)   return { msg: 'Na ├║ltima semana! Priorize revis├úo e descanso ­ƒÿ┤', color: '#f87171' };
-    if (days > 0)   return { msg: `Faltam apenas ${days} dias ÔÇö voc├¬ chegou at├® aqui! ­ƒÜÇ`, color: '#f87171' };
-    return { msg: 'Boa prova! Voc├¬ se preparou ÔÇö confie em voc├¬! ­ƒîƒ', color: '#4ade80' };
+    if (days > 300) return { msg: 'Comece agora — cada dia conta! 💪', color: '#00b4a6' };
+    if (days > 180) return { msg: 'Ainda há muito tempo — foco na base! 📚', color: '#00b4a6' };
+    if (days > 90)  return { msg: 'Reta final chegando — intensifique os estudos! 🔥', color: '#fbbf24' };
+    if (days > 30)  return { msg: 'Um mês! Revise os tópicos mais difíceis 📝', color: '#f97316' };
+    if (days > 7)   return { msg: 'Na última semana! Priorize revisão e descanso 😴', color: '#f87171' };
+    if (days > 0)   return { msg: `Faltam apenas ${days} dias — você chegou até aqui! 🚀`, color: '#f87171' };
+    return { msg: 'Boa prova! Você se preparou — confie em você! 🌟', color: '#4ade80' };
 }
 
 function renderENEMCountdown() {
-    const ENEM_DATE = new Date('2026-11-08T13:00:00'); // 1┬║ dia ENEM 2026
+    const ENEM_DATE = new Date('2026-11-08T13:00:00'); // 1º dia ENEM 2026
     const widget    = document.getElementById('enem-countdown');
     if (!widget) return;
 
@@ -56,58 +56,58 @@ function renderENEMCountdown() {
 }
 
 // =====================================================
-// PUSH NOTIFICATIONS ÔÇö lembretes di├írios de estudo
+// PUSH NOTIFICATIONS — lembretes diários de estudo
 // =====================================================
 async function requestPushPermission() {
     const btn      = document.getElementById('push-notif-btn');
     const statusEl = document.getElementById('push-notif-status');
 
     if (!('Notification' in window)) {
-        if (statusEl) statusEl.textContent = 'Seu navegador n├úo suporta notifica├º├Áes';
+        if (statusEl) statusEl.textContent = 'Seu navegador não suporta notificações';
         return;
     }
     if (Notification.permission === 'granted') {
-        if (statusEl) statusEl.textContent = 'Ô£à Notifica├º├Áes j├í est├úo ativadas!';
-        if (btn) { btn.textContent = 'Ativado Ô£ô'; btn.disabled = true; }
+        if (statusEl) statusEl.textContent = '✅ Notificações já estão ativadas!';
+        if (btn) { btn.textContent = 'Ativado ✓'; btn.disabled = true; }
         _scheduleDailyStudyReminder();
         return;
     }
 
     const permission = await Notification.requestPermission();
     if (permission === 'granted') {
-        if (statusEl) statusEl.textContent = 'Ô£à Lembretes de estudo ativados com sucesso!';
-        if (btn) { btn.textContent = 'Ativado Ô£ô'; btn.disabled = true; }
+        if (statusEl) statusEl.textContent = '✅ Lembretes de estudo ativados com sucesso!';
+        if (btn) { btn.textContent = 'Ativado ✓'; btn.disabled = true; }
         state.user.pushEnabled = true;
         saveState();
-        _showQuickToast('­ƒöö Notifica├º├Áes push ativadas!');
+        _showQuickToast('🔔 Notificações push ativadas!');
         _scheduleDailyStudyReminder();
     } else {
-        if (statusEl) statusEl.textContent = 'Permiss├úo negada ÔÇö ative nas configura├º├Áes do navegador';
+        if (statusEl) statusEl.textContent = 'Permissão negada — ative nas configurações do navegador';
     }
 }
 
-// Agenda um lembrete di├írio de estudo para ├ás 20h
+// Agenda um lembrete diário de estudo para às 20h
 function _scheduleDailyStudyReminder() {
     if (Notification.permission !== 'granted') return;
 
     const todayKey = new Date().toDateString();
     const lastScheduled = localStorage.getItem('enem_push_scheduled');
-    if (lastScheduled === todayKey) return; // j├í agendou hoje
+    if (lastScheduled === todayKey) return; // já agendou hoje
 
     const now = new Date();
     const target = new Date();
     target.setHours(20, 0, 0, 0); // 20:00 local
 
-    // Se j├í passou das 20h, agenda para a hora + 1min (lembrete imediato de conquista di├íria)
+    // Se já passou das 20h, agenda para a hora + 1min (lembrete imediato de conquista diária)
     let delay = target - now;
     if (delay < 0) delay = 60 * 1000;
 
     const msgs = [
-        { title:'­ƒôÜ Hora de estudar!',           body:'Voc├¬ tem quest├Áes te esperando. Bora revisar antes de dormir?' },
-        { title:'­ƒöÑ Mantenha seu streak!',        body:'Estude pelo menos 10 minutos hoje para n├úo perder sua sequ├¬ncia!' },
-        { title:'­ƒÄ» ENEM cada vez mais perto!',   body:'Que tal um simulado r├ípido agora? Cada quest├úo conta!' },
-        { title:'ÔÜí Revise um flashcard hoje!',   body:'5 minutinhos de revis├úo no ENEM Master ÔÇö v├í l├í!' },
-        { title:'­ƒÅå Ranking espera por voc├¬!',    body:'Outros estudantes est├úo avan├ºando. Jogue algumas quest├Áes!' },
+        { title:'📚 Hora de estudar!',           body:'Você tem questões te esperando. Bora revisar antes de dormir?' },
+        { title:'🔥 Mantenha seu streak!',        body:'Estude pelo menos 10 minutos hoje para não perder sua sequência!' },
+        { title:'🎯 ENEM cada vez mais perto!',   body:'Que tal um simulado rápido agora? Cada questão conta!' },
+        { title:'⚡ Revise um flashcard hoje!',   body:'5 minutinhos de revisão no ENEM Master — vá lá!' },
+        { title:'🏆 Ranking espera por você!',    body:'Outros estudantes estão avançando. Jogue algumas questões!' },
     ];
     const msg = msgs[Math.floor(Math.random() * msgs.length)];
 
@@ -131,12 +131,12 @@ function _renderPushNotifCard() {
     if (!btn || !statusEl || !('Notification' in window)) return;
 
     if (Notification.permission === 'granted') {
-        statusEl.textContent = 'Ô£à Lembretes de estudo ativados!';
-        btn.textContent = 'Ativado Ô£ô';
+        statusEl.textContent = '✅ Lembretes de estudo ativados!';
+        btn.textContent = 'Ativado ✓';
         btn.disabled = true;
         _scheduleDailyStudyReminder(); // reagenda ao abrir o app
     } else if (Notification.permission === 'denied') {
-        statusEl.textContent = 'Bloqueado ÔÇö ative nas configura├º├Áes do navegador';
+        statusEl.textContent = 'Bloqueado — ative nas configurações do navegador';
         btn.textContent = 'Bloqueado';
         btn.disabled = true;
         btn.style.background = '#6b7280';
@@ -144,28 +144,28 @@ function _renderPushNotifCard() {
 }
 
 // =====================================================
-// SOCIAL ÔÇö CARDS VISUAIS PARA COMPARTILHAR
+// SOCIAL — CARDS VISUAIS PARA COMPARTILHAR
 // =====================================================
 let _shareData = {};
 
 function shareResult() {
-    const pct     = document.getElementById('result-pct')?.textContent || 'ÔÇö';
-    const correct = document.getElementById('res-correct')?.textContent || 'ÔÇö';
-    const wrong   = document.getElementById('res-wrong')?.textContent  || 'ÔÇö';
-    const xp      = document.getElementById('res-xp')?.textContent     || 'ÔÇö';
+    const pct     = document.getElementById('result-pct')?.textContent || '—';
+    const correct = document.getElementById('res-correct')?.textContent || '—';
+    const wrong   = document.getElementById('res-wrong')?.textContent  || '—';
+    const xp      = document.getElementById('res-xp')?.textContent     || '—';
     const tri     = document.getElementById('result-tri-score')?.textContent;
 
     const discLabels = {
-        misto:'Todas as ├üreas', humanas:'Ci├¬ncias Humanas', natureza:'Ci├¬ncias da Natureza',
-        linguagens:'Linguagens', matematica:'Matem├ítica', 'enem-dia1':'1┬║ Dia ENEM', 'enem-dia2':'2┬║ Dia ENEM',
+        misto:'Todas as Áreas', humanas:'Ciências Humanas', natureza:'Ciências da Natureza',
+        linguagens:'Linguagens', matematica:'Matemática', 'enem-dia1':'1º Dia ENEM', 'enem-dia2':'2º Dia ENEM',
     };
 
     _shareData = {
         pct,
         disc: discLabels[quizState.discipline] || 'Simulado',
-        stats: `${correct} acertos ┬À ${wrong} erros`,
+        stats: `${correct} acertos · ${wrong} erros`,
         xp,
-        tri: tri && tri !== 'ÔÇö' ? `Estimativa ENEM: ${tri}` : '',
+        tri: tri && tri !== '—' ? `Estimativa ENEM: ${tri}` : '',
         user: state.user.name || 'Estudante',
     };
 
@@ -188,12 +188,12 @@ function closeShareModal() {
 
 function shareViaWhatsapp() {
     const d = _shareData;
-    const text = `­ƒÄô *ENEM Master* ÔÇö Resultado do Simulado\n\n` +
-        `­ƒôè *${d.pct}* de acerto em ${d.disc}\n` +
-        `Ô£à ${d.stats}\n` +
-        `ÔÜí ${d.xp} XP ganhos\n` +
-        (d.tri ? `­ƒÄ» ${d.tri}\n` : '') +
-        `\nEstudando no ENEM Master ­ƒÜÇ ÔÇö enem.app`;
+    const text = `🎓 *ENEM Master* — Resultado do Simulado\n\n` +
+        `📊 *${d.pct}* de acerto em ${d.disc}\n` +
+        `✅ ${d.stats}\n` +
+        `⚡ ${d.xp} XP ganhos\n` +
+        (d.tri ? `🎯 ${d.tri}\n` : '') +
+        `\nEstudando no ENEM Master 🚀 — enem.app`;
 
     window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank', 'noopener,noreferrer');
     closeShareModal();
@@ -201,16 +201,16 @@ function shareViaWhatsapp() {
 
 function copyShareText() {
     const d = _shareData;
-    const text = `­ƒÄô ENEM Master ÔÇö ${d.disc}\n${d.pct} de acerto ┬À ${d.stats}\n${d.xp} XP` +
+    const text = `🎓 ENEM Master — ${d.disc}\n${d.pct} de acerto · ${d.stats}\n${d.xp} XP` +
         (d.tri ? `\n${d.tri}` : '') + `\nenem.app`;
 
     navigator.clipboard?.writeText(text).then(() => {
-        _showQuickToast('­ƒôï Texto copiado!');
+        _showQuickToast('📋 Texto copiado!');
         closeShareModal();
-    }).catch(() => _showQuickToast('ÔØî N├úo foi poss├¡vel copiar'));
+    }).catch(() => _showQuickToast('❌ Não foi possível copiar'));
 }
 
-// ÔöÇÔöÇ Gera├º├úo de card visual via Canvas ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+// ── Geração de card visual via Canvas ────────────────────────────────────────
 function downloadShareCard() {
     const d = _shareData;
     const canvas = document.createElement('canvas');
@@ -255,7 +255,7 @@ function downloadShareCard() {
     ctx.font = 'bold 36px Inter, Arial, sans-serif';
     ctx.fillStyle = '#00b4a6';
     ctx.textAlign = 'center';
-    ctx.fillText('­ƒÄô ENEM MASTER', W/2, 100);
+    ctx.fillText('🎓 ENEM MASTER', W/2, 100);
 
     // Linha separadora
     ctx.strokeStyle = 'rgba(0,180,166,0.3)';
@@ -266,7 +266,7 @@ function downloadShareCard() {
     ctx.font = 'bold 200px Inter, Arial, sans-serif';
     ctx.fillStyle = '#00e5d4';
     ctx.textAlign = 'center';
-    ctx.fillText(d.pct || 'ÔÇö', W/2, 380);
+    ctx.fillText(d.pct || '—', W/2, 380);
 
     // DE ACERTO
     ctx.font = 'bold 32px Inter, Arial, sans-serif';
@@ -300,7 +300,7 @@ function downloadShareCard() {
     ctx.stroke();
     ctx.font = 'bold 32px Inter, Arial, sans-serif';
     ctx.fillStyle = '#00b4a6';
-    ctx.fillText(`ÔÜí +${d.xp} XP`, W/2, xpY);
+    ctx.fillText(`⚡ +${d.xp} XP`, W/2, xpY);
 
     // Linha separadora inferior
     const lineY = xpY + 80;
@@ -308,7 +308,7 @@ function downloadShareCard() {
     ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(120, lineY); ctx.lineTo(W-120, lineY); ctx.stroke();
 
-    // Nome do usu├írio
+    // Nome do usuário
     ctx.font = 'bold 36px Inter, Arial, sans-serif';
     ctx.fillStyle = 'rgba(255,255,255,0.9)';
     ctx.textAlign = 'left';
@@ -332,10 +332,10 @@ function downloadShareCard() {
         link.download = 'enem-master-resultado.png';
         link.href = canvas.toDataURL('image/png');
         link.click();
-        _showQuickToast('­ƒû╝´©Å Card salvo como imagem!');
+        _showQuickToast('🖼️ Card salvo como imagem!');
         closeShareModal();
     } catch {
-        _showQuickToast('ÔØî N├úo foi poss├¡vel salvar a imagem');
+        _showQuickToast('❌ Não foi possível salvar a imagem');
     }
 }
 
@@ -348,29 +348,29 @@ async function shareCardNative() {
     const d = _shareData;
     try {
         await navigator.share({
-            title: 'ENEM Master ÔÇö Resultado',
-            text:  `­ƒÄô ${d.pct} de acerto em ${d.disc}! ${d.stats} ┬À +${d.xp} XP\nenem.app`,
+            title: 'ENEM Master — Resultado',
+            text:  `🎓 ${d.pct} de acerto em ${d.disc}! ${d.stats} · +${d.xp} XP\nenem.app`,
             url:   'https://enem.app',
         });
         closeShareModal();
     } catch {
-        // usu├írio cancelou ÔÇö sem toast
+        // usuário cancelou — sem toast
     }
 }
 
 // Compartilhar para o Instagram (stories): salva como imagem
 function shareToInstagram() {
     downloadShareCard();
-    _showQuickToast('­ƒô© Salve a imagem e abra o Instagram para postar nos Stories!');
+    _showQuickToast('📸 Salve a imagem e abra o Instagram para postar nos Stories!');
 }
 
-// Compartilha stats do perfil (streak, XP, n├¡vel)
+// Compartilha stats do perfil (streak, XP, nível)
 function shareProfile() {
     const { name, xp, level, streak } = state.user;
     _shareData = {
-        pct:    `N├¡vel ${level || 1}`,
+        pct:    `Nível ${level || 1}`,
         disc:   'Perfil de Estudante',
-        stats:  `${xp || 0} XP ┬À ­ƒöÑ ${streak || 0} dias seguidos`,
+        stats:  `${xp || 0} XP · 🔥 ${streak || 0} dias seguidos`,
         xp:     xp || 0,
         tri:    '',
         user:   name || 'Estudante',
@@ -379,7 +379,7 @@ function shareProfile() {
     const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
     set('sc-pct',   `LVL ${level || 1}`);
     set('sc-disc',  'Perfil de Estudante');
-    set('sc-stats', `${xp || 0} XP ┬À ­ƒöÑ ${streak || 0} dias`);
+    set('sc-stats', `${xp || 0} XP · 🔥 ${streak || 0} dias`);
     set('sc-xp',    `+${xp || 0} XP acumulados`);
     set('sc-tri',   '');
     set('sc-user',  name || 'Estudante');
@@ -388,7 +388,7 @@ function shareProfile() {
     if (overlay) overlay.style.display = 'flex';
 }
 
-// Helper: ret├óngulo arredondado no canvas
+// Helper: retângulo arredondado no canvas
 function _roundRect(ctx, x, y, w, h, radius) {
     ctx.beginPath();
     ctx.moveTo(x + radius, y);

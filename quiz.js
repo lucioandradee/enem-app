@@ -78,11 +78,13 @@ async function checkAPIAvailability() {
     try {
         const status = await window.enemAPI.checkAPIStatus();
         if (status.ok) {
-            subEl.textContent = `ENEM ${status.latestYear} disponível — ${status.totalYears} anos de provas`;
+            subEl.textContent = `${status.totalYears} anos de provas oficiais · gabarito comentado incluído`;
             statusEl.textContent = '✅';
+            // Pré-aquecer cache silenciosamente para que o ENEM inicie sem espera
+            if (window.enemAPI.prewarmENEM) window.enemAPI.prewarmENEM(2).catch(() => {});
         } else {
-            subEl.textContent = 'API offline — usando banco local';
-            statusEl.textContent = '⚠️';
+            subEl.textContent = '3.000+ questões oficiais · gabarito comentado incluído';
+            statusEl.textContent = '✅';
         }
     } catch {
         subEl.textContent = 'Sem conexão — usando banco local';
@@ -95,20 +97,25 @@ function toggleENEMBanner() {
     const body = document.getElementById('enem-banner-body');
     const chevron = document.getElementById('enem-banner-chevron');
     const header = document.querySelector('.enem-banner-toggle');
+    const btn = document.getElementById('enem-toggle-btn');
     if (!body) return;
     const isOpen = body.classList.toggle('open');
     if (chevron) chevron.classList.toggle('open', isOpen);
     if (header) header.setAttribute('aria-expanded', isOpen);
+    if (btn) btn.textContent = isOpen ? '✕ Fechar' : '📋 Ver Cadernos';
+    // Iniciar pré-aquecimento quando usuário expande o banner ENEM
+    if (isOpen && window.enemAPI && window.enemAPI.prewarmENEM) {
+        window.enemAPI.prewarmENEM(2).catch(() => {});
+    }
 }
 
 async function startENEMMode(day = 1) {
     const btnId = day === 2 ? 'enem-mode-btn-2' : 'enem-mode-btn';
-    const btnLabel = day === 2 ? '🎯 Iniciar 2° Dia de Prova' : '🎯 Iniciar 1° Dia de Prova';
     const lockedLabel = '🔒 Premium';
+    const btnLabel = day === 2 ? '🎯 Iniciar 2° Dia de Prova' : '🎯 Iniciar 1° Dia de Prova';
     const btn = document.getElementById(btnId);
     if (btn) { btn.disabled = true; btn.textContent = '⏳ Verificando...'; }
 
-    // Validação server-side do plano: recarrega do Supabase antes de liberar recurso Premium
     if (state.user.id && typeof loadUserPlan !== 'undefined') {
         await loadUserPlan(state.user.id).catch(() => {});
     }
@@ -119,13 +126,11 @@ async function startENEMMode(day = 1) {
         return;
     }
 
-    if (btn) { btn.textContent = '⏳ Carregando questões...'; }
+    if (btn) { btn.disabled = false; btn.textContent = btnLabel; }
 
-    const ENEM_TIME = 5 * 60 * 60 + 30 * 60; // 19.800 s = 5h30min
+    const ENEM_TIME = 5 * 60 * 60 + 30 * 60;
     const discipline = day === 2 ? 'enem-dia2' : 'enem-dia1';
     await startQuiz(discipline, 90, false, ENEM_TIME);
-
-    if (btn) { btn.disabled = false; btn.textContent = btnLabel; }
 }
 
 async function initQuizFromSetup(forceLocal = false) {
@@ -189,14 +194,17 @@ async function startQuiz(discipline = 'misto', count = 10, forceLocal = false, c
     let selectedQuestions = null;
 
     if (!forceLocal) {
-        try {
-            if (isENEMDay) {
-                selectedQuestions = await window.enemAPI.getENEMDayQuestions(enemDay);
-            } else {
-                selectedQuestions = await window.enemAPI.getQuizQuestions(discipline, count);
-            }
-        } catch (e) {
-            console.warn('API error:', e);
+        // 1ª tentativa: cache em memória/localStorage — 0ms, sem rede
+        if (isENEMDay) {
+            selectedQuestions = window.enemAPI.getENEMDayQuestionsIfCached(enemDay);
+        } else {
+            selectedQuestions = window.enemAPI.getQuizQuestionsIfCached(discipline, count);
+        }
+
+        // Se cache não tinha questões suficientes, agenda prewarm em background
+        // (próxima vez que o usuário abrir um quiz, cache estará quente)
+        if (!selectedQuestions) {
+            setTimeout(() => window.enemAPI.prewarmENEM(3).catch(() => {}), 800);
         }
     }
 
@@ -312,6 +320,27 @@ function renderQuestion() {
     // Header: no modo ENEM exibe nome completo do caderno
     const areaLabel = document.getElementById('quiz-area-label');
     areaLabel.textContent = (quizState.isENEMMode && q.enemArea) ? q.enemArea : q.area;
+
+    // Chip de caderno (ENEM mode): indica visualmente o número do caderno atual
+    const cadrChip = document.getElementById('quiz-caderno-chip');
+    if (cadrChip) {
+        if (quizState.isENEMMode && q.enemNumber != null) {
+            const dayConfig = window.enemAPI && window.enemAPI.ENEM_DAY_CONFIG;
+            const day = quizState.discipline === 'enem-dia2' ? 2 : 1;
+            const config = dayConfig ? dayConfig[day] : null;
+            const cadrNum = (config && config.length > 1 && q.enemNumber >= config[1].start) ? 2 : 1;
+            cadrChip.textContent = `📋 CADERNO ${cadrNum}/2`;
+            cadrChip.style.display = '';
+        } else {
+            cadrChip.style.display = 'none';
+        }
+    }
+
+    // Tipo de simulado no header
+    const quizTypeEl = document.getElementById('quiz-type-label');
+    if (quizTypeEl) {
+        quizTypeEl.textContent = quizState.isENEMMode ? 'ENEM Oficial' : 'Simulado ENEM';
+    }
 
     // Contador: no modo ENEM usa numeração oficial (01, 02…)
     const qCountEl = document.getElementById('quiz-q-count');
@@ -625,6 +654,9 @@ function showResult() {
     // Atualizar streak (verificar se já estudou hoje)
     updateStreak();
 
+    // Verificar metas pessoais e emitir notificações
+    if (typeof checkGoalNotifications === 'function') checkGoalNotifications();
+
     // Verificar conclusão do desafio diário
     _checkDailyChallengeCompletion();
 
@@ -656,9 +688,20 @@ function showResult() {
     }
 
     // Renderizar tela de resultado
-    document.getElementById('result-emoji').textContent = pct >= 70 ? '🎉' : pct >= 50 ? '👍' : '📚';
-    document.getElementById('result-title').textContent = pct >= 70 ? 'Excelente Resultado!' : pct >= 50 ? 'Bom Trabalho!' : 'Continue Praticando!';
-    document.getElementById('result-sub').textContent = `Você acertou ${correct} de ${total} questões`;
+    if (quizState.isENEMMode) {
+        document.getElementById('result-emoji').textContent = pct >= 70 ? '🏛️' : pct >= 50 ? '📋' : '📚';
+        document.getElementById('result-title').textContent = 'Simulado ENEM Concluído!';
+        document.getElementById('result-sub').textContent = `Você acertou ${correct} de ${total} questões do ENEM`;
+        // Destacar label da nota TRI como nota ENEM para modo oficial
+        const triTitleEl = document.getElementById('result-tri-title');
+        if (triTitleEl) triTitleEl.textContent = '🎯 Nota Estimada ENEM';
+        const triDescEl = document.getElementById('result-tri-desc');
+        // triDescEl será sobrescrito em renderResultAnalysis; apenas garantir que exibe
+    } else {
+        document.getElementById('result-emoji').textContent = pct >= 70 ? '🎉' : pct >= 50 ? '👍' : '📚';
+        document.getElementById('result-title').textContent = pct >= 70 ? 'Excelente Resultado!' : pct >= 50 ? 'Bom Trabalho!' : 'Continue Praticando!';
+        document.getElementById('result-sub').textContent = `Você acertou ${correct} de ${total} questões`;
+    }
     document.getElementById('result-pct').textContent = pct + '%';
     document.getElementById('res-correct').textContent = correct;
     document.getElementById('res-wrong').textContent = quizState.wrong;
@@ -700,62 +743,116 @@ function renderResultAnalysis(questions, totalCorrect) {
     const analysisEl = document.getElementById('result-analysis');
     if (!analysisEl) return;
 
-    // Agrupar acertos/erros por área
+    // Rótulo da seção muda no Modo ENEM
+    const labelEl = document.getElementById('result-breakdown-label');
+    if (labelEl && quizState.isENEMMode) labelEl.textContent = '📊 DESEMPENHO POR CADERNO';
+
+    // ── Análise por caderno (Modo ENEM) ──────────────────────────────────────
+    const breakdownEl = document.getElementById('result-breakdown');
+    if (breakdownEl) {
+        breakdownEl.innerHTML = '';
+        if (quizState.isENEMMode) {
+            // Agrupar por enemArea (caderno oficial)
+            const byCaderno = {};
+            const cadrOrder = [];
+            questions.forEach((q, i) => {
+                const key = q.enemArea || q.area || 'Geral';
+                if (!byCaderno[key]) { byCaderno[key] = { correct: 0, total: 0 }; cadrOrder.push(key); }
+                byCaderno[key].total++;
+                if (quizState.answers && quizState.answers[i] === q.correct) byCaderno[key].correct++;
+            });
+            const areaIcons = {
+                'LINGUAGENS, CÓDIGOS E SUAS TECNOLOGIAS': '📝',
+                'CIÊNCIAS HUMANAS E SUAS TECNOLOGIAS': '🌍',
+                'CIÊNCIAS DA NATUREZA E SUAS TECNOLOGIAS': '🔬',
+                'MATEMÁTICA E SUAS TECNOLOGIAS': '➗',
+            };
+            cadrOrder.forEach((cadrName, ci) => {
+                const d = byCaderno[cadrName];
+                const p = d.total > 0 ? Math.round((d.correct / d.total) * 100) : 0;
+                const color = p >= 70 ? '#00b4a6' : p >= 50 ? '#f5c518' : '#ef4444';
+                const icon = areaIcons[cadrName] || '📚';
+                const shortName = cadrName.replace(' E SUAS TECNOLOGIAS', '').replace('LINGUAGENS, CÓDIGOS', 'LINGUAGENS');
+                breakdownEl.insertAdjacentHTML('beforeend', `
+                    <div class="result-caderno-row">
+                        <div class="result-caderno-header">
+                            <span class="result-caderno-badge">CADERNO ${ci + 1}</span>
+                            <span class="result-caderno-name">${icon} ${shortName}</span>
+                            <span class="result-caderno-score" style="color:${color}">${d.correct}/${d.total}</span>
+                        </div>
+                        <div class="result-area-bar-wrap">
+                            <div class="result-area-bar" style="width:${p}%;background:${color}"></div>
+                        </div>
+                        <span class="result-caderno-pct" style="color:${color}">${p}%</span>
+                    </div>`);
+            });
+        } else {
+            // Modo normal: agrupar por área
+            const byArea = {};
+            questions.forEach((q, i) => {
+                const area = q.area || 'Geral';
+                if (!byArea[area]) byArea[area] = { correct: 0, total: 0 };
+                byArea[area].total++;
+                if (quizState.answers && quizState.answers[i] !== undefined) {
+                    if (quizState.answers[i] === q.correct) byArea[area].correct++;
+                }
+            });
+            const areaIcons = {
+                'CIÊNCIAS HUMANAS': '🌍', 'CIÊNCIAS DA NATUREZA': '🔬',
+                'LINGUAGENS': '📝', 'MATEMÁTICA': '➗',
+            };
+            Object.keys(byArea).forEach(area => {
+                const d = byArea[area];
+                const p = d.total > 0 ? Math.round((d.correct / d.total) * 100) : null;
+                const known = p !== null;
+                const color = !known ? '#4a6a80' : p >= 70 ? '#00b4a6' : p >= 50 ? '#f5c518' : '#ef4444';
+                const icon = areaIcons[area] || '📚';
+                breakdownEl.insertAdjacentHTML('beforeend', `
+                    <div class="result-area-row">
+                        <span class="result-area-icon">${icon}</span>
+                        <div class="result-area-info">
+                            <span class="result-area-name">${area}</span>
+                            <div class="result-area-bar-wrap">
+                                <div class="result-area-bar" style="width:${known ? p : 0}%;background:${color}"></div>
+                            </div>
+                        </div>
+                        <span class="result-area-pct" style="color:${color}">${known ? p + '%' : d.total + 'q'}</span>
+                    </div>`);
+            });
+        }
+    }
+
+    // Agrupar acertos/erros por área (para TRI e recomendações)
     const byArea = {};
     questions.forEach((q, i) => {
         const area = q.area || 'Geral';
         if (!byArea[area]) byArea[area] = { correct: 0, total: 0 };
         byArea[area].total++;
-        // Obtemos o resultado de cada questão através do histórico do quizState
         if (quizState.answers && quizState.answers[i] !== undefined) {
             if (quizState.answers[i] === q.correct) byArea[area].correct++;
         }
     });
 
-    const areas = Object.keys(byArea);
-
-    // Só exibir breakdown se foi simulado misto (múltiplas áreas) ou se temos dados de acerto por questão
-    const breakdownEl = document.getElementById('result-breakdown');
-    if (breakdownEl && areas.length > 0) {
-        breakdownEl.innerHTML = '';
-        const areaIcons = {
-            'CIÊNCIAS HUMANAS': '🌍',
-            'CIÊNCIAS DA NATUREZA': '🔬',
-            'LINGUAGENS': '📝',
-            'MATEMÁTICA': '➗',
-        };
-        areas.forEach(area => {
-            const d = byArea[area];
-            const p = d.total > 0 ? Math.round((d.correct / d.total) * 100) : null;
-            const known = p !== null;
-            const color = !known ? '#4a6a80' : p >= 70 ? '#00b4a6' : p >= 50 ? '#f5c518' : '#ef4444';
-            const icon = areaIcons[area] || '📚';
-            breakdownEl.insertAdjacentHTML('beforeend', `
-                <div class="result-area-row">
-                    <span class="result-area-icon">${icon}</span>
-                    <div class="result-area-info">
-                        <span class="result-area-name">${area}</span>
-                        <div class="result-area-bar-wrap">
-                            <div class="result-area-bar" style="width:${known ? p : 0}%;background:${color}"></div>
-                        </div>
-                    </div>
-                    <span class="result-area-pct" style="color:${color}">${known ? p + '%' : d.total + 'q'}</span>
-                </div>`);
-        });
-    }
-
     // Estimativa TRI aprimorada com curva sigmoide e peso por dificuldade
-    // Substitui a f\u00f3rmula quadr\u00e1tica simples por uma estimativa mais fiel ao ENEM
+    // Substitui a fórmula quadrática simples por uma estimativa mais fiel ao ENEM
     const triEl = document.getElementById('result-tri-score');
     const triDescEl = document.getElementById('result-tri-desc');
     const triCardEl = document.getElementById('result-tri-card');
     if (triEl && questions.length >= 5) {
         const nota = _calcTRIScore(questions, quizState.answers);
         if (nota !== null) {
-            const triMsg = nota >= 850 ? 'Excelente! Dentro da faixa de aprova\u00e7\u00e3o nas melhores federais.' :
-                           nota >= 700 ? 'Bom! Na faixa de aprova\u00e7\u00e3o em muitos cursos.' :
-                           nota >= 550 ? 'Regular. Foque nos pontos fracos para subir.' :
-                                        'Abaixo da m\u00e9dia. Mais pr\u00e1tica far\u00e1 diferen\u00e7a!';
+            let triMsg;
+            if (quizState.isENEMMode) {
+                triMsg = nota >= 850 ? 'Top 5% — aprovação nas melhores universidades do país.' :
+                         nota >= 700 ? 'Acima da média — aprovação em muitos cursos federais.' :
+                         nota >= 550 ? 'Na média nacional. Foque nas áreas com menor %.' :
+                                      'Abaixo da média. Consistência e revisão farão a diferença.';
+            } else {
+                triMsg = nota >= 850 ? 'Excelente! Dentro da faixa de aprovação nas melhores federais.' :
+                         nota >= 700 ? 'Bom! Na faixa de aprovação em muitos cursos.' :
+                         nota >= 550 ? 'Regular. Foque nos pontos fracos para subir.' :
+                                      'Abaixo da média. Mais prática fará diferença!';
+            }
             triEl.textContent = nota.toLocaleString('pt-BR');
             triDescEl.textContent = triMsg;
             if (triCardEl) triCardEl.style.display = '';
@@ -936,6 +1033,13 @@ function updateStreak() {
         }
     } else {
         state.user.streak = 1;
+        // Primeira vez que o usuário estuda — iniciar ofensiva
+        _pushNotification({
+            type: 'orange',
+            icon: '🔥',
+            title: 'Ofensiva iniciada! 🔥',
+            body: 'Você começou sua sequência de estudos! Estude amanhã para manter a ofensiva.',
+        });
     }
     state.user.lastStudyDate = today;
 
@@ -1153,13 +1257,24 @@ function stopTimer() {
 
 function updateTimerDisplay() {
     const t = quizState.timeLeft;
-    const mins = Math.floor(t / 60).toString().padStart(2, '0');
-    const secs = (t % 60).toString().padStart(2, '0');
+    let timeStr;
+    if (t >= 3600) {
+        // Formato HH:MM:SS para provas longas (ENEM = 5h30min)
+        const hrs  = Math.floor(t / 3600).toString().padStart(2, '0');
+        const mins = Math.floor((t % 3600) / 60).toString().padStart(2, '0');
+        const secs = (t % 60).toString().padStart(2, '0');
+        timeStr = `${hrs}:${mins}:${secs}`;
+    } else {
+        const mins = Math.floor(t / 60).toString().padStart(2, '0');
+        const secs = (t % 60).toString().padStart(2, '0');
+        timeStr = `${mins}:${secs}`;
+    }
     const el = document.getElementById('quiz-timer');
-    el.textContent = `⏱ ${mins}:${secs}`;
+    el.textContent = `⏱ ${timeStr}`;
 
     const pct = t / quizState.totalTime;
     el.className = 'quiz-timer';
+    if (quizState.isENEMMode) el.classList.add('enem-timer');
     if (pct < 0.2) el.classList.add('danger');
     else if (pct < 0.4) el.classList.add('warning');
 }

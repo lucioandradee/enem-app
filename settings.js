@@ -5,7 +5,7 @@ function renderSettings() {
     const s = state.user;
     const safeName = (s.name && s.name.trim()) ? s.name : 'Estudante';
 
-    // Cabe├ºalho
+    // Cabeçalho
     const avatarEl = document.getElementById('settings-avatar');
     const nameEl   = document.getElementById('settings-name');
     const goalEl   = document.getElementById('settings-goal');
@@ -13,7 +13,7 @@ function renderSettings() {
     if (nameEl)   nameEl.textContent   = safeName;
     if (goalEl)   goalEl.textContent   = s.goal ? `Meta: ${s.goal}` : '';
 
-    // Campos edit├íveis
+    // Campos editáveis
     const inputName   = document.getElementById('input-name');
     const inputEmail  = document.getElementById('input-email');
     const inputSchool = document.getElementById('input-school');
@@ -45,7 +45,7 @@ function saveSettings() {
     // Visual feedback
     const btn = document.getElementById('save-settings-btn');
     const original = btn.textContent;
-    btn.textContent = 'Ô£à Salvo com sucesso!';
+    btn.textContent = '✅ Salvo com sucesso!';
     btn.style.background = 'linear-gradient(135deg, #22c55e, #16a34a)';
     setTimeout(() => {
         btn.textContent = original;
@@ -55,7 +55,7 @@ function saveSettings() {
 
 async function logout() {
     if (confirm('Tem certeza que deseja sair da conta?')) {
-        // Apagar a sess├úo Supabase do localStorage (todas as chaves sb-*)
+        // Apagar a sessão Supabase do localStorage (todas as chaves sb-*)
         Object.keys(localStorage)
             .filter(k => k.startsWith('sb-'))
             .forEach(k => localStorage.removeItem(k));
@@ -86,7 +86,7 @@ async function handleLogin() {
     errorEl.textContent = '';
 
     if (!email.includes('@')) {
-        errorEl.textContent = 'Digite um e-mail v├ílido.';
+        errorEl.textContent = 'Digite um e-mail válido.';
         document.getElementById('login-email').focus();
         return;
     }
@@ -110,12 +110,12 @@ async function handleLogin() {
             state.user.id = result.user.id;
             state.user.email = email;
             state.onboardingDone = true;
-            state.currentScreen = 'login'; // garante que navigate('home') n├úo seja bloqueado
+            state.currentScreen = 'login'; // garante que navigate('home') não seja bloqueado
             saveState();
-            // Persistir/atualizar registro do usu├írio no banco ao logar
+            // Persistir/atualizar registro do usuário no banco ao logar
             if (typeof saveUserData !== 'undefined') await saveUserData(result.user.id).catch(() => {});
             if (typeof startSyncLoop !== 'undefined') startSyncLoop(result.user.id);
-            // Solicitar permiss├úo de notifica├º├Áes push ap├│s login
+            // Solicitar permissão de notificações push após login
             _requestPushPermission();
             // Rastrear login
             _trackEvent('login', { method: 'email' });
@@ -125,15 +125,15 @@ async function handleLogin() {
             if (msg.includes('Invalid login') || msg.includes('invalid_credentials')) {
                 errorEl.textContent = 'E-mail ou senha incorretos.';
             } else if (msg.includes('Email not confirmed')) {
-                errorEl.innerHTML = 'E-mail n├úo confirmado. Verifique sua caixa de entrada ou <a href="#" onclick="handleForgotPassword();return false;" style="color:var(--accent);text-decoration:underline">reenviar confirma├º├úo</a>.';
+                errorEl.innerHTML = 'E-mail não confirmado. Verifique sua caixa de entrada ou <a href="#" onclick="handleForgotPassword();return false;" style="color:var(--accent);text-decoration:underline">reenviar confirmação</a>.';
             } else {
                 errorEl.textContent = 'Erro ao entrar. Tente novamente.';
             }
         }
     } catch (e) {
-        errorEl.textContent = 'Sem conex├úo. Verifique sua internet.';
+        errorEl.textContent = 'Sem conexão. Verifique sua internet.';
     } finally {
-        btn.textContent = 'Entrar ÔåÆ';
+        btn.textContent = 'Entrar →';
         btn.disabled = false;
     }
 }

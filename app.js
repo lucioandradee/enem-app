@@ -1,6 +1,6 @@
-/* =====================================================
-   ENEM MASTER â€” App Logic (app.js)
-   SPA Router â€¢ Quiz Engine â€¢ Gamification â€¢ Data
+﻿/* =====================================================
+   ENEM MASTER — App Logic (app.js)
+   SPA Router • Quiz Engine • Gamification • Data
    ===================================================== */
 
 'use strict';
@@ -9,21 +9,21 @@
 // STATE
 // =====================================================
 // =====================================================
-// PLANOS â€” configuraÃ§Ã£o central
+// PLANOS — configuração central
 // =====================================================
 const PLANS = {
     free: {
-        name: 'GrÃ¡tis',
-        dailyLimit: 10,          // questÃµes por dia
-        maxQuizSize: 10,         // tamanho mÃ¡ximo do simulado
+        name: 'Grátis',
+        dailyLimit: 10,          // questões por dia
+        maxQuizSize: 10,         // tamanho máximo do simulado
         features: {
             enemMode:  false,    // simulado ENEM completo (90q / 5h30min)
-            redacaoIA: false,    // correÃ§Ã£o de redaÃ§Ã£o por IA
-            largeQuiz: false,    // simulados acima de 10 questÃµes
+            redacaoIA: false,    // correção de redação por IA
+            largeQuiz: false,    // simulados acima de 10 questões
         },
     },
     premium: {
-        name: 'Premium ðŸ‘‘',
+        name: 'Premium 👑',
         dailyLimit: Infinity,
         maxQuizSize: 90,
         features: {
@@ -34,32 +34,32 @@ const PLANS = {
     },
 };
 
-// â”€â”€â”€ MENSAGENS DE PAYWALL â€” Ãºnica fonte de verdade para cada bloqueio â”€â”€â”€â”€â”€â”€â”€
+// ─── MENSAGENS DE PAYWALL — única fonte de verdade para cada bloqueio ───────
 const PAYWALL_MESSAGES = {
     enemMode: {
-        title: 'Modo ENEM Ã© exclusivo Premium ðŸ‘‘',
-        body:  '90 questÃµes com o tempo real do ENEM (5h30min). Assine o Premium e simule a prova completa!',
+        title: 'Modo ENEM é exclusivo Premium 👑',
+        body:  '90 questões com o tempo real do ENEM (5h30min). Assine o Premium e simule a prova completa!',
     },
     redacaoIA: {
-        title: 'RedaÃ§Ã£o com IA Ã© exclusivo Premium ðŸ‘‘',
-        body:  'Corrija sua redaÃ§Ã£o nas 5 competÃªncias com anÃ¡lise detalhada por IA. Assine o Premium para desbloquear!',
+        title: 'Redação com IA é exclusivo Premium 👑',
+        body:  'Corrija sua redação nas 5 competências com análise detalhada por IA. Assine o Premium para desbloquear!',
     },
     largeQuiz: {
-        title: 'Simulados maiores sÃ£o exclusivos Premium ðŸ‘‘',
-        body:  'No plano GrÃ¡tis o limite Ã© 10 questÃµes por simulado. Assine o Premium para simulados de atÃ© 90 questÃµes!',
+        title: 'Simulados maiores são exclusivos Premium 👑',
+        body:  'No plano Grátis o limite é 10 questões por simulado. Assine o Premium para simulados de até 90 questões!',
     },
     dailyLimit: {
-        title: 'Limite diÃ¡rio atingido ðŸ”’',
-        body:  'VocÃª usou todas as 10 questÃµes grÃ¡tis de hoje. Volte amanhÃ£ ou assine o Premium para estudar sem limites!',
+        title: 'Limite diário atingido 🔒',
+        body:  'Você usou todas as 10 questões grátis de hoje. Volte amanhã ou assine o Premium para estudar sem limites!',
     },
 };
 
-// Retorna o plano atual do usuÃ¡rio
+// Retorna o plano atual do usuário
 function getUserPlan() {
     return (state.user && state.user.plan === 'premium') ? PLANS.premium : PLANS.free;
 }
 
-// Retorna quantas questÃµes o usuÃ¡rio ainda pode responder hoje
+// Retorna quantas questões o usuário ainda pode responder hoje
 function getRemainingQuestions() {
     const plan = getUserPlan();
     if (plan.dailyLimit === Infinity) return Infinity;
@@ -70,7 +70,7 @@ function getRemainingQuestions() {
     return Math.max(0, plan.dailyLimit - countToday);
 }
 
-// Registra N questÃµes respondidas hoje
+// Registra N questões respondidas hoje
 function registerQuestionsUsed(n) {
     const today = new Date().toDateString();
     if (state.user.questoesHojeData !== today) {
@@ -80,9 +80,67 @@ function registerQuestionsUsed(n) {
     state.user.questoesHoje = (state.user.questoesHoje || 0) + n;
 }
 
-// â”€â”€ HELPERS DE PLANO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// =====================================================
+// NOTIFICAÇÕES DE METAS PESSOAIS
+// =====================================================
+function checkGoalNotifications() {
+    const today = new Date();
+    const todayStr = today.toDateString();
 
-/** Retorna true se o usuÃ¡rio tem plano Premium */
+    // --- Meta: Questões de Hoje ---
+    const dailyGoal = state.user.dailyGoal || 10;
+    const doneDiario = state.user.questoesHojeData === todayStr ? (state.user.questoesHoje || 0) : 0;
+    if (doneDiario >= dailyGoal && state.user.goalNotifDateDaily !== todayStr) {
+        state.user.goalNotifDateDaily = todayStr;
+        _pushNotification({
+            type: 'green',
+            icon: '✅',
+            title: 'Meta diária concluída! 🎯',
+            body: `Você respondeu ${doneDiario} questões hoje. Parabéns, meta batida!`,
+            ctaScreen: 'quiz',
+            cta: 'Continuar praticando',
+        });
+    }
+
+    // --- Meta: Simulados Semanais ---
+    const weeklyGoal = state.user.weeklyGoal || 3;
+    const dayOfWeek = today.getDay();
+    const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    const weekStart = new Date(today);
+    weekStart.setDate(today.getDate() + mondayOffset);
+    weekStart.setHours(0, 0, 0, 0);
+    const weekStartStr = weekStart.toDateString();
+    const weeklyDone = (state.quizHistory || []).filter(h => h.date && new Date(h.date) >= weekStart).length;
+    if (weeklyDone >= weeklyGoal && state.user.goalNotifWeekStart !== weekStartStr) {
+        state.user.goalNotifWeekStart = weekStartStr;
+        _pushNotification({
+            type: 'blue',
+            icon: '📋',
+            title: 'Meta semanal de simulados! 🏆',
+            body: `Você completou ${weeklyDone} simulados esta semana. Meta da semana atingida!`,
+            ctaScreen: 'quiz',
+            cta: 'Fazer mais simulados',
+        });
+    }
+
+    // --- Alerta de Domingo: meta semanal não concluída ---
+    if (today.getDay() === 0 && weeklyDone < weeklyGoal && state.user.goalNotifSundayDate !== todayStr) {
+        state.user.goalNotifSundayDate = todayStr;
+        const faltam = weeklyGoal - weeklyDone;
+        _pushNotification({
+            type: 'orange',
+            icon: '⏰',
+            title: 'Último dia para bater a meta! ⚠️',
+            body: `Hoje é domingo! Falt${faltam === 1 ? 'a' : 'am'} ${faltam} simulado${faltam === 1 ? '' : 's'} para atingir sua meta semanal.`,
+            ctaScreen: 'quiz',
+            cta: 'Fazer simulado',
+        });
+    }
+}
+
+// ── HELPERS DE PLANO ──────────────────────────────────────────────────────────
+
+/** Retorna true se o usuário tem plano Premium */
 function isPremium() {
     return getUserPlan() === PLANS.premium;
 }
@@ -98,7 +156,7 @@ function showFeaturePaywall(feature) {
     showPaywall(msg.title, msg.body);
 }
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────────────────────────────────────────
 
 const defaultState = {
     user: {
@@ -108,11 +166,15 @@ const defaultState = {
         level: 1,
         xp: 0,
         streak: 0,
-        goal: 'Rumo Ã  Federal ðŸš€',
+        goal: 'Rumo à Federal 🚀',
         plan: 'free',           // 'free' | 'premium'
-        questoesHoje: 0,        // questÃµes respondidas hoje (controle de limite)
+        questoesHoje: 0,        // questões respondidas hoje (controle de limite)
         questoesHojeData: '',   // data do contador (ex: "Mon Mar 23 2026")
-        lastStudyDate: '',      // data do Ãºltimo estudo, para cÃ¡lculo de streak
+        lastStudyDate: '',      // data do último estudo, para cálculo de streak
+        avatarColor: '',        // gradiente CSS escolhido pelo usuário
+        goalNotifDateDaily: '', // última data em que notificou meta diária concluída
+        goalNotifWeekStart: '', // segunda-feira da semana em que notificou meta semanal
+        goalNotifSundayDate: '', // data do domingo em que enviou alerta de meta não concluída
     },
     progress: {
         humanas: 0, natureza: 0, linguagens: 0, matematica: 0,
@@ -126,10 +188,10 @@ const defaultState = {
             matematica: { correct: 0, total: 0 },
         },
     },
-    quizHistory: [],    // [{ date, discipline, correct, total, xp }] â€” cap: 200
-    wrongAnswers: [],   // [{ question, userAnswer, correctAnswer, date }] â€” cap: 300
+    quizHistory: [],    // [{ date, discipline, correct, total, xp }] — cap: 200
+    wrongAnswers: [],   // [{ question, userAnswer, correctAnswer, date }] — cap: 300
     onboardingDone: false,
-    weakSubjects: [],   // disciplinas prioritÃ¡rias do onboarding
+    weakSubjects: [],   // disciplinas prioritárias do onboarding
     dailyChallenge: null, // { date, discipline, count, done, xp }
     badges: {
         ofensiva: [],
@@ -137,11 +199,11 @@ const defaultState = {
         maratonista: [],
     },
     notifications: [
-        { id: 1, type: 'blue', icon: 'ðŸ“', title: 'Simulado disponÃ­vel', body: 'Novo Simulado: CiÃªncias da Natureza jÃ¡ estÃ¡ aberto para vocÃª. Prepare-se e comece agora!', time: '6h', unread: true, cta: 'Fazer Simulado', ctaScreen: 'quiz-setup', date: 'today' },
-        { id: 2, type: 'orange', icon: 'ðŸ“Š', title: 'Ranking Semanal', body: 'Eita! JoÃ£o Silva ultrapassou vocÃª no Ranking. Volte aos estudos para recuperar sua posiÃ§Ã£o!', time: '1h', unread: true, date: 'today' },
-        { id: 3, type: 'purple', icon: 'ðŸ…', title: 'Nova Conquista', body: 'ParabÃ©ns! VocÃª desbloqueou o badge "Mestre da RedaÃ§Ã£o" por 5 notas acima de 900.', time: '3h', unread: true, date: 'today' },
-        { id: 4, type: 'green', icon: 'ðŸ“…', title: 'Lembrete de Estudo', body: 'Hora do Estudo: Seguindo seu cronograma, agora Ã© vez de MatemÃ¡tica (FunÃ§Ãµes).', time: '6h', unread: false, date: 'today' },
-        { id: 5, type: 'yellow', icon: 'ðŸ”¥', title: 'Maratona 7 Dias', body: 'IncrÃ­vel! VocÃª manteve seu ritmo de estudos por uma semana inteira.', time: 'Ontem', unread: false, date: 'yesterday' },
+        { id: 1, type: 'blue', icon: '📝', title: 'Simulado disponível', body: 'Novo Simulado: Ciências da Natureza já está aberto para você. Prepare-se e comece agora!', time: '6h', unread: true, cta: 'Fazer Simulado', ctaScreen: 'quiz-setup', date: 'today' },
+        { id: 2, type: 'orange', icon: '📊', title: 'Ranking Semanal', body: 'Eita! João Silva ultrapassou você no Ranking. Volte aos estudos para recuperar sua posição!', time: '1h', unread: true, date: 'today' },
+        { id: 3, type: 'purple', icon: '🏅', title: 'Nova Conquista', body: 'Parabéns! Você desbloqueou o badge "Mestre da Redação" por 5 notas acima de 900.', time: '3h', unread: true, date: 'today' },
+        { id: 4, type: 'green', icon: '📅', title: 'Lembrete de Estudo', body: 'Hora do Estudo: Seguindo seu cronograma, agora é vez de Matemática (Funções).', time: '6h', unread: false, date: 'today' },
+        { id: 5, type: 'yellow', icon: '🔥', title: 'Maratona 7 Dias', body: 'Incrível! Você manteve seu ritmo de estudos por uma semana inteira.', time: 'Ontem', unread: false, date: 'yesterday' },
     ],
     currentScreen: 'home',
 };
@@ -150,7 +212,7 @@ const defaultState = {
 // SCHEMA MIGRATION
 // =====================================================
 // Preenche campos ausentes no state salvo sem apagar dados existentes.
-// Incrementar STATE_VERSION sempre que adicionar campos obrigatÃ³rios.
+// Incrementar STATE_VERSION sempre que adicionar campos obrigatórios.
 const STATE_VERSION = 2;
 
 function _migrateState(saved) {
@@ -200,7 +262,7 @@ try {
     const _saved = localStorage.getItem('enem_state');
     state = _saved ? _migrateState(JSON.parse(_saved)) : null;
 } catch (e) {
-    console.warn('âš ï¸ Estado corrompido, resetando:', e);
+    console.warn('⚠️ Estado corrompido, resetando:', e);
     localStorage.removeItem('enem_state');
     state = null;
 }
@@ -210,10 +272,10 @@ const QUIZ_HISTORY_LIMIT  = 200; // entradas mais recentes mantidas
 const WRONG_ANSWERS_LIMIT = 300; // erros mais recentes mantidos
 
 // =====================================================
-// TRI â€” TEORIA DE RESPOSTA AO ITEM (estimativa)
+// TRI — TEORIA DE RESPOSTA AO ITEM (estimativa)
 // =====================================================
 // Calcula estimativa de nota ENEM usando curva sigmoide ponderada por dificuldade.
-// QuestÃµes com Ã­ndice maior na prova recebem peso maior (itens mais difÃ­ceis).
+// Questões com índice maior na prova recebem peso maior (itens mais difíceis).
 function _calcTRIScore(questions, answers) {
     if (!questions || questions.length < 3) return null;
 
@@ -221,21 +283,21 @@ function _calcTRIScore(questions, answers) {
     let totalWeight = 0;
 
     questions.forEach((q, i) => {
-        // Estimar dificuldade pelo Ã­ndice da questÃ£o na prova ENEM
-        // QuestÃµes 1-30 = mais fÃ¡ceis (0.3), 31-60 = mÃ©dias (0.5), 61-90 = mais difÃ­ceis (0.8)
-        let difficulty = 0.5; // padrÃ£o = mÃ©dia
+        // Estimar dificuldade pelo índice da questão na prova ENEM
+        // Questões 1-30 = mais fáceis (0.3), 31-60 = médias (0.5), 61-90 = mais difíceis (0.8)
+        let difficulty = 0.5; // padrão = média
         if (q.apiFormat && q.index) {
             const pos = ((q.index - 1) % 90) / 89; // 0..1 dentro do caderno
             difficulty = 0.25 + pos * 0.55;         // 0.25..0.80
         }
-        const weight = 0.5 + difficulty; // peso: 0.75 (fÃ¡cil) a 1.30 (difÃ­cil)
+        const weight = 0.5 + difficulty; // peso: 0.75 (fácil) a 1.30 (difícil)
         totalWeight += weight;
         if (answers && answers[i] === q.correct) weightedCorrect += weight;
     });
 
     const weightedPct = totalWeight > 0 ? weightedCorrect / totalWeight : 0;
 
-    // Curva sigmoide: 0%â†’320  25%â†’450  50%â†’600  75%â†’760  100%â†’980
+    // Curva sigmoide: 0%→320  25%→450  50%→600  75%→760  100%→980
     const sigmoid = 1 / (1 + Math.exp(-9 * (weightedPct - 0.5)));
     const nota = Math.round((300 + sigmoid * 700) / 10) * 10;
     return Math.min(1000, Math.max(300, nota));
@@ -253,7 +315,7 @@ function saveState() {
         localStorage.setItem('enem_state', JSON.stringify(state));
     } catch (e) {
         // localStorage cheio: remover cache da API e tentar novamente
-        console.warn('âš ï¸ localStorage cheio, limpando cache da API...', e);
+        console.warn('⚠️ localStorage cheio, limpando cache da API...', e);
         Object.keys(localStorage)
             .filter(k => k.startsWith('enem_q_') || k.startsWith('enem_exams'))
             .forEach(k => localStorage.removeItem(k));
@@ -262,64 +324,64 @@ function saveState() {
 }
 
 // =====================================================
-// QUESTION BANK (questÃµes carregadas de questions.js)
+// QUESTION BANK (questões carregadas de questions.js)
 // =====================================================
-// O banco de questÃµes fica em window.LOCAL_QUESTIONS (questions.js)
-// que Ã© carregado antes de app.js no index.html
+// O banco de questões fica em window.LOCAL_QUESTIONS (questions.js)
+// que é carregado antes de app.js no index.html
 
 // =====================================================
-// AGENTE DE RECOMENDAÃ‡ÃƒO
+// AGENTE DE RECOMENDAÇÃO
 // =====================================================
 // Analisa stats por disciplina + weakSubjects do onboarding e gera
-// recomendaÃ§Ãµes priorizadas de tÃ³picos a estudar.
+// recomendações priorizadas de tópicos a estudar.
 const _REC_TOPICS = {
     humanas: [
-        'GeopolÃ­tica e GlobalizaÃ§Ã£o',
+        'Geopolítica e Globalização',
         'Era Vargas e Estado Novo',
         'Filosofia: Iluminismo e Contratualismo',
         'Ditadura Militar no Brasil',
-        'RevoluÃ§Ã£o Industrial e Neocolonialismo',
+        'Revolução Industrial e Neocolonialismo',
         'Direitos Humanos e Cidadania',
         'Segunda Guerra Mundial',
         'Guerra Fria e Mundo Bipolar',
     ],
     natureza: [
-        'GenÃ©tica e Heredograma',
-        'TermodinÃ¢mica â€” 1Âª e 2Âª Lei',
-        'FunÃ§Ãµes OrgÃ¢nicas e ReaÃ§Ãµes',
+        'Genética e Heredograma',
+        'Termodinâmica — 1ª e 2ª Lei',
+        'Funções Orgânicas e Reações',
         'Ecologia: Cadeias e Biomas',
-        'EletrodinÃ¢mica e Circuitos',
-        'Ãcidos, Bases e pH',
-        'EvoluÃ§Ã£o e SeleÃ§Ã£o Natural',
-        'OndulatÃ³ria e Ã“ptica GeomÃ©trica',
+        'Eletrodinâmica e Circuitos',
+        'Ácidos, Bases e pH',
+        'Evolução e Seleção Natural',
+        'Ondulatória e Óptica Geométrica',
     ],
     linguagens: [
-        'InterpretaÃ§Ã£o de Texto e InferÃªncia',
+        'Interpretação de Texto e Inferência',
         'Figuras de Linguagem',
-        'AnÃ¡lise de Charge, Tirinha e Publicidade',
-        'RegÃªncia Verbal e Nominal',
-        'ConcordÃ¢ncia Verbal e Nominal',
-        'RedaÃ§Ã£o: Estrutura Dissertativo-Argumentativa',
-        'Espanhol BÃ¡sico â€” InterpretaÃ§Ã£o',
+        'Análise de Charge, Tirinha e Publicidade',
+        'Regência Verbal e Nominal',
+        'Concordância Verbal e Nominal',
+        'Redação: Estrutura Dissertativo-Argumentativa',
+        'Espanhol Básico — Interpretação',
         'Literatura: Modernismo Brasileiro',
     ],
     matematica: [
-        'FunÃ§Ãµes do 1Âº e 2Âº Grau â€” Bhaskara',
-        'Geometria Plana: Ãreas e PerÃ­metros',
+        'Funções do 1º e 2º Grau — Bhaskara',
+        'Geometria Plana: Áreas e Perímetros',
         'Probabilidade e Contagem',
-        'Porcentagem, Juros e Regra de TrÃªs',
-        'Geometria Espacial: Volume e PlanificaÃ§Ã£o',
-        'Trigonometria no TriÃ¢ngulo RetÃ¢ngulo',
-        'ProgressÃ£o AritmÃ©tica e GeomÃ©trica',
-        'EstatÃ­stica: MÃ©dia e Desvio PadrÃ£o',
+        'Porcentagem, Juros e Regra de Três',
+        'Geometria Espacial: Volume e Planificação',
+        'Trigonometria no Triângulo Retângulo',
+        'Progressão Aritmética e Geométrica',
+        'Estatística: Média e Desvio Padrão',
     ],
 };
 
 function _getRecommendationAgent() {
     const stats = state.progress.stats;
     const DISCS = ['humanas', 'natureza', 'linguagens', 'matematica'];
-    const DISC_LABELS = { humanas: 'Humanas', natureza: 'CiÃªncias da Natureza', linguagens: 'Linguagens', matematica: 'MatemÃ¡tica' };
-    const DISC_ICONS  = { humanas: 'ðŸŒ', natureza: 'ðŸ”¬', linguagens: 'ðŸ“', matematica: 'âž—' };
+    const DISC_LABELS = { humanas: 'Humanas', natureza: 'Ciências da Natureza', linguagens: 'Linguagens', matematica: 'Matemática' };
+    const DISC_ICONS  = { humanas: '🌍', natureza: '🔬', linguagens: '📝', matematica: '➗' };
 
     // Calcular performance por disciplina
     const perfData = DISCS.map(disc => {
@@ -337,7 +399,7 @@ function _getRecommendationAgent() {
         return a.pct - b.pct;
     });
 
-    // Gerar sugestÃµes de tÃ³pico (rotaÃ§Ã£o diÃ¡ria determinÃ­stica)
+    // Gerar sugestões de tópico (rotação diária determinística)
     const dateSeed = parseInt(new Date().toISOString().slice(0, 10).replace(/-/g, ''), 10);
 
     return ranked.slice(0, 3).map((item, idx) => {
@@ -348,13 +410,13 @@ function _getRecommendationAgent() {
         let reason;
         if (pct !== null) {
             const pctStr = Math.round(pct * 100) + '%';
-            reason = pct < 0.4 ? `${pctStr} de acerto â€” revise este tÃ³pico` :
-                     pct < 0.7 ? `${pctStr} de acerto â€” ainda dÃ¡ para melhorar` :
-                                 `${pctStr} de acerto â€” continue assim!`;
+            reason = pct < 0.4 ? `${pctStr} de acerto — revise este tópico` :
+                     pct < 0.7 ? `${pctStr} de acerto — ainda dá para melhorar` :
+                                 `${pctStr} de acerto — continue assim!`;
         } else if (weakFromOnboarding) {
-            reason = 'Ãrea indicada nas suas preferÃªncias';
+            reason = 'Área indicada nas suas preferências';
         } else {
-            reason = 'Nenhuma questÃ£o ainda â€” Ã³timo ponto de partida!';
+            reason = 'Nenhuma questão ainda — ótimo ponto de partida!';
         }
 
         return {
@@ -369,20 +431,20 @@ function _getRecommendationAgent() {
 }
 let quizState = {
     questions: [],
-    answers: [],        // Ã­ndice da alternativa escolhida por questÃ£o
+    answers: [],        // índice da alternativa escolhida por questão
     currentIndex: 0,
     selectedOption: null,
     confirmed: false,
     correct: 0,
     wrong: 0,
-    combo: 0,           // acertos consecutivos na sessÃ£o atual
-    maxCombo: 0,        // maior combo da sessÃ£o
+    combo: 0,           // acertos consecutivos na sessão atual
+    maxCombo: 0,        // maior combo da sessão
     bonusXp: 0,         // XP extra ganho por combos e streak
     timerInterval: null,
     timeLeft: 0,
     totalTime: 0,
     discipline: 'misto',
-    startTime: null,   // timestamp real de inÃ­cio da sessÃ£o
+    startTime: null,   // timestamp real de início da sessão
 };
 
 // =====================================================
@@ -422,7 +484,7 @@ function _savePausedQuizSnapshot() {
 }
 
 function onPauseQuizRequest() {
-    // Congela o timer enquanto o modal estÃ¡ aberto
+    // Congela o timer enquanto o modal está aberto
     stopTimer();
     const overlay = document.getElementById('pause-quiz-overlay');
     if (overlay) overlay.style.display = 'flex';
@@ -431,7 +493,7 @@ function onPauseQuizRequest() {
 function closePauseModal() {
     const overlay = document.getElementById('pause-quiz-overlay');
     if (overlay) overlay.style.display = 'none';
-    // Retoma o timer se o quiz ainda estÃ¡ ativo
+    // Retoma o timer se o quiz ainda está ativo
     if (quizState.questions.length > 0 && quizState.timeLeft > 0) {
         startTimer();
     }
@@ -480,7 +542,7 @@ async function resumeQuiz() {
     quizState.selectedOption = null;
     quizState.confirmed     = false;
 
-    _clearPausedQuiz(); // limpa apÃ³s restaurar para nÃ£o reaparecer
+    _clearPausedQuiz(); // limpa após restaurar para não reaparecer
 
     renderQuestion();
     startTimer();
@@ -495,13 +557,13 @@ function _renderPausedQuizBanner(target) {
     if (!snapshot) { el.innerHTML = ''; el.style.display = 'none'; return; }
 
     const discLabels = {
-        'misto':        'Todas as Ãreas',
-        'enem-dia1':    '1Âº Dia â€” ENEM',
-        'enem-dia2':    '2Âº Dia â€” ENEM',
-        'humanas':      'CiÃªncias Humanas',
-        'natureza':     'CiÃªncias da Natureza',
+        'misto':        'Todas as Áreas',
+        'enem-dia1':    '1º Dia — ENEM',
+        'enem-dia2':    '2º Dia — ENEM',
+        'humanas':      'Ciências Humanas',
+        'natureza':     'Ciências da Natureza',
         'linguagens':   'Linguagens',
-        'matematica':   'MatemÃ¡tica',
+        'matematica':   'Matemática',
     };
     const discLabel = discLabels[snapshot.discipline] || 'Simulado';
     const total     = snapshot.questions.length;
@@ -513,37 +575,37 @@ function _renderPausedQuizBanner(target) {
     const diffMs    = Date.now() - new Date(snapshot.pausedAt).getTime();
     const diffMins  = Math.round(diffMs / 60000);
     const timeAgo   = diffMins < 1 ? 'agora mesmo' :
-                      diffMins < 60 ? `hÃ¡ ${diffMins} min` :
-                      `hÃ¡ ${Math.floor(diffMins / 60)}h`;
+                      diffMins < 60 ? `há ${diffMins} min` :
+                      `há ${Math.floor(diffMins / 60)}h`;
 
     el.style.display = '';
     el.innerHTML = `
         <div class="paused-quiz-card">
             <div class="pq-top">
-                <span class="pq-icon">â¸ï¸</span>
+                <span class="pq-icon">⏸️</span>
                 <div class="pq-info">
                     <p class="pq-title">Simulado pausado</p>
-                    <p class="pq-meta">${discLabel} Â· Q.${done + 1}/${total} Â· ${timeAgo}</p>
+                    <p class="pq-meta">${discLabel} · Q.${done + 1}/${total} · ${timeAgo}</p>
                 </div>
                 <span class="pq-timer">${mins}:${secs}</span>
             </div>
             <div class="pq-bar-wrap"><div class="pq-bar" style="width:${pct}%"></div></div>
-            <button class="cta-btn pq-btn" onclick="resumeQuiz()">â–¶ Continuar de onde parei</button>
+            <button class="cta-btn pq-btn" onclick="resumeQuiz()">▶ Continuar de onde parei</button>
         </div>
     `;
 }
 
 // =====================================================
-// SYNC DE UI â€” PLANO
+// SYNC DE UI — PLANO
 // =====================================================
 /**
- * Atualiza toda a UI dependente do plano em um Ãºnico passo.
- * Deve ser chamada sempre que state.user.plan mudar â€” login, sync loop,
- * polling de pagamento ou resgate de cÃ³digo de ativaÃ§Ã£o.
+ * Atualiza toda a UI dependente do plano em um único passo.
+ * Deve ser chamada sempre que state.user.plan mudar — login, sync loop,
+ * polling de pagamento ou resgate de código de ativação.
  */
 function _syncPlanUI() {
     const prem = isPremium();
-    const planLabel = prem ? 'Premium ðŸ‘‘' : 'GrÃ¡tis';
+    const planLabel = prem ? 'Premium 👑' : 'Grátis';
 
     // 1. Badges declarativos no HTML (elementos com atributo data-plan-badge)
     document.querySelectorAll('[data-plan-badge]').forEach(el => {
@@ -552,14 +614,14 @@ function _syncPlanUI() {
         el.classList.toggle('badge-free', !prem);
     });
 
-    // 2. BotÃµes ENEM Mode â€” exibe cadeado quando bloqueado
+    // 2. Botões ENEM Mode — exibe cadeado quando bloqueado
     const enemBtn = document.getElementById('enem-mode-btn');
     if (enemBtn && !enemBtn.disabled) {
-        enemBtn.textContent = prem ? 'ðŸŽ¯ Iniciar 1Â° Dia de Prova' : 'ðŸ”’ Premium';
+        enemBtn.textContent = prem ? '🎯 Iniciar 1° Dia de Prova' : '🔒 Premium';
     }
     const enemBtn2 = document.getElementById('enem-mode-btn-2');
     if (enemBtn2 && !enemBtn2.disabled) {
-        enemBtn2.textContent = prem ? 'ðŸŽ¯ Iniciar 2Â° Dia de Prova' : 'ðŸ”’ Premium';
+        enemBtn2.textContent = prem ? '🎯 Iniciar 2° Dia de Prova' : '🔒 Premium';
     }
 
     // 3. Re-renderizar telas que dependem fortemente do plano
@@ -601,6 +663,12 @@ const screensWithNav = ['home', 'ranking', 'achievements', 'profile', 'conteudo'
 const screensWithoutNav = ['quiz', 'quiz-setup', 'result', 'settings', 'support', 'notifications', 'review', 'onboarding', 'login', 'plans', 'checkout', 'privacy', 'terms', 'redacao', 'analise'];
 
 function navigate(screenName) {
+    // Conteúdo é exclusivo para usuários Premium
+    if (screenName === 'conteudo' && !isPremium()) {
+        showPaywall('Conteúdo Premium 🔒', 'Flashcards, Resumos, Tutor IA e Progresso são exclusivos do plano Premium. Assine e domine o ENEM!');
+        return;
+    }
+
     const currentId = screenMap[state.currentScreen];
     const nextId = screenMap[screenName];
     if (!nextId || currentId === nextId) return;
@@ -646,6 +714,10 @@ function updateNavActive(screenName) {
     const navMap = { home: 'nav-home', ranking: 'nav-ranking', conteudo: 'nav-conteudo', profile: 'nav-profile' };
     const activeBtn = document.getElementById(navMap[screenName]);
     if (activeBtn) activeBtn.classList.add('active');
+
+    // Mostra badge 👑 no botão Conteúdo para usuários free
+    const conteudoBadge = document.getElementById('nav-conteudo-badge');
+    if (conteudoBadge) conteudoBadge.style.display = isPremium() ? 'none' : 'flex';
 }
 
 function renderScreen(screenName) {
@@ -666,7 +738,7 @@ function renderScreen(screenName) {
             default: break;
         }
     } catch (e) {
-        console.error('âŒ renderScreen [' + screenName + ']:', e);
+        console.error('❌ renderScreen [' + screenName + ']:', e);
         _showQuickToast('Erro ao carregar tela: ' + e.message);
     }
 }
@@ -679,7 +751,7 @@ function renderDashboard() {
     const s = state.user;
     const safeName = (s.name && s.name.trim()) ? s.name : 'Estudante';
 
-    // SaudaÃ§Ã£o baseada no horÃ¡rio
+    // Saudação baseada no horário
     const hour = new Date().getHours();
     const greeting = hour < 12 ? 'Bom dia' : hour < 18 ? 'Boa tarde' : 'Boa noite';
     const greetingEl = document.querySelector('.greeting');
@@ -690,7 +762,7 @@ function renderDashboard() {
         nameSpan.textContent = safeName.split(' ')[0];
         greetingEl.appendChild(document.createTextNode(`${greeting}, `));
         greetingEl.appendChild(nameSpan);
-        greetingEl.appendChild(document.createTextNode('! ðŸ‘‹'));
+        greetingEl.appendChild(document.createTextNode('! 👋'));
     }
 
     const goalEl = document.querySelector('.goal-text');
@@ -700,6 +772,12 @@ function renderDashboard() {
     document.getElementById('dash-xp').textContent = s.xp.toLocaleString('pt-BR');
     document.getElementById('dash-streak').textContent = s.streak + ' Dias';
     document.getElementById('dash-avatar').textContent = safeName[0].toUpperCase();
+    if (s.avatarColor) {
+        document.querySelectorAll('.avatar, .podium-avatar').forEach(el => {
+            el.style.background = s.avatarColor;
+            el.style.borderColor = 'transparent';
+        });
+    }
 
     // Unread notifications count
     const notifs = state.notifications || [];
@@ -716,29 +794,29 @@ function renderDashboard() {
     renderDailyChallenge();
     renderENEMCountdown();
 
-    // PosiÃ§Ã£o no ranking global (assÃ­ncrono, nÃ£o bloqueia a UI)
+    // Posição no ranking global (assíncrono, não bloqueia a UI)
     const rankEl = document.getElementById('dash-ranking');
     if (rankEl && typeof getGlobalTop !== 'undefined') {
         getGlobalTop().then(res => {
             if (!res.success || !res.data || res.data.length === 0) return;
             const myIdx = res.data.findIndex(i => state.user.id && i.id === state.user.id);
             if (myIdx === -1) {
-                // Estimar posiÃ§Ã£o pelo XP
+                // Estimar posição pelo XP
                 const above = res.data.filter(i => (i.xp || 0) > (state.user.xp || 0)).length;
                 const total = res.data.length;
                 const pct = Math.round(((total - above) / total) * 100);
-                rankEl.textContent = pct >= 90 ? 'Top 10%' : pct >= 75 ? 'Top 25%' : pct >= 50 ? 'Top 50%' : `${above + 1}Âº`;
+                rankEl.textContent = pct >= 90 ? 'Top 10%' : pct >= 75 ? 'Top 25%' : pct >= 50 ? 'Top 50%' : `${above + 1}º`;
             } else {
                 const pos = myIdx + 1;
                 const total = res.data.length;
-                rankEl.textContent = pos <= 3 ? `${pos}Âº ðŸ†` : `${pos}Âº de ${total}`;
+                rankEl.textContent = pos <= 3 ? `${pos}º 🏆` : `${pos}º de ${total}`;
             }
         }).catch(() => {});
     }
 }
 
 function renderWeekRow() {
-    const days = ['SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÃB'];
+    const days = ['SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB'];
     const today = new Date();
     const dayOfWeek = today.getDay(); // 0=Sun
     const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
@@ -762,7 +840,7 @@ function renderWeekRow() {
     }
 }
 
-// Generar cronograma dinÃ¢mico baseado no desempenho
+// Generar cronograma dinâmico baseado no desempenho
 // Pseudo-random simples com seed (evita embaralhar com Math.random() a cada render)
 function _seededRandom(seed) {
     let s = seed;
@@ -778,12 +856,12 @@ function showActivityHistory() {
     if (!overlay || !body) return;
 
     const history = (state.quizHistory || []).slice().reverse();
-    const discIcons = { humanas: 'ðŸŒ', natureza: 'ðŸ”¬', linguagens: 'ðŸ“', matematica: 'âž—', misto: 'ðŸŽ¯' };
-    const discNames = { humanas: 'Humanas', natureza: 'CiÃªncias da Natureza', linguagens: 'Linguagens', matematica: 'MatemÃ¡tica', misto: 'Misto' };
+    const discIcons = { humanas: '🌍', natureza: '🔬', linguagens: '📝', matematica: '➗', misto: '🎯' };
+    const discNames = { humanas: 'Humanas', natureza: 'Ciências da Natureza', linguagens: 'Linguagens', matematica: 'Matemática', misto: 'Misto' };
     const discColors = { humanas: 'var(--teal)', natureza: '#a78bfa', linguagens: 'var(--gold)', matematica: 'var(--teal)', misto: '#a78bfa' };
 
     if (history.length === 0) {
-        body.innerHTML = '<p style="color:var(--text-secondary);text-align:center;padding:32px 0">Nenhum simulado ainda. Comece a estudar! ðŸš€</p>';
+        body.innerHTML = '<p style="color:var(--text-secondary);text-align:center;padding:32px 0">Nenhum simulado ainda. Comece a estudar! 🚀</p>';
     } else {
         body.innerHTML = history.map(h => {
             const date = h.date ? new Date(h.date) : null;
@@ -791,7 +869,7 @@ function showActivityHistory() {
             const timeStr = date ? date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '';
             const pct = h.pct ?? Math.round(((h.correct || 0) / Math.max(h.total || 1, 1)) * 100);
             const color = pct >= 70 ? '#22c55e' : pct >= 50 ? 'var(--orange)' : 'var(--red)';
-            const icon = discIcons[h.discipline] || 'ðŸŽ¯';
+            const icon = discIcons[h.discipline] || '🎯';
             const name = discNames[h.discipline] || (h.discipline || '').toUpperCase();
             return `
             <div class="ws-row">
@@ -800,7 +878,7 @@ function showActivityHistory() {
                 </div>
                 <div class="ws-info">
                     <span class="ws-area" style="color:${discColors[h.discipline] || 'var(--teal)'}">${name.toUpperCase()}</span>
-                    <span class="ws-topic">${h.count || h.total || '?'} questÃµes Â· ${dateStr}${timeStr ? ' Â· ' + timeStr : ''}</span>
+                    <span class="ws-topic">${h.count || h.total || '?'} questões · ${dateStr}${timeStr ? ' · ' + timeStr : ''}</span>
                 </div>
                 <span style="font-size:15px;font-weight:800;color:${color}">${pct}%</span>
             </div>`;
@@ -826,8 +904,8 @@ function showWeekSchedule() {
     const monday = new Date(today);
     monday.setDate(today.getDate() + mondayOffset);
 
-    const schedule = getDynamicSchedule(); // 6 slots segâ€“sÃ¡b
-    const DAY_NAMES = ['SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÃB'];
+    const schedule = getDynamicSchedule(); // 6 slots seg–sáb
+    const DAY_NAMES = ['SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB'];
 
     let html = '';
     for (let i = 0; i < 6; i++) {
@@ -840,11 +918,11 @@ function showWeekSchedule() {
         const subj = schedule[i] || schedule[i % schedule.length];
 
         const statusBadge = studied
-            ? `<span class="ws-badge ws-done">âœ“ Estudado</span>`
+            ? `<span class="ws-badge ws-done">✓ Estudado</span>`
             : isToday
             ? `<span class="ws-badge ws-today">Hoje</span>`
             : isPast
-            ? `<span class="ws-badge ws-missed">NÃ£o feito</span>`
+            ? `<span class="ws-badge ws-missed">Não feito</span>`
             : '';
 
         html += `
@@ -859,7 +937,7 @@ function showWeekSchedule() {
             </div>
             <div class="ws-right">
                 ${statusBadge}
-                <button class="ws-start-btn" onclick="closeWeekSchedule();navigate('quiz-setup')">â†’</button>
+                <button class="ws-start-btn" onclick="closeWeekSchedule();navigate('quiz-setup')">→</button>
             </div>
         </div>`;
     }
@@ -875,13 +953,13 @@ function closeWeekSchedule() {
 
 function getDynamicSchedule() {
     const allSubjects = [
-        { disc: 'humanas',    area: 'CIÃŠNCIAS HUMANAS',    icon: 'ðŸŒ', title: 'GeopolÃ­tica ContemporÃ¢nea', sub: 'GlobalizaÃ§Ã£o e Blocos EconÃ´micos' },
-        { disc: 'natureza',   area: 'CIÃŠNCIAS DA NATUREZA', icon: 'ðŸ§¬', title: 'Biologia: GenÃ©tica',          sub: 'Leis de Mendel e Heredogramas' },
-        { disc: 'linguagens', area: 'LINGUAGENS',            icon: 'âœï¸', title: 'RedaÃ§Ã£o ENEM',               sub: 'Proposta de IntervenÃ§Ã£o' },
-        { disc: 'matematica', area: 'MATEMÃTICA',            icon: 'âž—', title: 'FunÃ§Ãµes do 2Âº Grau',          sub: 'Bhaskara e VÃ©rtice da ParÃ¡bola' },
+        { disc: 'humanas',    area: 'CIÊNCIAS HUMANAS',    icon: '🌍', title: 'Geopolítica Contemporânea', sub: 'Globalização e Blocos Econômicos' },
+        { disc: 'natureza',   area: 'CIÊNCIAS DA NATUREZA', icon: '🧬', title: 'Biologia: Genética',          sub: 'Leis de Mendel e Heredogramas' },
+        { disc: 'linguagens', area: 'LINGUAGENS',            icon: '✍️', title: 'Redação ENEM',               sub: 'Proposta de Intervenção' },
+        { disc: 'matematica', area: 'MATEMÁTICA',            icon: '➗', title: 'Funções do 2º Grau',          sub: 'Bhaskara e Vértice da Parábola' },
     ];
 
-    // Ordenar: Ã¡reas com pior desempenho primeiro (mais frequentes)
+    // Ordenar: áreas com pior desempenho primeiro (mais frequentes)
     const stats = state.progress.stats;
     const withPct = allSubjects.map(s => {
         const st = stats[s.disc];
@@ -889,7 +967,7 @@ function getDynamicSchedule() {
         return { ...s, pct };
     });
 
-    // Se tem preferÃªncia do onboarding, priorizar essas
+    // Se tem preferência do onboarding, priorizar essas
     const weak = state.weakSubjects || [];
     withPct.forEach(s => { if (weak.includes(s.disc)) s.pct -= 0.2; });
 
@@ -905,34 +983,34 @@ function getDynamicSchedule() {
 }
 
 function renderTodayCard() {
-    // Usar agente de recomendaÃ§Ã£o para mostrar a Ã¡rea mais prioritÃ¡ria do dia
+    // Usar agente de recomendação para mostrar a área mais prioritária do dia
     const recs = _getRecommendationAgent();
-    const topRec = recs[0]; // Ã¡rea mais fraca / prioritÃ¡ria
+    const topRec = recs[0]; // área mais fraca / prioritária
 
-    // Fallback para schedule dinÃ¢mico se agente nÃ£o tiver dados
+    // Fallback para schedule dinâmico se agente não tiver dados
     const schedule = getDynamicSchedule();
     const dayIdx = new Date().getDay();
     const scheduleSubj = schedule[dayIdx % schedule.length];
 
-    // Usar recomendaÃ§Ã£o do agente se disponÃ­vel, senÃ£o usar cronograma
+    // Usar recomendação do agente se disponível, senão usar cronograma
     const DISC_AREA_MAP = {
-        humanas: 'CIÃŠNCIAS HUMANAS', natureza: 'CIÃŠNCIAS DA NATUREZA',
-        linguagens: 'LINGUAGENS', matematica: 'MATEMÃTICA',
+        humanas: 'CIÊNCIAS HUMANAS', natureza: 'CIÊNCIAS DA NATUREZA',
+        linguagens: 'LINGUAGENS', matematica: 'MATEMÁTICA',
     };
-    const DISC_ICON_MAP = { humanas: 'ðŸŒ', natureza: 'ðŸ”¬', linguagens: 'ðŸ“', matematica: 'âž—' };
+    const DISC_ICON_MAP = { humanas: '🌍', natureza: '🔬', linguagens: '📝', matematica: '➗' };
 
     const area  = topRec ? DISC_AREA_MAP[topRec.disc] || scheduleSubj.area  : scheduleSubj.area;
     const icon  = topRec ? DISC_ICON_MAP[topRec.disc]  || scheduleSubj.icon  : scheduleSubj.icon;
     const title = topRec ? topRec.topic : scheduleSubj.title;
     const sub   = topRec ? topRec.reason : scheduleSubj.sub;
 
-    // Usar state.user.questoesHoje como fonte de verdade (tem reset diÃ¡rio real)
+    // Usar state.user.questoesHoje como fonte de verdade (tem reset diário real)
     const today = new Date().toDateString();
     const done  = state.user.questoesHojeData === today ? (state.user.questoesHoje || 0) : 0;
     const total = state.progress.totalHoje;
     const pct   = Math.round((done / total) * 100);
 
-    // Para usuÃ¡rios do plano GrÃ¡tis, sinalizamos visualmente quando o limite estÃ¡ prÃ³ximo
+    // Para usuários do plano Grátis, sinalizamos visualmente quando o limite está próximo
     const remaining = getRemainingQuestions();
     const planLimit = !isPremium() ? PLANS.free.dailyLimit : null;
     const nearLimit  = planLimit !== null && remaining <= 3 && remaining > 0;
@@ -942,7 +1020,7 @@ function renderTodayCard() {
     document.getElementById('today-icon').textContent = icon;
     document.getElementById('today-title').textContent = title;
     document.getElementById('today-sub').textContent = sub;
-    document.getElementById('today-progress').textContent = `${done}/${total} QuestÃµes`;
+    document.getElementById('today-progress').textContent = `${done}/${total} Questões`;
     document.getElementById('today-bar').style.width = pct + '%';
 
     // Feedback visual de limite (aplica classe no card se existir)
@@ -954,22 +1032,22 @@ function renderTodayCard() {
 }
 
 // =====================================================
-// DESAFIO DIÃRIO
+// DESAFIO DIÁRIO
 // =====================================================
 const _CHALLENGE_DISCS = ['humanas', 'natureza', 'linguagens', 'matematica', 'misto'];
-const _CHALLENGE_COUNTS = [5, 5, 10, 10];          // quantidade de questÃµes possÃ­veis
+const _CHALLENGE_COUNTS = [5, 5, 10, 10];          // quantidade de questões possíveis
 const _CHALLENGE_XP    = { 5: 50, 10: 100, 15: 150 };
 const _CHALLENGE_NAMES = {
-    humanas:    'CiÃªncias Humanas',
-    natureza:   'CiÃªncias da Natureza',
+    humanas:    'Ciências Humanas',
+    natureza:   'Ciências da Natureza',
     linguagens: 'Linguagens',
-    matematica: 'MatemÃ¡tica',
+    matematica: 'Matemática',
     misto:      'Desafio Misto',
 };
 
 function _generateDailyChallenge() {
     const today = new Date().toISOString().slice(0, 10);
-    // DeterminÃ­stico: seed pela data
+    // Determinístico: seed pela data
     const seed  = parseInt(today.replace(/-/g, ''), 10);
     const rand  = _seededRandom(seed);
 
@@ -1000,8 +1078,8 @@ function renderDailyChallenge() {
     const btnEl    = el.querySelector('.dc-btn');
     const checkEl  = el.querySelector('.dc-check');
 
-    if (titleEl) titleEl.textContent = ch.done ? 'âœ… Desafio ConcluÃ­do!' : 'ðŸŽ¯ Desafio do Dia';
-    if (descEl)  descEl.textContent  = `${ch.count} questÃµes de ${discName}`;
+    if (titleEl) titleEl.textContent = ch.done ? '✅ Desafio Concluído!' : '🎯 Desafio do Dia';
+    if (descEl)  descEl.textContent  = `${ch.count} questões de ${discName}`;
     if (xpEl)    xpEl.textContent    = `+${ch.xp} XP`;
     if (btnEl)   btnEl.style.display = ch.done ? 'none' : '';
     if (checkEl) checkEl.style.display = ch.done ? '' : 'none';
@@ -1011,18 +1089,18 @@ function renderDailyChallenge() {
 function startDailyChallenge() {
     const ch = _ensureDailyChallenge();
     if (ch.done) return;
-    // Guardar referÃªncia para detectar completion em showResult()
+    // Guardar referência para detectar completion em showResult()
     quizState._isDailyChallenge = true;
     quizState._dailyChallengeTarget = ch.count;
     quizState._dailyChallengeDisc   = ch.discipline;
     navigate('quiz-setup');
-    // PrÃ©-selecionar a disciplina e quantidade do desafio
+    // Pré-selecionar a disciplina e quantidade do desafio
     quizSetup.discipline = ch.discipline;
     quizSetup.count      = ch.count;
     renderQuizSetup();
 }
 
-/** Verifica e completa o desafio diÃ¡rio se o quiz atual bater as condiÃ§Ãµes */
+/** Verifica e completa o desafio diário se o quiz atual bater as condições */
 function _checkDailyChallengeCompletion() {
     if (!quizState._isDailyChallenge) return;
     const ch = _ensureDailyChallenge();
@@ -1041,9 +1119,9 @@ function _checkDailyChallengeCompletion() {
 
     _pushNotification({
         type: 'green',
-        icon: 'ðŸŽ¯',
-        title: 'Desafio DiÃ¡rio ConcluÃ­do!',
-        body: `ParabÃ©ns! VocÃª completou o desafio de hoje e ganhou +${ch.xp} XP bÃ´nus!`,
+        icon: '🎯',
+        title: 'Desafio Diário Concluído!',
+        body: `Parabéns! Você completou o desafio de hoje e ganhou +${ch.xp} XP bônus!`,
     });
 }
 
@@ -1085,9 +1163,9 @@ function renderReviewList(filter) {
     if (wrong.length === 0) {
         list.innerHTML = `
             <div class="empty-state">
-                <div class="empty-state-emoji">${filter === 'all' ? 'ðŸŽ‰' : 'âœ¨'}</div>
+                <div class="empty-state-emoji">${filter === 'all' ? '🎉' : '✨'}</div>
                 <div class="empty-state-title">Tudo certo por aqui!</div>
-                <div class="empty-state-sub">Seus erros aparecerÃ£o aqui para vocÃª revisar.<br>Continue praticando!</div>
+                <div class="empty-state-sub">Seus erros aparecerão aqui para você revisar.<br>Continue praticando!</div>
             </div>`;
         return;
     }
@@ -1126,7 +1204,7 @@ function renderReviewList(filter) {
         userLabel.textContent = 'SEU';
         const userText = document.createElement('span');
         userText.className = 'review-ans-text';
-        userText.textContent = `${letters[w.userAnswer]}. ${q.options[w.userAnswer] || 'â€”'}`;
+        userText.textContent = `${letters[w.userAnswer]}. ${q.options[w.userAnswer] || '—'}`;
         userAns.appendChild(userLabel);
         userAns.appendChild(userText);
 
@@ -1137,7 +1215,7 @@ function renderReviewList(filter) {
         correctLabel.textContent = 'CERTA';
         const correctText = document.createElement('span');
         correctText.className = 'review-ans-text';
-        correctText.textContent = `${letters[q.correct]}. ${q.options[q.correct] || 'â€”'}`;
+        correctText.textContent = `${letters[q.correct]}. ${q.options[q.correct] || '—'}`;
         correctAns.appendChild(correctLabel);
         correctAns.appendChild(correctText);
 
@@ -1146,8 +1224,8 @@ function renderReviewList(filter) {
 
         const practiceBtn = document.createElement('button');
         practiceBtn.className = 'review-practice-btn';
-        practiceBtn.textContent = 'ðŸŽ¯ Praticar esta disciplina';
-        practiceBtn.addEventListener('click', () => practiceDisc(disc)); // disc via closure, nÃ£o interpolado
+        practiceBtn.textContent = '🎯 Praticar esta disciplina';
+        practiceBtn.addEventListener('click', () => practiceDisc(disc)); // disc via closure, não interpolado
 
         item.appendChild(header);
         item.appendChild(qText);
@@ -1158,7 +1236,7 @@ function renderReviewList(filter) {
 }
 
 function clearWrongAnswers() {
-    if (!confirm('Limpar todo o histÃ³rico de erros?')) return;
+    if (!confirm('Limpar todo o histórico de erros?')) return;
     state.wrongAnswers = [];
     saveState();
     renderReview();
@@ -1166,10 +1244,10 @@ function clearWrongAnswers() {
 
 function practiceDisc(disc) {
     const discKey = {
-        'CIÃŠNCIAS HUMANAS': 'humanas',
-        'CIÃŠNCIAS DA NATUREZA': 'natureza',
+        'CIÊNCIAS HUMANAS': 'humanas',
+        'CIÊNCIAS DA NATUREZA': 'natureza',
         'LINGUAGENS': 'linguagens',
-        'MATEMÃTICA': 'matematica',
+        'MATEMÁTICA': 'matematica',
     }[disc] || disc;
     quizSetup.discipline = discKey;
     navigate('quiz-setup');
@@ -1230,26 +1308,26 @@ async function finishOnboarding() {
                     msg.toLowerCase().includes('exist') ||
                     msg.toLowerCase().includes('user already');
                 if (isAlreadyRegistered) {
-                    if (obBtn) { obBtn.disabled = false; obBtn.textContent = 'ComeÃ§ar a Estudar ðŸš€'; }
+                    if (obBtn) { obBtn.disabled = false; obBtn.textContent = 'Começar a Estudar 🚀'; }
                     _pendingPassword = '';
                     saveState();
                     navigate('login');
                     const emailEl2 = document.getElementById('login-email');
                     if (emailEl2) emailEl2.value = state.user.email;
                     const errEl = document.getElementById('login-error');
-                    if (errEl) { errEl.style.color = 'var(--orange, #f97316)'; errEl.textContent = 'E-mail jÃ¡ cadastrado. FaÃ§a login.'; }
+                    if (errEl) { errEl.style.color = 'var(--orange, #f97316)'; errEl.textContent = 'E-mail já cadastrado. Faça login.'; }
                     return;
                 }
-                console.warn('âš ï¸ Erro ao registrar:', result.error);
+                console.warn('⚠️ Erro ao registrar:', result.error);
             }
         } catch (e) {
-            console.warn('âš ï¸ Registro Supabase nÃ£o disponÃ­vel:', e);
+            console.warn('⚠️ Registro Supabase não disponível:', e);
         } finally {
-            _pendingPassword = ''; // limpar senha da memÃ³ria imediatamente
+            _pendingPassword = ''; // limpar senha da memória imediatamente
         }
     }
 
-    if (obBtn) { obBtn.disabled = false; obBtn.textContent = 'ComeÃ§ar a Estudar ðŸš€'; }
+    if (obBtn) { obBtn.disabled = false; obBtn.textContent = 'Começar a Estudar 🚀'; }
     saveState();
     navigate('home');
 }
@@ -1258,15 +1336,15 @@ async function finishOnboarding() {
 // INIT
 // =====================================================
 
-// Capturar erros globais para diagnÃ³stico
+// Capturar erros globais para diagnóstico
 window.onerror = (msg, src, line, col, err) => {
-    console.error('ðŸ”´ Erro global:', msg, 'em', src, 'linha', line);
-    // Mostrar erro na tela se o app nÃ£o carregou
+    console.error('🔴 Erro global:', msg, 'em', src, 'linha', line);
+    // Mostrar erro na tela se o app não carregou
     const appEl = document.getElementById('app');
     if (appEl && !document.querySelector('.screen.active')) {
         appEl.insertAdjacentHTML('afterbegin',
             `<div style="position:fixed;inset:0;background:#0a1929;color:#ef4444;padding:24px;font-family:monospace;z-index:9999;overflow:auto">
-            <b>âŒ Erro ao carregar o app:</b><br>${msg}<br><small>${src}:${line}</small>
+            <b>❌ Erro ao carregar o app:</b><br>${msg}<br><small>${src}:${line}</small>
             <br><br><button onclick="localStorage.clear();location.reload()" style="margin-top:16px;padding:10px 20px;background:#ef4444;color:white;border:none;border-radius:8px;cursor:pointer">Limpar dados e recarregar</button>
             </div>`);
     }
@@ -1277,7 +1355,7 @@ function init() {
     // Garantir que apenas uma tela fique ativa
     document.querySelectorAll('.screen.active').forEach(s => s.classList.remove('active'));
 
-    // Migrar state antigo se necessÃ¡rio
+    // Migrar state antigo se necessário
     if (!state.quizHistory) state.quizHistory = [];
     if (!state.wrongAnswers) state.wrongAnswers = [];
     if (!state.progress.stats) {
@@ -1310,23 +1388,23 @@ function init() {
         state.currentScreen = 'home';
     }
 
-    // Pular se usuÃ¡rio jÃ¡ tem dados (migraÃ§Ã£o do estado antigo)
+    // Pular se usuário já tem dados (migração do estado antigo)
     const isReturningUser = state.user.xp > 0 || (state.quizHistory && state.quizHistory.length > 0);
 
     // Detectar entrada pelo funil (landing.html?ref=landing)
     const _urlParams    = new URLSearchParams(window.location.search);
     const _refSource    = (_urlParams.get('ref') || _urlParams.get('utm_source') || '').toLowerCase();
     const _forceFunnel  = _refSource === 'landing' || _refSource === 'landing_page';
-    // Limpar parÃ¢metro da URL sem recarregar a pÃ¡gina
+    // Limpar parâmetro da URL sem recarregar a página
     if (_forceFunnel && window.history?.replaceState) {
         window.history.replaceState({}, '', window.location.pathname);
     }
 
-    // â”€â”€ Verificar sessÃ£o Supabase SEMPRE antes de decidir qual tela mostrar â”€â”€
+    // ── Verificar sessão Supabase SEMPRE antes de decidir qual tela mostrar ──
     if (typeof getCurrentUser !== 'undefined') {
         getCurrentUser().then(user => {
             if (user) {
-                // SessÃ£o ativa: aplicar nome real do Google antes de carregar do banco
+                // Sessão ativa: aplicar nome real do Google antes de carregar do banco
                 const meta = user.user_metadata || {};
                 const googleName = meta.full_name || meta.name || meta.display_name || '';
                 if (googleName && googleName.trim()) {
@@ -1350,7 +1428,7 @@ function init() {
                     _resumePendingPayment();
                 });
             } else {
-                // Sem sessÃ£o: entrada pelo funil OU usuÃ¡rio novo â†’ onboarding
+                // Sem sessão: entrada pelo funil OU usuário novo → onboarding
                 if (_forceFunnel || (!state.onboardingDone && !isReturningUser)) {
                     document.getElementById('screen-onboarding').classList.add('active');
                     nav.style.display = 'none';
@@ -1367,7 +1445,7 @@ function init() {
                 }
             }
         }).catch(() => {
-            // Supabase indisponÃ­vel: usar estado local como fallback
+            // Supabase indisponível: usar estado local como fallback
             if (!state.onboardingDone && !isReturningUser) {
                 document.getElementById('screen-onboarding').classList.add('active');
                 nav.style.display = 'none';
@@ -1384,7 +1462,7 @@ function init() {
         return;
     }
 
-    // Fallback: Supabase nÃ£o disponÃ­vel â€” usar estado local
+    // Fallback: Supabase não disponível — usar estado local
     if (!state.onboardingDone && !isReturningUser) {
         document.getElementById('screen-onboarding').classList.add('active');
         nav.style.display = 'none';
@@ -1402,24 +1480,24 @@ function init() {
 document.addEventListener('DOMContentLoaded', init);
 
 // =====================================================
-// PRÃ‰-AQUECIMENTO DO CACHE DA API
-// Roda em background apÃ³s o app carregar, para que o
+// PRÉ-AQUECIMENTO DO CACHE DA API
+// Roda em background após o app carregar, para que o
 // primeiro simulado inicie instantaneamente (sem espera).
 // =====================================================
 (function _warmAPICache() {
-    // Aguarda 4 s para nÃ£o competir com o carregamento inicial
+    // Aguarda 4 s para não competir com o carregamento inicial
     setTimeout(async () => {
         if (!window.enemAPI) return;
         try {
             const years = await window.enemAPI.fetchAvailableYears();
             if (!years || years.length === 0) return;
-            // PrÃ©-carrega o ano mais recente â€” cobre os 4 cadernos
+            // Pré-carrega o ano mais recente — cobre os 4 cadernos
             const latest = years[0];
             const cacheKey = `enem_q3_${latest}`;
             const cached = localStorage.getItem(cacheKey);
             if (!cached) {
-                console.log(`ðŸ”„ PrÃ©-carregando questÃµes ENEM ${latest}...`);
-                // Importa a funÃ§Ã£o interna via mÃ³dulo exposto
+                console.log(`🔄 Pré-carregando questões ENEM ${latest}...`);
+                // Importa a função interna via módulo exposto
                 const pages = await Promise.all(
                     [0, 45, 90, 135].map(offset =>
                         fetch(`https://api.enem.dev/v1/exams/${latest}/questions?limit=45&offset=${offset}`)
@@ -1434,22 +1512,22 @@ document.addEventListener('DOMContentLoaded', init);
                             data: questions,
                             ts: Date.now()
                         }));
-                        console.log(`âœ… Cache aquecido: ${questions.length} questÃµes ENEM ${latest}`);
+                        console.log(`✅ Cache aquecido: ${questions.length} questões ENEM ${latest}`);
                     } catch (e) {
-                        console.warn('âš ï¸ Sem espaÃ§o para cache de questÃµes');
+                        console.warn('⚠️ Sem espaço para cache de questões');
                     }
                 }
             } else {
-                console.log(`âœ… Cache jÃ¡ existe para ENEM ${latest}`);
+                console.log(`✅ Cache já existe para ENEM ${latest}`);
             }
         } catch (e) {
-            // Silencioso â€” falha no prÃ©-aquecimento nÃ£o afeta o app
+            // Silencioso — falha no pré-aquecimento não afeta o app
         }
     }, 4000);
 })();
 
 // =====================================================
-// FILTRO POR TÃ“PICO â€” QUIZ SETUP
+// FILTRO POR TÓPICO — QUIZ SETUP
 // =====================================================
 function renderTopicFilter() {
     const wrap = document.getElementById('topic-filter-wrap');
@@ -1468,7 +1546,7 @@ function renderTopicFilter() {
 
     const anyChip = document.createElement('button');
     anyChip.className = 'topic-chip any' + (quizSetup.topic === null ? ' selected' : '');
-    anyChip.textContent = 'ðŸŽ² Qualquer tÃ³pico';
+    anyChip.textContent = '🎲 Qualquer tópico';
     anyChip.onclick = () => _selectTopic(null, anyChip);
     chipsEl.appendChild(anyChip);
 
@@ -1490,7 +1568,7 @@ function _selectTopic(topic, btn) {
 }
 
 // =====================================================
-// HISTÃ“RICO DE REDAÃ‡Ã•ES
+// HISTÓRICO DE REDAÇÕES
 // =====================================================
 function renderRedacaoHistory() {
     const listEl = document.getElementById('redacao-hist-list');
@@ -1499,7 +1577,7 @@ function renderRedacaoHistory() {
     const history = (state.redacaoHistory || []).slice().reverse().slice(0, 10);
 
     if (history.length === 0) {
-        listEl.innerHTML = '<p style="color:var(--text-muted);font-size:13px;text-align:center;padding:16px 0">Nenhuma redaÃ§Ã£o enviada ainda. Escreva e corrija com IA acima! âœï¸</p>';
+        listEl.innerHTML = '<p style="color:var(--text-muted);font-size:13px;text-align:center;padding:16px 0">Nenhuma redação enviada ainda. Escreva e corrija com IA acima! ✍️</p>';
         return;
     }
 
@@ -1552,7 +1630,7 @@ function renderRedacaoHistory() {
 }
 
 // =====================================================
-// METAS CONFIGURÃVEIS
+// METAS CONFIGURÁVEIS
 // =====================================================
 function openGoalsModal() {
     const overlay = document.getElementById('goals-modal-overlay');
@@ -1590,11 +1668,11 @@ function saveGoals() {
     saveState();
     closeGoalsModal();
     renderGoals();
-    _showQuickToast(`âœ… Metas atualizadas: ${daily} questÃµes/dia Â· ${weekly} simulados/semana`);
+    _showQuickToast(`✅ Metas atualizadas: ${daily} questões/dia · ${weekly} simulados/semana`);
 }
 
 // =====================================================
-// ANÃLISE â€” PAINEL CONSOLIDADO + GRÃFICOS
+// ANÁLISE — PAINEL CONSOLIDADO + GRÁFICOS
 // =====================================================
 function renderAnalise() {
     // Stats gerais
@@ -1612,9 +1690,9 @@ function renderAnalise() {
             { label: 'Simulados', val: totalSimulados, sub: 'realizados', color: 'var(--teal)' },
             { label: 'Acertos',   val: overallPct + '%', sub: `${totalCorretas}/${totalQuestoes}`,
               color: overallPct >= 70 ? 'var(--teal)' : overallPct >= 50 ? 'var(--orange)' : 'var(--red)' },
-            { label: 'Ofensiva',  val: streak, sub: streak > 0 ? `dias ðŸ”¥` : 'comece hoje!',
+            { label: 'Ofensiva',  val: streak, sub: streak > 0 ? `dias 🔥` : 'comece hoje!',
               color: streak > 7 ? 'var(--gold)' : 'var(--orange)' },
-            { label: 'XP Total',  val: xp.toLocaleString('pt-BR'), sub: `NÃ­vel ${state.user.level}`, color: 'var(--gold)' },
+            { label: 'XP Total',  val: xp.toLocaleString('pt-BR'), sub: `Nível ${state.user.level}`, color: 'var(--gold)' },
         ];
         statsGrid.innerHTML = items.map(s => `
             <div class="analise-stat-card">
@@ -1624,12 +1702,12 @@ function renderAnalise() {
             </div>`).join('');
     }
 
-    // GrÃ¡fico histÃ³rico â€” Ãºltimos 10 simulados
+    // Gráfico histórico — últimos 10 simulados
     const barsEl = document.getElementById('analise-bars');
     if (barsEl) {
         const recent = (state.quizHistory || []).slice(-10);
         if (recent.length === 0) {
-            barsEl.innerHTML = '<p style="color:var(--text-muted);font-size:12px;text-align:center;width:100%;align-self:center">FaÃ§a simulados para ver o grÃ¡fico ðŸ“Š</p>';
+            barsEl.innerHTML = '<p style="color:var(--text-muted);font-size:12px;text-align:center;width:100%;align-self:center">Faça simulados para ver o gráfico 📊</p>';
         } else {
             const discColors = { humanas:'#00b4a6', natureza:'#a78bfa', linguagens:'#f5c518', matematica:'#f97316', misto:'#3b82f6' };
             barsEl.innerHTML = recent.map(h => {
@@ -1649,10 +1727,10 @@ function renderAnalise() {
     const discList = document.getElementById('analise-disc-list');
     if (discList) {
         const discs = [
-            { disc:'humanas',    icon:'ðŸŒ', name:'CiÃªncias Humanas',    color:'#00b4a6' },
-            { disc:'natureza',   icon:'ðŸ”¬', name:'CiÃªncias da Natureza', color:'#a78bfa' },
-            { disc:'linguagens', icon:'ðŸ“', name:'Linguagens',           color:'#f5c518' },
-            { disc:'matematica', icon:'âž—', name:'MatemÃ¡tica',           color:'#f97316' },
+            { disc:'humanas',    icon:'🌍', name:'Ciências Humanas',    color:'#00b4a6' },
+            { disc:'natureza',   icon:'🔬', name:'Ciências da Natureza', color:'#a78bfa' },
+            { disc:'linguagens', icon:'📝', name:'Linguagens',           color:'#f5c518' },
+            { disc:'matematica', icon:'➗', name:'Matemática',           color:'#f97316' },
         ];
         discList.innerHTML = discs.map(d => {
             const st  = state.progress.stats?.[d.disc] || { correct:0, total:0 };
@@ -1665,7 +1743,7 @@ function renderAnalise() {
                         <div class="analise-disc-bar" style="width:${pct}%;background:${d.color}"></div>
                     </div>
                 </div>
-                <span class="analise-disc-pct" style="color:${d.color}">${st.total > 0 ? pct+'%' : 'â€”'}</span>
+                <span class="analise-disc-pct" style="color:${d.color}">${st.total > 0 ? pct+'%' : '—'}</span>
             </div>`;
         }).join('');
     }
@@ -1685,7 +1763,7 @@ function renderAnalise() {
             cell.className = 'analise-heatmap-cell' +
                 (count > 0 ? (count >= 2 ? ' has-data high' : ' has-data') : '') +
                 (isToday ? ' today' : '');
-            cell.title = dateStr + (count > 0 ? ` â€” ${count} simulado${count>1?'s':''}` : '');
+            cell.title = dateStr + (count > 0 ? ` — ${count} simulado${count>1?'s':''}` : '');
             heatmapEl.appendChild(cell);
         }
     }
@@ -1701,7 +1779,7 @@ function renderAnalise() {
                     <p style="font-size:13px;font-weight:700;color:var(--text-primary)">${r.area}: ${r.topic}</p>
                     <p style="font-size:11px;color:var(--text-muted);margin-top:3px">${r.reason}</p>
                 </div>
-                <button style="background:var(--teal);color:#fff;border-radius:10px;padding:6px 12px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;border:none" onclick="navigate('quiz-setup')">Praticar â†’</button>
+                <button style="background:var(--teal);color:#fff;border-radius:10px;padding:6px 12px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;border:none" onclick="navigate('quiz-setup')">Praticar →</button>
             </div>`).join('');
     }
 }

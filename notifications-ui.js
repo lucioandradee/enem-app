@@ -4,13 +4,13 @@
 function renderNotifications() {
     const list = document.getElementById('notif-list');
     const tab = document.querySelector('.notif-tab.active');
-    const showUnreadOnly = tab && tab.textContent.trim() === 'N├úo lidas';
+    const showUnreadOnly = tab && tab.textContent.trim() === 'Não lidas';
     renderNotifList(showUnreadOnly);
 }
 
-// Normalizar campo `date` de notifica├º├úo para categoria de exibi├º├úo
+// Normalizar campo `date` de notificação para categoria de exibição
 function _notifDateGroup(n) {
-    // Aceita 'today'/'yesterday' legados e ISO strings das notifica├º├Áes novas
+    // Aceita 'today'/'yesterday' legados e ISO strings das notificações novas
     if (n.date === 'today') return 'today';
     if (n.date === 'yesterday') return 'yesterday';
     if (!n.date) return 'more';
@@ -48,22 +48,19 @@ function renderNotifList(unreadOnly = false) {
     });
 
     if (list.children.length === 0) {
-        list.innerHTML = '<div style="text-align:center;padding:40px 16px;color:var(--text-muted);font-size:14px;">Nenhuma notifica├º├úo n├úo lida ­ƒÄë</div>';
+        list.innerHTML = '<div style="text-align:center;padding:40px 16px;color:var(--text-muted);font-size:14px;">Nenhuma notificação não lida 🎉</div>';
     }
 }
-
-// Telas permitidas em CTAs de notifica├º├úo (whitelist)
-const _NOTIF_CTA_ALLOWED = new Set(Object.keys(screenMap));
 
 function createNotifItem(n) {
     const el = document.createElement('div');
     el.className = 'notif-item' + (n.unread ? ' unread' : '');
 
-    // type como classe CSS ÔÇö aceitar apenas valores conhecidos
+    // type como classe CSS — aceitar apenas valores conhecidos
     const safeType = ['blue','orange','purple','green','yellow','red'].includes(n.type) ? n.type : 'blue';
     const iconWrap = document.createElement('div');
     iconWrap.className = 'notif-icon-wrap ' + safeType;
-    iconWrap.textContent = n.icon;  // emoji ÔÇö textContent ├® seguro
+    iconWrap.textContent = n.icon;  // emoji — textContent é seguro
 
     const contentEl = document.createElement('div');
     contentEl.className = 'notif-content';
@@ -79,8 +76,8 @@ function createNotifItem(n) {
     contentEl.appendChild(titleEl);
     contentEl.appendChild(bodyEl);
 
-    // CTA ÔÇö nunca executar string din├ómica; usar rota validada
-    if (n.cta && n.ctaScreen && _NOTIF_CTA_ALLOWED.has(n.ctaScreen)) {
+    // CTA — nunca executar string dinâmica; usar rota validada
+    if (n.cta && n.ctaScreen && typeof screenMap !== 'undefined' && screenMap[n.ctaScreen]) {
         const ctaEl = document.createElement('span');
         ctaEl.className = 'notif-cta';
         ctaEl.textContent = n.cta;

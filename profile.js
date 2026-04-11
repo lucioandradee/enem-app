@@ -1,6 +1,16 @@
 // =====================================================
-// PROFILE ÔÇö STATS DIN├éMICAS
+// PROFILE — STATS DINÂMICAS
 // =====================================================
+
+// Aplica a cor do avatar em todos os elementos .avatar do app
+function _applyAvatarColor(grad) {
+    if (!grad) return;
+    document.querySelectorAll('.avatar, .podium-avatar').forEach(el => {
+        el.style.background = grad;
+        el.style.borderColor = 'transparent';
+    });
+}
+
 function renderProfile() {
     const s = state.user;
     const safeName = (s.name && s.name.trim()) ? s.name : 'Estudante';
@@ -8,6 +18,8 @@ function renderProfile() {
     document.getElementById('profile-name').textContent = safeName;
     document.getElementById('profile-level').textContent = s.level;
     document.getElementById('profile-xp').textContent = s.xp.toLocaleString('pt-BR');
+
+    if (s.avatarColor) _applyAvatarColor(s.avatarColor);
 
     // Card de status do plano
     const planStatusEl = document.getElementById('profile-plan-status');
@@ -19,38 +31,38 @@ function renderProfile() {
                 : null;
             planStatusEl.innerHTML = `
                 <div class="profile-plan-card profile-plan-premium">
-                    <span class="ppc-icon">­ƒææ</span>
+                    <span class="ppc-icon">👑</span>
                     <div class="ppc-info">
                         <span class="ppc-name">Plano Premium</span>
-                        <span class="ppc-sub">Ativo ┬À simulados e reda├º├úo ilimitados${exp ? ` ┬À at├® ${exp}` : ''}</span>
+                        <span class="ppc-sub">Ativo · simulados e redação ilimitados${exp ? ` · até ${exp}` : ''}</span>
                     </div>
                     <span class="ppc-active">ATIVO</span>
                 </div>`;
         } else {
             const remText = remaining <= 0
-                ? 'Limite di├írio atingido ­ƒöÆ'
+                ? 'Limite diário atingido 🔒'
                 : remaining <= 3
-                    ? `ÔÜá´©Å Apenas ${remaining} ${remaining === 1 ? 'quest├úo restante' : 'quest├Áes restantes'} hoje`
-                    : `${remaining} quest├Áes restantes hoje`;
+                    ? `⚠️ Apenas ${remaining} ${remaining === 1 ? 'questão restante' : 'questões restantes'} hoje`
+                    : `${remaining} questões restantes hoje`;
             planStatusEl.innerHTML = `
                 <div class="profile-plan-card profile-plan-free">
-                    <span class="ppc-icon">ÔÜí</span>
+                    <span class="ppc-icon">⚡</span>
                     <div class="ppc-info">
-                        <span class="ppc-name">Plano Gr├ítis</span>
+                        <span class="ppc-name">Plano Grátis</span>
                         <span class="ppc-sub">${remText}</span>
                     </div>
-                    <button class="ppc-upgrade-btn" onclick="navigate('plans')">Upgrade ­ƒææ</button>
+                    <button class="ppc-upgrade-btn" onclick="navigate('plans')">Upgrade 👑</button>
                 </div>`;
         }
     }
 
-    // ├ürea grid din├ómica
+    // Área grid dinâmica
     renderAreaGrid();
 
-    // Metas pessoais din├ómicas
+    // Metas pessoais dinâmicas
     renderGoals();
 
-    // Atividade recente (├║ltimos badges)
+    // Atividade recente (últimos badges)
     renderRecentActivity();
 
     // Retrospectiva mensal
@@ -62,10 +74,10 @@ function renderAreaGrid() {
     if (!grid) return;
 
     const areas = [
-        { disc: 'humanas',    icon: '­ƒôÜ', name: 'HUMANAS' },
-        { disc: 'natureza',   icon: '­ƒö¼', name: 'NATUREZA' },
-        { disc: 'linguagens', icon: '­ƒôØ', name: 'LINGUAGENS' },
-        { disc: 'matematica', icon: 'Ô×ù', name: 'MATEM├üTICA' },
+        { disc: 'humanas',    icon: '📚', name: 'HUMANAS' },
+        { disc: 'natureza',   icon: '🔬', name: 'NATUREZA' },
+        { disc: 'linguagens', icon: '📝', name: 'LINGUAGENS' },
+        { disc: 'matematica', icon: '➗', name: 'MATEMÁTICA' },
     ];
 
     grid.innerHTML = '';
@@ -78,11 +90,11 @@ function renderAreaGrid() {
         card.innerHTML = `
             <span class="area-icon">${a.icon}</span>
             <span class="area-name">${a.name}</span>
-            <span class="area-pct" style="color:${color}">${st.total > 0 ? pct + '%' : 'ÔÇö'}</span>
+            <span class="area-pct" style="color:${color}">${st.total > 0 ? pct + '%' : '—'}</span>
             <div class="progress-bar-wrap thin">
                 <div class="progress-bar" style="width:${pct}%"></div>
             </div>
-            <span class="area-questions">${st.total > 0 ? st.correct + '/' + st.total + ' acertos' : 'Nenhuma quest├úo ainda'}</span>
+            <span class="area-questions">${st.total > 0 ? st.correct + '/' + st.total + ' acertos' : 'Nenhuma questão ainda'}</span>
         `;
         grid.appendChild(card);
     });
@@ -104,12 +116,12 @@ function renderGoals() {
     const weeklyDone = (state.quizHistory || []).filter(h => h.date && new Date(h.date) >= weekStart).length;
     const weeklyGoal = state.user.weeklyGoal || 3;
 
-    // --- Meta 2: Quest├Áes hoje ---
+    // --- Meta 2: Questões hoje ---
     const todayDone = state.user.questoesHojeData === todayStr ? (state.user.questoesHoje || 0) : 0;
     const todayTotal = state.user.dailyGoal || state.progress.totalHoje || 10;
     const topRec = _getRecommendationAgent()[0];
-    const areaLabel = topRec ? topRec.area : 'Quest├Áes';
-    const areaIcon  = topRec ? topRec.icon : '­ƒÄ»';
+    const areaLabel = topRec ? topRec.area : 'Questões';
+    const areaIcon  = topRec ? topRec.icon : '🎯';
 
     // --- Meta 3: Ofensiva ---
     const streak = state.user.streak || 0;
@@ -117,16 +129,16 @@ function renderGoals() {
 
     const goals = [
         {
-            icon: '­ƒôï', iconBg: 'teal-bg-sm',
+            icon: '📋', iconBg: 'teal-bg-sm',
             title: 'Simulados Semanais',
-            sub: weeklyDone >= weeklyGoal ? 'Meta da semana atingida! ­ƒÄë' : `Faltam ${weeklyGoal - weeklyDone} para a meta ÔÇö at├® domingo`,
+            sub: weeklyDone >= weeklyGoal ? 'Meta da semana atingida! 🎉' : `Faltam ${weeklyGoal - weeklyDone} para a meta — até domingo`,
             done: weeklyDone >= weeklyGoal,
             badge: weeklyDone >= weeklyGoal ? null : `${weeklyDone}/${weeklyGoal}`,
         },
         {
             icon: areaIcon, iconBg: 'teal-bg-sm',
-            title: `Quest├Áes de Hoje`,
-            sub: todayDone >= todayTotal ? 'Meta di├íria conclu├¡da! ­ƒöÑ' : `${todayTotal - todayDone} restantes ┬À foco em ${areaLabel}`,
+            title: `Questões de Hoje`,
+            sub: todayDone >= todayTotal ? 'Meta diária concluída! 🔥' : `${todayTotal - todayDone} restantes · foco em ${areaLabel}`,
             done: todayDone >= todayTotal,
             badge: todayDone >= todayTotal ? null : `${todayDone}/${todayTotal}`,
         },
@@ -134,9 +146,9 @@ function renderGoals() {
 
     if (streak >= 2 || studiedToday) {
         goals.push({
-            icon: '­ƒöÑ', iconBg: 'orange-bg-sm',
+            icon: '🔥', iconBg: 'orange-bg-sm',
             title: streak > 0 ? `Ofensiva: ${streak} dia${streak > 1 ? 's' : ''}` : 'Manter Ofensiva',
-            sub: studiedToday ? 'J├í estudou hoje ÔÇö sequ├¬ncia mantida!' : 'Estude hoje para n├úo perder a sequ├¬ncia',
+            sub: studiedToday ? 'Já estudou hoje — sequência mantida!' : 'Estude hoje para não perder a sequência',
             done: studiedToday,
             badge: null,
         });
@@ -145,7 +157,7 @@ function renderGoals() {
     el.innerHTML = '';
     goals.forEach(g => {
         const right = g.done
-            ? `<span class="goal-check">Ô£à</span>`
+            ? `<span class="goal-check">✅</span>`
             : g.badge ? `<span class="goal-progress">${g.badge}</span>` : '';
         const div = document.createElement('div');
         div.className = 'goal-item';
@@ -161,7 +173,7 @@ function renderGoals() {
 }
 
 // =====================================================
-// RETROSPECTIVA MENSAL ÔÇö Wrapped
+// RETROSPECTIVA MENSAL — Wrapped
 // =====================================================
 
 function computeMonthlyRetro(month, year) {
@@ -180,7 +192,7 @@ function computeMonthlyRetro(month, year) {
     const uniqueDays    = new Set(entries.map(h => new Date(h.date).toDateString())).size;
     const simulados     = entries.length;
 
-    // Tempo real de sess├úo (durationMinutes salvo desde v2; fallback 1.5 min/quest├úo)
+    // Tempo real de sessão (durationMinutes salvo desde v2; fallback 1.5 min/questão)
     const studyMinutes = entries.reduce((acc, h) =>
         acc + (h.durationMinutes != null ? h.durationMinutes : Math.round((h.total || 0) * 1.5)), 0);
     const studyHours = studyMinutes >= 60
@@ -188,12 +200,12 @@ function computeMonthlyRetro(month, year) {
         : `${studyMinutes}min`;
 
     const areaNames = { humanas: 'Humanas', natureza: 'Natureza', linguagens: 'Linguagens', matematica: 'Mat.', misto: 'Misto' };
-    const areaIcons = { humanas: '­ƒôÜ', natureza: '­ƒö¼', linguagens: '­ƒôØ', matematica: 'Ô×ù', misto: '­ƒÄ»' };
+    const areaIcons = { humanas: '📚', natureza: '🔬', linguagens: '📝', matematica: '➗', misto: '🎯' };
 
-    // ÔöÇÔöÇ Erros reais do m├¬s via wrongAnswers ÔöÇÔöÇ
+    // ── Erros reais do mês via wrongAnswers ──
     const AREA_TO_DISC = {
-        'CI├èNCIAS HUMANAS': 'humanas', 'CI├èNCIAS DA NATUREZA': 'natureza',
-        'LINGUAGENS': 'linguagens', 'MATEM├üTICA': 'matematica',
+        'CIÊNCIAS HUMANAS': 'humanas', 'CIÊNCIAS DA NATUREZA': 'natureza',
+        'LINGUAGENS': 'linguagens', 'MATEMÁTICA': 'matematica',
     };
     const wrongThisMonth = (state.wrongAnswers || []).filter(wa => {
         if (!wa.date) return false;
@@ -206,18 +218,18 @@ function computeMonthlyRetro(month, year) {
         wrongByDisc[disc] = (wrongByDisc[disc] || 0) + 1;
     });
 
-    // ÔöÇÔöÇ Acur├ícia por disciplina do m├¬s (quizHistory de disciplina espec├¡fica) ÔöÇÔöÇ
+    // ── Acurácia por disciplina do mês (quizHistory de disciplina específica) ──
     const areaStats = {};
     entries.forEach(h => {
         const d = h.discipline || 'misto';
-        if (d === 'misto') return; // misto n├úo representa uma disciplina
+        if (d === 'misto') return; // misto não representa uma disciplina
         if (!areaStats[d]) areaStats[d] = { correct: 0, total: 0 };
         areaStats[d].correct += (h.correct || 0);
         areaStats[d].total   += (h.total || 0);
     });
 
-    // Complementar com progress.stats (dados reais acumulados) se n├úo houver
-    // quizzes por disciplina no m├¬s
+    // Complementar com progress.stats (dados reais acumulados) se não houver
+    // quizzes por disciplina no mês
     const globalStats = (state.progress && state.progress.stats) || {};
     const discsWithMonthData = Object.keys(areaStats).filter(d => areaStats[d].total >= 3);
     if (discsWithMonthData.length === 0) {
@@ -234,7 +246,7 @@ function computeMonthlyRetro(month, year) {
         .map(([disc, s]) => ({ disc, pct: Math.round((s.correct / s.total) * 100), isGlobal: !!s.isGlobal }))
         .sort((a, b) => b.pct - a.pct);
 
-    // Pior ├írea: prioridade para a que tem mais erros reais no m├¬s
+    // Pior área: prioridade para a que tem mais erros reais no mês
     const worstByErrors = Object.entries(wrongByDisc)
         .filter(([d]) => d !== 'misto')
         .sort((a, b) => b[1] - a[1])[0];
@@ -258,21 +270,21 @@ function renderMonthlyRetro() {
     let year  = now.getFullYear();
     let retro = computeMonthlyRetro(month, year);
 
-    // Sem dados no m├¬s atual ÔåÆ tentar m├¬s anterior
+    // Sem dados no mês atual → tentar mês anterior
     if (!retro) {
         month = month === 0 ? 11 : month - 1;
         year  = (month === 11 && now.getMonth() === 0) ? year - 1 : year;
         retro = computeMonthlyRetro(month, year);
     }
 
-    const MONTH_NAMES = ['Janeiro','Fevereiro','Mar├ºo','Abril','Maio','Junho',
+    const MONTH_NAMES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
                          'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 
     if (!retro) {
         wrap.innerHTML = `
-            <div class="section-header"><span class="section-title">RETROSPECTIVA DO M├èS</span></div>
+            <div class="section-header"><span class="section-title">RETROSPECTIVA DO MÊS</span></div>
             <div class="retro-empty-card">
-                <div style="font-size:32px;margin-bottom:8px">­ƒôè</div>
+                <div style="font-size:32px;margin-bottom:8px">📊</div>
                 <p>Responda alguns simulados para ver<br>sua retrospectiva mensal!</p>
             </div>`;
         return;
@@ -280,27 +292,27 @@ function renderMonthlyRetro() {
 
     const monthLabel  = `${MONTH_NAMES[month]} ${year}`;
 
-    // Melhor mat├®ria: badge "(global)" se vier de progress.stats
+    // Melhor matéria: badge "(global)" se vier de progress.stats
     const bestLabel = retro.bestArea
         ? `${retro.areaIcons[retro.bestArea.disc]} ${retro.areaNames[retro.bestArea.disc]} (${retro.bestArea.pct}%${retro.bestArea.isGlobal ? ' geral' : ''})`
-        : 'ÔÇö';
+        : '—';
 
-    // Pior mat├®ria: prefere mat├®ria com mais erros reais no m├¬s
+    // Pior matéria: prefere matéria com mais erros reais no mês
     let worstLabel = null;
     if (retro.worstArea) {
         const wa = retro.worstArea;
         const pctStr = wa.pct != null ? ` (${wa.pct}%)` : '';
-        const errStr = wa.erros != null ? ` ┬À ${wa.erros} erros` : '';
+        const errStr = wa.erros != null ? ` · ${wa.erros} erros` : '';
         worstLabel = `${retro.areaIcons[wa.disc]} ${retro.areaNames[wa.disc]}${pctStr}${errStr}`;
     }
 
-    // Tempo: indicar se ├® real ou estimado
+    // Tempo: indicar se é real ou estimado
     const hasRealTime = (state.quizHistory || []).some(h => h.durationMinutes != null);
     const timePrefix  = hasRealTime ? '' : '~';
 
     const streakValue = state.user.streak || 0;
 
-    // Erros por mat├®ria no m├¬s
+    // Erros por matéria no mês
     const wrongByDisc = retro.wrongByDisc || {};
     const discOrder = ['humanas', 'natureza', 'linguagens', 'matematica'];
     const wrongRowsHtml = discOrder
@@ -312,13 +324,13 @@ function renderMonthlyRetro() {
 
     wrap.innerHTML = `
         <div class="section-header">
-            <span class="section-title">RETROSPECTIVA DO M├èS</span>
+            <span class="section-title">RETROSPECTIVA DO MÊS</span>
         </div>
         <div class="retro-card">
             <div class="retro-glow"></div>
             <div class="retro-header">
                 <div class="retro-title-block">
-                    <div class="retro-label">ENEM Master Wrapped Ô£¿</div>
+                    <div class="retro-label">ENEM Master Wrapped ✨</div>
                     <div class="retro-month">${monthLabel}</div>
                 </div>
                 <button class="retro-share-btn" onclick="shareRetro()">
@@ -328,48 +340,48 @@ function renderMonthlyRetro() {
             </div>
             <div class="retro-big-stats">
                 <div class="retro-stat">
-                    <span class="retro-stat-icon">­ƒôÜ</span>
+                    <span class="retro-stat-icon">📚</span>
                     <span class="retro-stat-value">${retro.totalQuestoes.toLocaleString('pt-BR')}</span>
-                    <span class="retro-stat-label">Quest├Áes</span>
+                    <span class="retro-stat-label">Questões</span>
                 </div>
                 <div class="retro-stat">
-                    <span class="retro-stat-icon">­ƒÄ»</span>
+                    <span class="retro-stat-icon">🎯</span>
                     <span class="retro-stat-value">${retro.accuracy}%</span>
                     <span class="retro-stat-label">Taxa de acerto</span>
                 </div>
                 <div class="retro-stat">
-                    <span class="retro-stat-icon">ÔÜí</span>
+                    <span class="retro-stat-icon">⚡</span>
                     <span class="retro-stat-value">${retro.totalXP.toLocaleString('pt-BR')}</span>
                     <span class="retro-stat-label">XP ganho</span>
                 </div>
                 <div class="retro-stat">
-                    <span class="retro-stat-icon">­ƒôà</span>
+                    <span class="retro-stat-icon">📅</span>
                     <span class="retro-stat-value">${retro.uniqueDays}</span>
                     <span class="retro-stat-label">Dias estudados</span>
                 </div>
             </div>
             <div class="retro-highlights">
-                ${bestLabel !== 'ÔÇö' ? `
+                ${bestLabel !== '—' ? `
                 <div class="retro-highlight-row">
-                    <div class="retro-highlight-left"><span class="retro-hl-icon">­ƒÅå</span><span class="retro-hl-text">Melhor mat├®ria</span></div>
+                    <div class="retro-highlight-left"><span class="retro-hl-icon">🏆</span><span class="retro-hl-text">Melhor matéria</span></div>
                     <span class="retro-hl-value">${bestLabel}</span>
                 </div>` : ''}
                 ${worstLabel ? `
                 <div class="retro-highlight-row">
-                    <div class="retro-highlight-left"><span class="retro-hl-icon">ÔÜö´©Å</span><span class="retro-hl-text">Focar mais em</span></div>
+                    <div class="retro-highlight-left"><span class="retro-hl-icon">⚔️</span><span class="retro-hl-text">Focar mais em</span></div>
                     <span class="retro-hl-value">${worstLabel}</span>
                 </div>` : ''}
                 <div class="retro-highlight-row">
-                    <div class="retro-highlight-left"><span class="retro-hl-icon">­ƒòÉ</span><span class="retro-hl-text">Tempo de estudo</span></div>
+                    <div class="retro-highlight-left"><span class="retro-hl-icon">🕐</span><span class="retro-hl-text">Tempo de estudo</span></div>
                     <span class="retro-hl-value">${timePrefix}${retro.studyHours}</span>
                 </div>
                 <div class="retro-highlight-row">
-                    <div class="retro-highlight-left"><span class="retro-hl-icon">­ƒôï</span><span class="retro-hl-text">Simulados feitos</span></div>
+                    <div class="retro-highlight-left"><span class="retro-hl-icon">📋</span><span class="retro-hl-text">Simulados feitos</span></div>
                     <span class="retro-hl-value">${retro.simulados} ${retro.simulados === 1 ? 'simulado' : 'simulados'}</span>
                 </div>
                 ${wrongRowsHtml ? `<div class="retro-wrong-section">${wrongRowsHtml}</div>` : ''}
                 <div class="retro-streak-pill">
-                    ­ƒöÑ Sequ├¬ncia atual: <strong>${streakValue} dia${streakValue !== 1 ? 's' : ''}</strong>
+                    🔥 Sequência atual: <strong>${streakValue} dia${streakValue !== 1 ? 's' : ''}</strong>
                 </div>
             </div>
         </div>`;
@@ -390,57 +402,147 @@ function shareRetro() {
         return;
     }
 
-    const MONTH_NAMES = ['Janeiro','Fevereiro','Mar├ºo','Abril','Maio','Junho',
+    const MONTH_NAMES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
                          'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
     const bestLabel = retro.bestArea
         ? `${retro.areaNames[retro.bestArea.disc]} (${retro.bestArea.pct}%)`
-        : 'ÔÇö';
+        : '—';
 
     const text = [
-        `­ƒÄô Meu ENEM Master Wrapped ÔÇö ${MONTH_NAMES[month]} ${year}`,
+        `🎓 Meu ENEM Master Wrapped — ${MONTH_NAMES[month]} ${year}`,
         ``,
-        `­ƒôÜ ${retro.totalQuestoes} quest├Áes respondidas`,
-        `­ƒÄ» ${retro.accuracy}% de taxa de acerto`,
-        `ÔÜí ${retro.totalXP.toLocaleString('pt-BR')} XP ganho`,
-        `­ƒôà ${retro.uniqueDays} dias estudados`,
-        `­ƒòÉ ~${retro.studyHours} de estudo estimado`,
-        `­ƒöÑ Sequ├¬ncia atual: ${state.user.streak || 0} dias`,
-        `­ƒÅå Melhor em: ${bestLabel}`,
+        `📚 ${retro.totalQuestoes} questões respondidas`,
+        `🎯 ${retro.accuracy}% de taxa de acerto`,
+        `⚡ ${retro.totalXP.toLocaleString('pt-BR')} XP ganho`,
+        `📅 ${retro.uniqueDays} dias estudados`,
+        `🕐 ~${retro.studyHours} de estudo estimado`,
+        `🔥 Sequência atual: ${state.user.streak || 0} dias`,
+        `🏆 Melhor em: ${bestLabel}`,
         ``,
-        `­ƒô▓ #ENEMMaster`,
+        `📲 #ENEMMaster`,
     ].join('\n');
 
     if (navigator.share) {
         navigator.share({ title: 'ENEM Master Wrapped', text }).catch(() => {});
     } else {
         navigator.clipboard.writeText(text)
-            .then(() => _showQuickToast('Copiado! Cole no WhatsApp ou Instagram ­ƒÄë'))
-            .catch(() => _showQuickToast('N├úo foi poss├¡vel copiar. Tente novamente.'));
+            .then(() => _showQuickToast('Copiado! Cole no WhatsApp ou Instagram 🎉'))
+            .catch(() => _showQuickToast('Não foi possível copiar. Tente novamente.'));
     }
 }
 
 function renderRecentActivity() {
-    const scroll = document.querySelector('.recent-badges-scroll');
+    const scroll = document.getElementById('recent-badges-scroll');
     if (!scroll) return;
 
-    const history = (state.quizHistory || []).slice(-6).reverse();
-    if (history.length === 0) return;
+    // Coletar badges desbloqueados de todas as categorias
+    const unlocked = [];
+    if (typeof BADGE_DEFINITIONS !== 'undefined' && state.badges) {
+        for (const [cat, defs] of Object.entries(BADGE_DEFINITIONS)) {
+            const earned = state.badges[cat] || [];
+            defs.forEach(def => {
+                if (earned.includes(def.id)) unlocked.push(def);
+            });
+        }
+    }
 
     scroll.innerHTML = '';
-    const discColors = {
-        humanas: 'teal-bg', natureza: 'purple-bg', linguagens: 'gold-bg', matematica: 'teal-bg', misto: 'purple-bg'
-    };
-    const discIcons = { humanas: '­ƒîì', natureza: '­ƒö¼', linguagens: '­ƒôØ', matematica: 'Ô×ù', misto: '­ƒÄ»' };
-    const discNames = { humanas: 'HUMANAS', natureza: 'NATUREZA', linguagens: 'LINGUAGENS', matematica: 'MATEM├üTICA', misto: 'MISTO' };
 
-    history.forEach(h => {
+    if (unlocked.length === 0) {
+        scroll.innerHTML = `<div style="padding:16px 0;color:var(--text-muted);font-size:13px;width:100%;text-align:center">Nenhuma conquista ainda — complete um simulado! 🎯</div>`;
+        return;
+    }
+
+    const catColors = { ofensiva: 'gold-bg', especialista: 'teal-bg', maratonista: 'purple-bg' };
+    unlocked.slice(-6).reverse().forEach(def => {
+        const cat = Object.entries(BADGE_DEFINITIONS).find(([, defs]) => defs.some(d => d.id === def.id))?.[0] || 'ofensiva';
         const badge = document.createElement('div');
-        badge.className = `recent-badge ${discColors[h.discipline] || 'teal-bg'}`;
-        badge.innerHTML = `
-            <div class="rb-icon">${discIcons[h.discipline] || '­ƒÄ»'}</div>
-            <span>${h.pct}% ÔÇö ${discNames[h.discipline] || h.discipline.toUpperCase()}</span>
-        `;
+        badge.className = `recent-badge ${catColors[cat] || 'teal-bg'}`;
+        badge.title = def.hint || def.name;
+        const iconEl = document.createElement('div');
+        iconEl.className = 'rb-icon';
+        iconEl.textContent = def.icon;
+        const labelEl = document.createElement('span');
+        labelEl.textContent = def.name.toUpperCase();
+        badge.appendChild(iconEl);
+        badge.appendChild(labelEl);
         scroll.appendChild(badge);
     });
 }
 
+// =====================================================
+// EDITAR PERFIL — NOME + COR DO AVATAR
+// =====================================================
+let _pendingAvatarGrad = null;
+
+function openAvatarEditModal() {
+    const overlay = document.getElementById('avatar-edit-overlay');
+    if (!overlay) return;
+
+    const s = state.user;
+    const safeName = (s.name && s.name.trim()) ? s.name : '';
+    const currentGrad = s.avatarColor || 'linear-gradient(135deg,#00b4a6,#0077b6)';
+    _pendingAvatarGrad = currentGrad;
+
+    const nameInput = document.getElementById('avatar-edit-name');
+    if (nameInput) nameInput.value = safeName;
+
+    // Marcar swatch ativo
+    document.querySelectorAll('.avatar-color-swatch').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.grad === currentGrad);
+    });
+
+    _refreshAvatarPreview(safeName, currentGrad);
+    overlay.style.display = 'flex';
+}
+
+function closeAvatarEditModal() {
+    _pendingAvatarGrad = null;
+    const overlay = document.getElementById('avatar-edit-overlay');
+    if (overlay) overlay.style.display = 'none';
+}
+
+function pickAvatarColor(btn) {
+    _pendingAvatarGrad = btn.dataset.grad;
+    document.querySelectorAll('.avatar-color-swatch').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const nameInput = document.getElementById('avatar-edit-name');
+    const name = nameInput ? nameInput.value.trim() : '';
+    _refreshAvatarPreview(name, _pendingAvatarGrad);
+}
+
+function updateAvatarPreview() {
+    const nameInput = document.getElementById('avatar-edit-name');
+    const name = nameInput ? nameInput.value.trim() : '';
+    _refreshAvatarPreview(name, _pendingAvatarGrad);
+}
+
+function _refreshAvatarPreview(name, grad) {
+    const preview = document.getElementById('avatar-preview');
+    if (!preview) return;
+    const letter = name ? name[0].toUpperCase() : '?';
+    preview.textContent = letter;
+    if (grad) {
+        preview.style.background = grad;
+        preview.style.borderColor = 'transparent';
+    }
+}
+
+function saveAvatarEdit() {
+    const nameInput = document.getElementById('avatar-edit-name');
+    const newName = nameInput ? nameInput.value.trim() : '';
+
+    if (newName) state.user.name = newName;
+    if (_pendingAvatarGrad) state.user.avatarColor = _pendingAvatarGrad;
+
+    saveState();
+    closeAvatarEditModal();
+
+    // Atualizar toda a UI
+    if (_pendingAvatarGrad) _applyAvatarColor(_pendingAvatarGrad);
+    renderProfile();
+    if (typeof renderDashboard === 'function') renderDashboard();
+    if (typeof renderSettings  === 'function') renderSettings();
+
+    _showQuickToast('✅ Perfil atualizado!');
+}

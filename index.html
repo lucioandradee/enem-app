@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 
 <head>
@@ -13,6 +13,8 @@
         rel="stylesheet" />
     <link rel="stylesheet" href="style.css?v=7" />
     <link rel="manifest" href="manifest.json" />
+    <link rel="icon" href="icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="icon-192.png" />
     <meta name="theme-color" content="#00b4a6" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -209,8 +211,8 @@
                     </div>
 
                     <!-- Botão sempre visível -->
-                    <button class="cta-btn enem-mode-btn" onclick="toggleENEMBanner()" style="background:linear-gradient(135deg,#00b4a6,#0077b6)">
-                        🎯 Simular ENEM
+                    <button class="cta-btn enem-mode-btn" id="enem-toggle-btn" onclick="toggleENEMBanner()" style="background:linear-gradient(135deg,#00b4a6,#0077b6)">
+                        📋 Ver Cadernos
                     </button>
 
                     <!-- Corpo colapsável -->
@@ -328,9 +330,9 @@
                 <div class="quiz-limit-banner" id="quiz-plan-limit" style="display:none"></div>
 
                 <div class="api-source-card" id="api-source-card">
-                    <span class="api-source-icon">🌐</span>
+                    <span class="api-source-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#00b4a6" stroke-width="1.8" width="26" height="26"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></span>
                     <div>
-                        <p class="api-source-title">Questões Reais do ENEM</p>
+                        <p class="api-source-title">+3.000 Questões Reais do ENEM</p>
                         <p class="api-source-sub" id="api-source-sub">Verificando banco de dados...</p>
                     </div>
                     <span class="api-source-status" id="api-source-status">⏳</span>
@@ -350,6 +352,33 @@
 
         <!-- ===================== SCREEN: QUIZ ===================== -->
         <section id="screen-quiz" class="screen">
+
+            <!-- Overlay de Instruções ENEM (pré-prova) -->
+            <div class="enem-instructions-overlay" id="enem-instructions-overlay">
+                <div class="enem-inst-card">
+                    <div class="enem-inst-header">
+                        <span class="enem-inst-seal">🏛️</span>
+                        <div>
+                            <p class="enem-inst-eyebrow">SIMULADO OFICIAL</p>
+                            <p class="enem-inst-day-title" id="enem-inst-day-title">1° DIA DE PROVA</p>
+                            <p class="enem-inst-day-desc" id="enem-inst-day-desc">Linguagens + Ciências Humanas</p>
+                        </div>
+                    </div>
+                    <div class="enem-inst-rules">
+                        <div class="enem-inst-rule"><span class="enem-inst-rule-icon">📋</span><span>90 questões de múltipla escolha</span></div>
+                        <div class="enem-inst-rule"><span class="enem-inst-rule-icon">⏱</span><span>5 horas e 30 minutos de duração</span></div>
+                        <div class="enem-inst-rule"><span class="enem-inst-rule-icon">📘</span><span>2 cadernos de conhecimento em sequência</span></div>
+                        <div class="enem-inst-rule"><span class="enem-inst-rule-icon">⚡</span><span>O tempo corre mesmo ao pausar o app</span></div>
+                    </div>
+                    <div class="enem-inst-cadernos-wrap">
+                        <p class="enem-inst-cadernos-title">CADERNOS DESTA PROVA</p>
+                        <div id="enem-inst-cadernos"></div>
+                    </div>
+                    <button class="cta-btn enem-inst-start-btn" id="enem-inst-start-btn">🏛️ INICIAR PROVA AGORA</button>
+                    <button class="enem-inst-cancel-btn" id="enem-inst-cancel-btn">Cancelar</button>
+                </div>
+            </div>
+
             <!-- Loading Overlay -->
             <div class="quiz-loading-overlay" id="quiz-loading-overlay">
                 <div class="loading-spinner"></div>
@@ -360,7 +389,8 @@
                 <button class="back-btn" onclick="onPauseQuizRequest()">✕</button>
                 <div class="quiz-meta">
                     <span class="quiz-area" id="quiz-area-label">CIÊNCIAS HUMANAS</span>
-                    <span class="quiz-type">Simulado ENEM</span>
+                    <span class="quiz-type" id="quiz-type-label">Simulado ENEM</span>
+                    <span class="quiz-caderno-chip" id="quiz-caderno-chip" style="display:none">CADERNO 1/2</span>
                 </div>
                 <div class="quiz-timer" id="quiz-timer">⏱ 12:45</div>
             </div>
@@ -428,13 +458,13 @@
 
                 <!-- Análise de desempenho por área -->
                 <div id="result-analysis" style="display:none">
-                    <p class="result-section-label">📊 DESEMPENHO POR ÁREA</p>
+                    <p class="result-section-label" id="result-breakdown-label">📊 DESEMPENHO POR ÁREA</p>
                     <div id="result-breakdown"></div>
 
                     <!-- Estimativa TRI simplificada -->
                     <div class="result-tri-card" id="result-tri-card">
                         <div class="result-tri-label-col">
-                            <p class="result-tri-title">🎯 Estimativa ENEM</p>
+                            <p class="result-tri-title" id="result-tri-title">🎯 Estimativa ENEM</p>
                             <p class="result-tri-desc" id="result-tri-desc">Baseado no seu desempenho</p>
                         </div>
                         <span class="result-tri-score" id="result-tri-score">—</span>
@@ -538,7 +568,7 @@
         <!-- ===================== SCREEN: CONQUISTAS ===================== -->
         <section id="screen-achievements" class="screen">
             <div class="inner-header">
-                <button class="back-btn" onclick="navigate('home')">←</button>
+                <button class="back-btn" onclick="navigate('profile')">←</button>
                 <h2 class="inner-title">Conquistas</h2>
                 <button class="icon-btn teal-icon">🏅</button>
             </div>
@@ -641,7 +671,7 @@
                 <div class="profile-header">
                     <div class="profile-avatar-wrap">
                         <div class="avatar large" id="profile-avatar">A</div>
-                        <span class="avatar-edit-btn">✏️</span>
+                        <span class="avatar-edit-btn" onclick="openAvatarEditModal()">✏️</span>
                     </div>
                     <h2 class="profile-name" id="profile-name">Alex</h2>
                     <div class="profile-badges-row">
@@ -695,31 +725,12 @@
                     </div>
                 </div>
 
-                <!-- Recent Activity -->
+                <!-- Conquistas Recentes -->
                 <div class="section-header">
-                    <span class="section-title">Atividade Recente</span>
-                    <button class="link-btn" onclick="showActivityHistory()">Ver todas</button>
+                    <span class="section-title">Conquistas Recentes</span>
+                    <button class="link-btn" onclick="navigate('achievements')">Ver todas →</button>
                 </div>
-                <div class="recent-badges-scroll">
-                    <div class="recent-badge teal-bg">
-                        <div class="rb-icon">🔥</div><span>STREAK 7D</span>
-                    </div>
-                    <div class="recent-badge gold-bg">
-                        <div class="rb-icon">🏆</div><span>MESTRE MATH</span>
-                    </div>
-                    <div class="recent-badge purple-bg">
-                        <div class="rb-icon">✍️</div><span>1ª REDAÇÃO</span>
-                    </div>
-                    <div class="recent-badge locked-bg">
-                        <div class="rb-icon">🔒</div><span>???</span>
-                    </div>
-                </div>
-
-                <!-- Análise Completa -->
-                <div class="section-header" style="margin-top:8px">
-                    <span class="section-title">Análise Detalhada</span>
-                    <button class="link-btn" onclick="navigate('analise')">Ver análise →</button>
-                </div>
+                <div class="recent-badges-scroll" id="recent-badges-scroll"></div>
 
                 <!-- Personal Goals -->
                 <div class="section-header">
@@ -728,13 +739,17 @@
                 </div>
                 <div class="goals-list" id="goals-list"></div>
 
-                <!-- Conta -->
+                <!-- Ações -->
                 <div class="section-header" style="margin-top:8px">
-                    <span class="section-title">Conta</span>
+                    <span class="section-title">Mais</span>
                 </div>
                 <div class="profile-account-actions">
+                    <button class="profile-action-row" onclick="navigate('analise')">
+                        <span>📊 Análise detalhada</span>
+                        <span class="arrow">›</span>
+                    </button>
                     <button class="profile-action-row" onclick="navigate('settings')">
-                        <span>⚙️ Configurações e perfil</span>
+                        <span>⚙️ Configurações</span>
                         <span class="arrow">›</span>
                     </button>
                     <button class="profile-action-row danger" onclick="logout()">
@@ -1193,10 +1208,13 @@
                 <span>Praticar</span>
             </button>
             <button class="nav-btn" id="nav-conteudo" onclick="navigate('conteudo')">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22">
-                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
-                    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
-                </svg>
+                <div style="position:relative;display:inline-flex">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22">
+                        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+                    </svg>
+                    <span class="nav-premium-badge" id="nav-conteudo-badge" style="display:none">👑</span>
+                </div>
                 <span>Conteúdo</span>
             </button>
             <button class="nav-btn" id="nav-ranking" onclick="navigate('ranking')">
@@ -1243,6 +1261,48 @@
                 </div>
                 <button class="cta-btn" onclick="saveGoals()">Salvar Metas</button>
                 <button class="btn-outline-full" onclick="closeGoalsModal()">Cancelar</button>
+            </div>
+        </div>
+
+        <!-- ===================== MODAL: EDITAR PERFIL ===================== -->
+        <div class="goals-modal-overlay" id="avatar-edit-overlay" style="display:none" onclick="closeAvatarEditModal()">
+            <div class="goals-modal" onclick="event.stopPropagation()">
+                <div class="pause-sheet-handle" style="margin:0 auto 12px"></div>
+                <p class="goals-modal-title">✏️ Editar Perfil</p>
+
+                <!-- Preview do avatar -->
+                <div style="display:flex;justify-content:center;margin-bottom:20px;">
+                    <div class="avatar large" id="avatar-preview" style="font-size:28px;"></div>
+                </div>
+
+                <!-- Nome -->
+                <div class="goals-modal-field">
+                    <label for="avatar-edit-name">NOME DE EXIBIÇÃO</label>
+                    <input type="text" id="avatar-edit-name" maxlength="40"
+                        placeholder="Seu nome"
+                        oninput="updateAvatarPreview()"
+                        style="background:var(--bg-elevated);border:1px solid var(--border-subtle);
+                               color:var(--text-primary);border-radius:var(--radius-sm);
+                               padding:10px 12px;font-size:14px;width:100%;box-sizing:border-box;" />
+                </div>
+
+                <!-- Paleta de cores -->
+                <div class="goals-modal-field">
+                    <label>COR DO AVATAR</label>
+                    <div class="avatar-color-palette" id="avatar-color-palette">
+                        <button class="avatar-color-swatch" data-grad="linear-gradient(135deg,#00b4a6,#0077b6)" onclick="pickAvatarColor(this)"></button>
+                        <button class="avatar-color-swatch" data-grad="linear-gradient(135deg,#7c3aed,#a78bfa)" onclick="pickAvatarColor(this)"></button>
+                        <button class="avatar-color-swatch" data-grad="linear-gradient(135deg,#f97316,#f5c518)" onclick="pickAvatarColor(this)"></button>
+                        <button class="avatar-color-swatch" data-grad="linear-gradient(135deg,#e11d48,#f97316)" onclick="pickAvatarColor(this)"></button>
+                        <button class="avatar-color-swatch" data-grad="linear-gradient(135deg,#0ea5e9,#6366f1)" onclick="pickAvatarColor(this)"></button>
+                        <button class="avatar-color-swatch" data-grad="linear-gradient(135deg,#16a34a,#0ea5e9)" onclick="pickAvatarColor(this)"></button>
+                        <button class="avatar-color-swatch" data-grad="linear-gradient(135deg,#be185d,#7c3aed)" onclick="pickAvatarColor(this)"></button>
+                        <button class="avatar-color-swatch" data-grad="linear-gradient(135deg,#d97706,#16a34a)" onclick="pickAvatarColor(this)"></button>
+                    </div>
+                </div>
+
+                <button class="cta-btn" onclick="saveAvatarEdit()">Salvar</button>
+                <button class="btn-outline-full" onclick="closeAvatarEditModal()">Cancelar</button>
             </div>
         </div>
 
@@ -1988,20 +2048,20 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
-    <script src="api.js?v=5"></script>
+    <script src="api.js?v=6"></script>
     <script src="questions.js?v=4"></script>
-    <script src="quiz.js?v=1"></script>
+    <script src="quiz.js?v=2"></script>
     <script src="ranking.js?v=1"></script>
-    <script src="notifications-ui.js?v=1"></script>
-    <script src="settings.js?v=1"></script>
-    <script src="profile.js?v=1"></script>
+    <script src="notifications-ui.js?v=2"></script>
+    <script src="settings.js?v=2"></script>
+    <script src="profile.js?v=2"></script>
     <script src="achievements.js?v=1"></script>
-    <script src="premium.js?v=1"></script>
-    <script src="redacao.js?v=1"></script>
-    <script src="onboarding.js?v=1"></script>
-    <script src="conteudo.js?v=1"></script>
-    <script src="social.js?v=1"></script>
-    <script src="app.js?v=14"></script>
+    <script src="premium.js?v=2"></script>
+    <script src="redacao.js?v=2"></script>
+    <script src="onboarding.js?v=2"></script>
+    <script src="conteudo.js?v=2"></script>
+    <script src="social.js?v=2"></script>
+    <script src="app.js?v=15"></script>
     <script src="supabase-config.js?v=12"></script>
     <script>
         // Registrar Service Worker (PWA)

@@ -146,7 +146,25 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
-function bootApp() {
+async function bootApp() {
+    // Verifica role no servidor (app_metadata não pode ser alterado pelo usuário)
+    const { data: { user: verifiedUser }, error: verifyErr } = await supabase.auth.getUser();
+    if (verifyErr || verifiedUser?.app_metadata?.role !== 'admin') {
+        await supabase.auth.signOut();
+        sessionStorage.removeItem(ADMIN_SESSION_KEY);
+        adminUser = null;
+        const errEl = document.getElementById('gate-error');
+        if (errEl) {
+            errEl.textContent = 'Acesso negado: conta sem privilégios de administrador.';
+            errEl.style.display = 'block';
+        }
+        const btn    = document.getElementById('gate-btn');
+        const btnTxt = document.getElementById('gate-btn-text');
+        if (btn)    btn.disabled = false;
+        if (btnTxt) btnTxt.textContent = 'Entrar';
+        return;
+    }
+    adminUser = verifiedUser;
     document.getElementById('gate').style.display = 'none';
     const appEl = document.getElementById('app');
     appEl.style.display = 'flex';

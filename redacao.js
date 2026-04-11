@@ -189,29 +189,50 @@ async function submitEssay() {
 
     try {
         const EDGE_URL = 'https://nkuiwdolkluetsadauwb.supabase.co/functions/v1/corrigir-redacao';
-        const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5rdWl3ZG9sa2x1ZXRzYWRhdXdiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyMjQ0OTgsImV4cCI6MjA4OTgwMDQ5OH0.xIkowv91_aL-v03HIPtg9Ni6M_rROs7VcZS2qa3PbV4';
 
         let result = null;
 
         // 1ª tentativa: Edge Function do servidor (chave central)
         try {
-            const res = await fetch(EDGE_URL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${ANON_KEY}`,
-                },
-                body: JSON.stringify({ theme, text }),
-            });
-            if (res.ok) {
-                const body = await res.json().catch(() => null);
-                if (body && body.c1) result = body;
-            } else if (res.status !== 404 && res.status !== 503) {
-                const body = await res.json().catch(() => ({}));
-                throw new Error(body?.error || `Erro ${res.status} na correção por IA.`);
+            // Garante sessão válida — no mobile ela pode expirar silenciosamente
+            let { data: sessionData } = await supabase.auth.getSession().catch(() => ({ data: null }));
+            if (!sessionData?.session?.access_token) {
+                const { data: refreshed } = await supabase.auth.refreshSession().catch(() => ({ data: null }));
+                sessionData = refreshed;
+            }
+            const authToken = sessionData?.session?.access_token ?? '';
+
+            if (authToken) {
+                // Timeout de 28s — evita requisição pendurada no mobile
+                const edgeCtrl  = new AbortController();
+                const edgeTimer = setTimeout(() => edgeCtrl.abort(), 28000);
+                let res;
+                try {
+                    res = await fetch(EDGE_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+                        body: JSON.stringify({ theme, text }),
+                        signal: edgeCtrl.signal,
+                    });
+                } finally {
+                    clearTimeout(edgeTimer);
+                }
+
+                if (res.ok) {
+                    const body = await res.json().catch(() => null);
+                    if (body?.c1) result = body;
+                } else if (res.status === 403) {
+                    // 403 = usuário não é premium — ÚNICO status que interrompe o fluxo
+                    const body = await res.json().catch(() => ({}));
+                    const gateErr = new Error(body?.error || 'Recurso exclusivo do plano Premium.');
+                    gateErr._gate = true;
+                    throw gateErr;
+                }
+                // 401, 429, 500, 502, 503, 404, timeout → cai no fallback Groq silenciosamente
             }
         } catch (edgeErr) {
-            if (edgeErr.message && !edgeErr.message.includes('fetch')) throw edgeErr;
+            if (edgeErr._gate) throw edgeErr; // re-lança só o paywall
+            console.warn('[redacao] Edge Function indisponível:', edgeErr.message, '— usando fallback Groq');
         }
 
         // 2ª tentativa: Groq API diretamente com chave do usuário
@@ -225,26 +246,64 @@ async function submitEssay() {
                 throw new Error('A correção automática está indisponível. Insira sua chave Groq abaixo para continuar.');
             }
 
-            const PROMPT = `Você é um avaliador oficial de redações do ENEM. Corrija a redação abaixo usando as 5 competências. Para cada uma, dê nota de 0 a 200 (múltiplos de 40) e feedback de 2-3 linhas.\n\nTEMA: "${theme}"\n\nREDAÇÃO:\n${text}\n\nRetorne APENAS JSON válido sem markdown:\n{"c1":{"nota":120,"feedback":"..."},"c2":{"nota":160,"feedback":"..."},"c3":{"nota":120,"feedback":"..."},"c4":{"nota":120,"feedback":"..."},"c5":{"nota":80,"feedback":"..."},"total":600,"comentario_geral":"..."}`;
+            const PROMPT = `Você é um corretor oficial credenciado do ENEM com 10 anos de experiência. Leia ATENTAMENTE a redação abaixo e corrija com rigor real — as notas devem refletir o texto específico enviado.
 
-            const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
-                body: JSON.stringify({
-                    model: 'llama-3.3-70b-versatile',
-                    messages: [{ role: 'user', content: PROMPT }],
-                    temperature: 0.3,
-                    max_tokens: 1500,
-                }),
-            });
+TEMA: "${theme}"
+
+REDAÇÃO DO ALUNO:
+${text}
+
+INSTRUÇÕES por competência (notas em múltiplos de 40: 0, 40, 80, 120, 160 ou 200):
+- C1 (Norma culta): identifique erros gramaticais, ortográficos ou de pontuação que aparecem no texto. Se houver erros graves ou frequentes, limite a nota a no máximo 120.
+- C2 (Repertório e tema): o aluno fugiu do tema, tangenciou ou desenvolveu bem? Comente a qualidade e pertinência do repertório sociocultural usado.
+- C3 (Argumentação): os argumentos são coerentes e progressivos? A tese está clara? Há contradições ou argumentos superficiais?
+- C4 (Coesão): identifique os conectivos usados. O texto tem boa articulação entre parágrafos? Há repetições excessivas de palavras?
+- C5 (Proposta de intervenção): a proposta contém os 5 elementos obrigatórios (ação + agente + modo/instrumento + efeito esperado + finalidade)? Respeita os direitos humanos?
+
+Seja HONESTO e RIGOROSO. Redações diferentes devem receber notas diferentes — nunca repita automaticamente os mesmos valores. Mencione aspectos concretos do texto fornecido nos feedbacks.
+
+Retorne APENAS JSON válido sem markdown:
+{"c1":{"nota":NUMERO,"feedback":"feedback específico sobre esta redação"},"c2":{"nota":NUMERO,"feedback":"..."},"c3":{"nota":NUMERO,"feedback":"..."},"c4":{"nota":NUMERO,"feedback":"..."},"c5":{"nota":NUMERO,"feedback":"..."},"total":SOMA_DAS_5_NOTAS,"comentario_geral":"Análise geral desta redação específica, citando pontos fortes e fracos concretos encontrados no texto."}`;
+
+            // Timeout de 28s — evita requisição pendurada no mobile
+            const groqCtrl  = new AbortController();
+            const groqTimer = setTimeout(() => groqCtrl.abort(), 28000);
+            let groqRes;
+            try {
+                groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+                    body: JSON.stringify({
+                        model: 'llama-3.3-70b-versatile',
+                        messages: [{ role: 'user', content: PROMPT }],
+                        temperature: 0.6,
+                        max_tokens: 2000,
+                    }),
+                    signal: groqCtrl.signal,
+                });
+            } catch (netErr) {
+                if (netErr.name === 'AbortError')
+                    throw new Error('Tempo limite esgotado. Verifique sua conexão e tente novamente.');
+                throw new Error('Sem conexão com a internet. Verifique sua rede e tente novamente.');
+            } finally {
+                clearTimeout(groqTimer);
+            }
+
             if (groqRes.status === 401) throw new Error('Chave Groq inválida. Verifique e tente novamente.');
-            if (groqRes.status === 429) throw new Error('Limite de requisições atingido. Aguarde um momento.');
-            if (!groqRes.ok) throw new Error(`Erro ${groqRes.status} na API Groq.`);
-            const groqData = await groqRes.json();
+            if (groqRes.status === 429) throw new Error('Serviço de IA sobrecarregado. Aguarde 30 segundos e tente novamente.');
+            if (groqRes.status >= 500) throw new Error('O serviço de IA está temporariamente fora do ar. Tente novamente em alguns minutos.');
+            if (!groqRes.ok)           throw new Error(`Erro ${groqRes.status} na API de IA. Tente novamente.`);
+
+            const groqData = await groqRes.json().catch(() => null);
+            if (!groqData) throw new Error('Resposta da IA em formato inesperado. Tente novamente.');
             const raw = groqData.choices?.[0]?.message?.content || '';
-            const m = raw.match(/\{[\s\S]*\}/);
-            if (!m) throw new Error('Resposta da IA em formato inesperado.');
-            result = JSON.parse(m[0]);
+            const m   = raw.match(/\{[\s\S]*\}/);
+            if (!m) throw new Error('A IA retornou um formato inesperado. Tente novamente.');
+            try {
+                result = JSON.parse(m[0]);
+            } catch {
+                throw new Error('Não foi possível interpretar a resposta da IA. Tente novamente.');
+            }
         }
 
         if (!result || !result.c1) throw new Error('Resposta inesperada da IA.');
@@ -274,7 +333,18 @@ async function submitEssay() {
 
     } catch (err) {
         console.error('❌ Erro na correção:', err);
-        alert(`❌ ${err.message}`);
+        const msg = err.message || 'Ocorreu um erro inesperado. Tente novamente.';
+        // Mostra o erro na área de resultado (sem alert bloqueante)
+        const resultEl = document.getElementById('redacao-result');
+        if (resultEl) {
+            resultEl.style.display = '';
+            resultEl.innerHTML = `<div style="color:#ef4444;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);border-radius:12px;padding:20px;text-align:center;font-size:15px;font-weight:600;line-height:1.5">❌ ${msg}</div>`;
+            resultEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        } else if (typeof _showQuickToast === 'function') {
+            _showQuickToast(`❌ ${msg}`);
+        } else {
+            alert(`❌ ${msg}`);
+        }
     } finally {
         btn.disabled    = false;
         btn.textContent = '🤖 Corrigir com IA';

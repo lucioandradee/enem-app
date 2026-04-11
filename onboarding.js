@@ -4,7 +4,7 @@
 let obStep = 1;
 let obGoal = '';
 // =====================================================
-// ONBOARDING ÔÇö Helpers de valida├º├úo em tempo real
+// ONBOARDING — Helpers de validação em tempo real
 // =====================================================
 
 function _obClearFieldError(fieldId) {
@@ -21,7 +21,7 @@ function _obSetFieldState(fieldId, ok, tooltip) {
     const icon = document.getElementById(fieldId + '-icon');
     if (el) el.style.borderColor = ok ? 'var(--teal)' : 'var(--red, #ef4444)';
     if (icon) {
-        icon.textContent = ok ? 'Ô£ö' : 'Ô£û';
+        icon.textContent = ok ? '✔' : '✖';
         icon.className = 'ob-field-icon ' + (ok ? 'ob-icon-ok' : 'ob-icon-err');
         icon.title = tooltip || '';
     }
@@ -51,8 +51,8 @@ function _obCheckPasswordStrength() {
 
     const levels = [
         { pct: '20%',  color: '#ef4444', text: 'Fraca' },
-        { pct: '40%',  color: '#f97316', text: 'Razo├ível' },
-        { pct: '60%',  color: '#eab308', text: 'M├®dia' },
+        { pct: '40%',  color: '#f97316', text: 'Razoável' },
+        { pct: '60%',  color: '#eab308', text: 'Média' },
         { pct: '80%',  color: '#22c55e', text: 'Boa' },
         { pct: '100%', color: '#00b4a6', text: 'Excelente' },
     ];
@@ -72,17 +72,17 @@ async function _obCheckEmailOnBlur() {
 
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!re.test(email)) {
-        _obSetFieldState('ob-email', false, 'E-mail inv├ílido');
-        if (hintEl) { hintEl.textContent = 'E-mail inv├ílido.'; hintEl.className = 'ob-field-hint ob-hint-err'; }
+        _obSetFieldState('ob-email', false, 'E-mail inválido');
+        if (hintEl) { hintEl.textContent = 'E-mail inválido.'; hintEl.className = 'ob-field-hint ob-hint-err'; }
         return;
     }
 
-    // Normalizar: sempre min├║sculas
+    // Normalizar: sempre minúsculas
     emailEl.value = email;
 
     if (hintEl) { hintEl.textContent = 'Verificando...'; hintEl.className = 'ob-field-hint ob-hint-info'; }
 
-    // Verifica se email j├í existe tentando uma busca na tabela public.users (sem expor dados)
+    // Verifica se email já existe tentando uma busca na tabela public.users (sem expor dados)
     try {
         if (typeof supabase !== 'undefined' && supabase) {
             const { data, error } = await supabase
@@ -91,22 +91,22 @@ async function _obCheckEmailOnBlur() {
                 .eq('email', email)
                 .maybeSingle();
             if (!error && data) {
-                _obSetFieldState('ob-email', false, 'E-mail j├í cadastrado');
-                if (hintEl) { hintEl.textContent = 'Este e-mail j├í tem conta. ├ë voc├¬?'; hintEl.className = 'ob-field-hint ob-hint-err'; }
+                _obSetFieldState('ob-email', false, 'E-mail já cadastrado');
+                if (hintEl) { hintEl.textContent = 'Este e-mail já tem conta. É você?'; hintEl.className = 'ob-field-hint ob-hint-err'; }
                 // Link no hint para ir ao login
                 if (hintEl) {
-                    hintEl.innerHTML = 'Este e-mail j├í tem conta. <button class="link-inline" onclick="navigate(\'login\')" style="font-size:11px">Fazer login ÔåÆ</button>';
+                    hintEl.innerHTML = 'Este e-mail já tem conta. <button class="link-inline" onclick="navigate(\'login\')" style="font-size:11px">Fazer login →</button>';
                 }
                 return;
             }
         }
-    } catch { /* falha silenciosa ÔÇö n├úo bloqueia o fluxo */ }
+    } catch { /* falha silenciosa — não bloqueia o fluxo */ }
 
-    _obSetFieldState('ob-email', true, 'E-mail dispon├¡vel');
-    if (hintEl) { hintEl.textContent = 'Ô£ö E-mail dispon├¡vel'; hintEl.className = 'ob-field-hint ob-hint-ok'; }
+    _obSetFieldState('ob-email', true, 'E-mail disponível');
+    if (hintEl) { hintEl.textContent = '✔ E-mail disponível'; hintEl.className = 'ob-field-hint ob-hint-ok'; }
 }
 
-let _pendingPassword = ''; // senha tempor├íria ÔÇö nunca entra no state nem no localStorage
+let _pendingPassword = ''; // senha temporária — nunca entra no state nem no localStorage
 
 async function onboardingNext() {
     if (obStep === 1) {
@@ -130,36 +130,36 @@ async function onboardingNext() {
         };
         if (errorEl) { errorEl.textContent = ''; errorEl.style.display = 'none'; }
 
-        // ÔÇö Nome obrigat├│rio (m├¡nimo 3 caracteres) ÔÇö
+        // — Nome obrigatório (mínimo 3 caracteres) —
         if (!name || name.length < 3) {
             _obSetFieldState('ob-name', false, 'Nome muito curto');
-            showError('Digite seu nome completo (m├¡nimo 3 caracteres).', nameEl);
+            showError('Digite seu nome completo (mínimo 3 caracteres).', nameEl);
             return;
         }
         _obSetFieldState('ob-name', true);
 
-        // ÔÇö E-mail v├ílido ÔÇö
+        // — E-mail válido —
         const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!re.test(email)) {
-            _obSetFieldState('ob-email', false, 'E-mail inv├ílido');
-            showError('Digite um e-mail v├ílido.', emailEl);
+            _obSetFieldState('ob-email', false, 'E-mail inválido');
+            showError('Digite um e-mail válido.', emailEl);
             return;
         }
-        if (emailEl) emailEl.value = email; // normaliza min├║sculas
+        if (emailEl) emailEl.value = email; // normaliza minúsculas
 
-        // ÔÇö Senha: m├¡nimo 8 caracteres + pelo menos 1 n├║mero ÔÇö
+        // — Senha: mínimo 8 caracteres + pelo menos 1 número —
         if (password.length < 8) {
             showError('A senha deve ter pelo menos 8 caracteres.', passwordEl);
             return;
         }
         if (!/[0-9]/.test(password)) {
-            showError('A senha deve conter pelo menos 1 n├║mero.', passwordEl);
+            showError('A senha deve conter pelo menos 1 número.', passwordEl);
             return;
         }
 
-        // ÔÇö Verificar email duplicado no Supabase antes de avan├ºar ÔÇö
+        // — Verificar email duplicado no Supabase antes de avançar —
         const btn = document.getElementById('ob-btn');
-        const origBtnText = btn?.textContent || 'Pr├│ximo';
+        const origBtnText = btn?.textContent || 'Próximo';
         if (btn) { btn.disabled = true; btn.textContent = 'Verificando...'; }
         try {
             if (typeof supabase !== 'undefined' && supabase) {
@@ -169,17 +169,17 @@ async function onboardingNext() {
                     .eq('email', email)
                     .maybeSingle();
                 if (data) {
-                    _obSetFieldState('ob-email', false, 'E-mail j├í cadastrado');
+                    _obSetFieldState('ob-email', false, 'E-mail já cadastrado');
                     if (hintEl) {
-                        hintEl.innerHTML = 'Este e-mail j├í tem conta. <button class="link-inline" onclick="navigate(\'login\')" style="font-size:11px">Fazer login ÔåÆ</button>';
+                        hintEl.innerHTML = 'Este e-mail já tem conta. <button class="link-inline" onclick="navigate(\'login\')" style="font-size:11px">Fazer login →</button>';
                         hintEl.className = 'ob-field-hint ob-hint-err';
                     }
-                    showError('Este e-mail j├í est├í cadastrado. Fa├ºa login.', emailEl);
+                    showError('Este e-mail já está cadastrado. Faça login.', emailEl);
                     if (btn) { btn.disabled = false; btn.textContent = origBtnText; }
                     return;
                 }
             }
-        } catch { /* offline ÔÇö continua e o Supabase rejeitar├í no signUp */ }
+        } catch { /* offline — continua e o Supabase rejeitará no signUp */ }
         if (btn) { btn.disabled = false; btn.textContent = origBtnText; }
 
         _obSetFieldState('ob-email', true);
@@ -188,11 +188,11 @@ async function onboardingNext() {
         _pendingPassword = password;
         goToObStep(2);
     } else if (obStep === 2) {
-        if (!obGoal) { obGoal = 'Rumo ├á Federal ­ƒÜÇ'; }
+        if (!obGoal) { obGoal = 'Rumo à Federal 🚀'; }
         if (obGoal === 'outro') {
             const customInput = document.getElementById('ob-outro-input');
             const customVal = customInput ? customInput.value.trim() : '';
-            obGoal = customVal ? customVal : 'Rumo ├á Federal ­ƒÜÇ';
+            obGoal = customVal ? customVal : 'Rumo à Federal 🚀';
         }
         state.user.goal = obGoal;
         goToObStep(3);
@@ -213,7 +213,7 @@ function goToObStep(step) {
     });
 
     if (step === 3) {
-        document.getElementById('ob-btn').textContent = 'Come├ºar a Estudar ­ƒÜÇ';
+        document.getElementById('ob-btn').textContent = 'Começar a Estudar 🚀';
     }
     obStep = step;
 }
@@ -240,30 +240,30 @@ function skipOnboarding() {
     finishOnboarding();
 }
 
-// Handler para login com Google OAuth ÔÇö redireciona para provedor
+// Handler para login com Google OAuth — redireciona para provedor
 async function handleGoogleLogin() {
 
 
     const btn = document.getElementById('google-login-btn') ||
                 document.querySelector('.google-login-btn');
     const origText = btn ? btn.textContent.trim() : 'Entrar com Google';
-    if (btn) { btn.disabled = true; btn.textContent = 'ÔÅ│ Redirecionando...'; }
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ Redirecionando...'; }
 
     // Garantir que o Supabase esteja iniciado
     if (typeof _initSupabase !== 'undefined') _initSupabase();
 
     const _showError = (msg) => {
-        console.error('ÔØî Google login:', msg);
+        console.error('❌ Google login:', msg);
         const errorEl = document.getElementById('login-error');
         if (errorEl) { errorEl.style.display = 'block'; errorEl.textContent = msg; }
-        else { _showQuickToast('ÔØî ' + msg); }
+        else { _showQuickToast('❌ ' + msg); }
         if (btn) { btn.disabled = false; btn.textContent = origText; }
     };
 
     try {
         const sb = window.supabase;
         if (!sb || !sb.auth) {
-            _showError('Conex├úo com servidor falhou. Recarregue a p├ígina.');
+            _showError('Conexão com servidor falhou. Recarregue a página.');
             return;
         }
 
@@ -276,7 +276,7 @@ async function handleGoogleLogin() {
         });
 
         if (error) { _showError(error.message); return; }
-        // Fallback manual: se o SDK n├úo redirecionou automaticamente
+        // Fallback manual: se o SDK não redirecionou automaticamente
         if (data && data.url) {
             window.location.href = data.url;
         }

@@ -150,6 +150,11 @@ SECURITY DEFINER
 SET search_path = ''
 AS $$
 BEGIN
+    -- Apenas usuários com role 'admin' em app_metadata podem chamar
+    IF (auth.jwt() -> 'app_metadata' ->> 'role') IS DISTINCT FROM 'admin' THEN
+        RAISE EXCEPTION 'Acesso negado: privilégios de administrador necessários.';
+    END IF;
+
     UPDATE public.users
     SET plan            = 'premium',
         plan_expires_at = NOW() + (p_days || ' days')::INTERVAL,
@@ -174,6 +179,11 @@ SECURITY DEFINER
 SET search_path = ''
 AS $$
 BEGIN
+    -- Apenas usuários com role 'admin' em app_metadata podem chamar
+    IF (auth.jwt() -> 'app_metadata' ->> 'role') IS DISTINCT FROM 'admin' THEN
+        RAISE EXCEPTION 'Acesso negado: privilégios de administrador necessários.';
+    END IF;
+
     UPDATE public.users
     SET plan            = 'free',
         plan_expires_at = NULL,
@@ -188,3 +198,26 @@ $$;
 
 REVOKE ALL ON FUNCTION public.admin_remove_premium(TEXT) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.admin_remove_premium(TEXT) TO authenticated;
+
+-- ─── 9. Tabela redacao_corrections (rate limiting para Edge Function) ─────────
+-- Registra cada correção de redação para impor limite de 5/dia por usuário.
+CREATE TABLE IF NOT EXISTS public.redacao_corrections (
+  id         BIGSERIAL   PRIMARY KEY,
+  user_id    UUID        NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+  theme      TEXT,
+  score      INTEGER,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE public.redacao_corrections ENABLE ROW LEVEL SECURITY;
+
+-- Apenas service_role (Edge Function) pode inserir e ler para rate limiting
+CREATE POLICY "Service role manages redacao_corrections" ON public.redacao_corrections
+  FOR ALL TO service_role USING (true) WITH CHECK (true);
+
+-- Usuário pode ver seu próprio histórico
+CREATE POLICY "Users can read own corrections" ON public.redacao_corrections
+  FOR SELECT TO authenticated USING (auth.uid() = user_id);
+
+CREATE INDEX IF NOT EXISTS idx_redacao_corrections_user_date
+  ON public.redacao_corrections (user_id, created_at DESC);

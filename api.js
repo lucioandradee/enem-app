@@ -57,32 +57,47 @@ const ENEM_DAY_CONFIG = {
     ],
 };
 
+/* Offset fixo de cada disciplina no exame ENEM (Q.1-45, Q.46-90, ...) */
+const DISC_OFFSET = {
+    'linguagens':        0,
+    'ciencias-humanas':  45,
+    'ciencias-natureza': 90,
+    'matematica':        135,
+};
+
 /* ---- Cache helpers ---- */
+// Dois níveis: memória (instântaneo, sem JSON.parse) + localStorage (persistência)
+const _memCache = new Map();
+
 function cacheGet(key) {
+    if (_memCache.has(key)) return _memCache.get(key); // hit: sem JSON.parse
     try {
         const raw = localStorage.getItem(key);
         if (!raw) return null;
-        const { data, ts } = JSON.parse(raw);
+        const { data, ts } = JSON.parse(raw); // parse só 1x por chave por sessão
         if (Date.now() - ts > CACHE_TTL) { localStorage.removeItem(key); return null; }
+        _memCache.set(key, data); // promove para memória
         return data;
     } catch { return null; }
 }
 
 function cacheSet(key, data) {
-    try { localStorage.setItem(key, JSON.stringify({ data, ts: Date.now() })); } catch (e) {
+    _memCache.set(key, data); // memória imediata
+    try { localStorage.setItem(key, JSON.stringify({ data, ts: Date.now() })); } catch {
         console.warn('Cache cheio, limpando itens antigos...');
         clearOldCache();
+        try { localStorage.setItem(key, JSON.stringify({ data, ts: Date.now() })); } catch { /* noop */ }
     }
 }
 
 function clearOldCache() {
-    const keys = Object.keys(localStorage).filter(k => /^enem_q[23]?_/.test(k));
+    const keys = Object.keys(localStorage).filter(k => /^enem_q[234c]/.test(k));
     keys.sort();
     keys.slice(0, Math.max(1, keys.length - 2)).forEach(k => localStorage.removeItem(k));
 }
 
 /* ---- Fetch com timeout ---- */
-async function apiFetch(path, timeout = 10000) {
+async function apiFetch(path, timeout = 5000) {
     const ctrl = new AbortController();
     const id = setTimeout(() => ctrl.abort(), timeout);
     try {
@@ -126,6 +141,34 @@ async function fetchAllQuestionsForYear(year) {
     return questions;
 }
 
+/* ---- Buscar 1 caderno de 1 ano (1 request, cache leve por disciplina) ---- */
+async function fetchDisciplineQuestions(year, disc) {
+    const cacheKey = `enem_qc_${year}_${disc}`;
+    const cached = cacheGet(cacheKey);
+    if (cached) return cached;
+    const offset = DISC_OFFSET[disc] ?? 0;
+    // Timeout de 4s por request individual (antes era 5s global)
+    const data = await apiFetch(`/exams/${year}/questions?limit=45&offset=${offset}`, 4000);
+    const questions = (data.questions || []).filter(q => q.discipline === disc);
+    if (questions.length > 0) cacheSet(cacheKey, questions);
+    return questions;
+}
+
+/* ---- Pré-aquecer cache silenciosamente (fire-and-forget) ---- */
+async function prewarmENEM(yearsCount = 2) {
+    try {
+        const years = await fetchAvailableYears();
+        if (!years || !years.length) return;
+        const off = _getYearOffset ? _getYearOffset(years) : 0;
+        const rotated = [...years.slice(off), ...years.slice(0, off)];
+        const top = rotated.slice(0, Math.min(yearsCount, rotated.length));
+        // Todos os cadernos dos primeiros N anos em paralelo — cache fica pronto antes do clique
+        await Promise.all(
+            top.flatMap(y => Object.keys(DISC_OFFSET).map(d => fetchDisciplineQuestions(y, d).catch(() => {})))
+        );
+    } catch { /* noop */ }
+}
+
 /* ---- Normalizar questão da API → formato app ---- */
 function normalizeQuestion(q) {
     const letterToIdx = { A: 0, B: 1, C: 2, D: 3, E: 4 };
@@ -157,35 +200,126 @@ function normalizeQuestion(q) {
     };
 }
 
+/* ---- Leitura de cache apenas (sem rede, 0ms) ---- */
+// Usado no caminho crítico do startQuiz para eliminar qualquer espera
+function getQuizQuestionsIfCached(discipline, count) {
+    try {
+        const years = cacheGet('enem_exams_v2');
+        if (!years || years.length === 0) return null;
+
+        const off = _getYearOffset(years);
+        const rotated = [...years.slice(off), ...years.slice(0, off)];
+
+        const discs = discipline === 'misto'
+            ? Object.keys(DISC_OFFSET)
+            : [DISC_MAP[discipline]].filter(Boolean);
+
+        let pool = [];
+        for (const year of rotated.slice(0, 4)) {
+            for (const disc of discs) {
+                const qs = cacheGet(`enem_qc_${year}_${disc}`);
+                if (!qs) continue;
+                const valid = qs.filter(q =>
+                    q.alternatives && q.alternatives.length >= 2 &&
+                    q.alternatives.some(a => a.text && a.text.trim().length > 5)
+                );
+                pool = [...pool, ...valid];
+            }
+        }
+
+        if (pool.length < count) return null;
+
+        const seen = getSeenIds();
+        const unseen = pool.filter(q => !seen.has(`${q.year}-${q.index}`));
+        const source = unseen.length >= count ? unseen : pool;
+        if (unseen.length < count) clearSeen();
+
+        const selected = [...source].sort(() => Math.random() - 0.5).slice(0, count);
+        markSeen(selected);
+        return selected.map(normalizeQuestion);
+    } catch { return null; }
+}
+
+function getENEMDayQuestionsIfCached(day) {
+    try {
+        const years = cacheGet('enem_exams_v2');
+        if (!years || years.length === 0) return null;
+
+        const config = ENEM_DAY_CONFIG[day];
+        if (!config) return null;
+
+        const off = _getYearOffset(years);
+        const rotated = [...years.slice(off), ...years.slice(0, off)];
+
+        const results = [];
+        for (const caderno of config) {
+            const pool = [];
+            for (const year of rotated.slice(0, 4)) {
+                const qs = cacheGet(`enem_qc_${year}_${caderno.disc}`);
+                if (!qs) continue;
+                pool.push(...qs.filter(q =>
+                    q.alternatives && q.alternatives.length >= 2 &&
+                    q.alternatives.some(a => a.text && a.text.trim().length > 5)
+                ));
+            }
+            if (pool.length < 45) return null; // caderno incompleto → fallback
+            const selected = [...pool].sort(() => Math.random() - 0.5).slice(0, 45);
+            selected.forEach((q, i) => results.push({
+                ...normalizeQuestion(q),
+                enemNumber: caderno.start + i,
+                enemArea: caderno.label,
+            }));
+        }
+        return results.length > 0 ? results : null;
+    } catch { return null; }
+}
+
+/* ---- Rotação de anos por sessão (garante variedade de questões) ---- */
+function _getYearOffset(years) {
+    const key = 'enem_yr_off';
+    let off = parseInt(sessionStorage.getItem(key) || '-1');
+    if (off < 0 || off >= years.length) {
+        off = Math.floor(Math.random() * Math.min(years.length, 6));
+        try { sessionStorage.setItem(key, String(off)); } catch {}
+    }
+    return off;
+}
+
 /* ---- Função principal: pegar questões para o quiz ---- */
 async function getQuizQuestions(discipline, count = 10) {
     try {
         const years = await fetchAvailableYears();
         if (!years || years.length === 0) throw new Error('Nenhum ano disponível');
 
+        const off = _getYearOffset(years);
+        const rotated = [...years.slice(off), ...years.slice(0, off)];
+        const batch = rotated.slice(0, Math.min(3, rotated.length));
+
         let pool = [];
+        const apiDisc = DISC_MAP[discipline];
 
-        // Busca até 5 anos para ter pool grande o suficiente
-        for (let i = 0; i < Math.min(5, years.length); i++) {
-            const all = await fetchAllQuestionsForYear(years[i]);
-            let filtered;
-
-            if (discipline === 'misto') {
-                filtered = all;
-            } else {
-                const apiDisc = DISC_MAP[discipline];
-                filtered = apiDisc ? all.filter(q => q.discipline === apiDisc) : all;
+        if (discipline !== 'misto' && apiDisc && DISC_OFFSET[apiDisc] !== undefined) {
+            // Disciplina específica: busca só o offset certo (1 request por ano, 3 em paralelo)
+            const pages = await Promise.all(batch.map(y => fetchDisciplineQuestions(y, apiDisc).catch(() => [])));
+            for (const qs of pages) {
+                const filtered = qs.filter(q =>
+                    q.alternatives && q.alternatives.length >= 2 &&
+                    q.alternatives.some(a => a.text && a.text.trim().length > 5)
+                );
+                pool = [...pool, ...filtered];
             }
-
-            // Apenas questões com alternativas de texto válidas
-            filtered = filtered.filter(q =>
-                q.alternatives &&
-                q.alternatives.length >= 2 &&
-                q.alternatives.some(a => a.text && a.text.trim().length > 5)
+        } else {
+            // Misto: busca as 4 disciplinas individualmente em paralelo (requests menores)
+            const allPages = await Promise.all(
+                batch.flatMap(y => Object.keys(DISC_OFFSET).map(d => fetchDisciplineQuestions(y, d).catch(() => [])))
             );
-
-            pool = [...pool, ...filtered];
-            if (pool.length >= count * 8) break; // Pool com margem ampla
+            for (const qs of allPages) {
+                const filtered = qs.filter(q =>
+                    q.alternatives && q.alternatives.length >= 2 &&
+                    q.alternatives.some(a => a.text && a.text.trim().length > 5)
+                );
+                pool = [...pool, ...filtered];
+            }
         }
 
         if (pool.length === 0) throw new Error('Pool vazio');
@@ -211,8 +345,30 @@ async function getQuizQuestions(discipline, count = 10) {
     }
 }
 
-/* ---- ENEM Dia completo: 45 questões por caderno em ordem real ---- */
+/* ---- ENEM Dia completo: fetch direto por disciplina, cache quente = instantâneo ---- */
 async function getENEMDayQuestions(day = 1) {
+    // Busca 45 questões de UM caderno usando o offset fixo da disciplina (1 req/ano)
+    async function _fetchCaderno(caderno, rotatedYears) {
+        const seen = new Set();
+        const acc  = [];
+        for (const year of rotatedYears.slice(0, 3)) {
+            if (acc.length >= 45) break;
+            const qs = await fetchDisciplineQuestions(year, caderno.disc).catch(() => []);
+            const valid = qs.filter(q =>
+                q.alternatives && q.alternatives.length >= 2 &&
+                q.alternatives.some(a => a.text && a.text.trim().length > 5)
+            );
+            for (const q of [...valid].sort(() => Math.random() - 0.5)) {
+                const k = `${q.year}-${q.index}`;
+                if (seen.has(k)) continue;
+                seen.add(k); acc.push(q);
+                if (acc.length === 45) break;
+            }
+        }
+        if (acc.length === 0) throw new Error(`Pool vazio para ${caderno.disc}`);
+        return acc;
+    }
+
     try {
         const config = ENEM_DAY_CONFIG[day];
         if (!config) throw new Error(`Dia inválido: ${day}`);
@@ -220,53 +376,27 @@ async function getENEMDayQuestions(day = 1) {
         const years = await fetchAvailableYears();
         if (!years || years.length === 0) throw new Error('Nenhum ano disponível');
 
+        const off = _getYearOffset(years);
+        const rotated = [...years.slice(off), ...years.slice(0, off)];
+
+        // Ambos cadernos em paralelo — se cache estiver quente = ~0ms
+        const [c1, c2] = await Promise.all(config.map(c => _fetchCaderno(c, rotated)));
+
         const result = [];
-
-        for (const caderno of config) {
-            // Acumula questões de anos diferentes até ter pelo menos 45 válidas
-            const globalSeen = new Set();
-            const accumulated = [];
-
-            for (let i = 0; i < Math.min(8, years.length) && accumulated.length < 45; i++) {
-                let all;
-                try {
-                    all = await fetchAllQuestionsForYear(years[i]);
-                } catch {
-                    continue; // ano indisponível, tenta o próximo
-                }
-
-                const filtered = all.filter(q =>
-                    q.discipline === caderno.disc &&
-                    q.alternatives &&
-                    q.alternatives.length >= 2 &&
-                    q.alternatives.some(a => a.text && a.text.trim().length > 5)
-                ).sort((a, b) => (a.index || 0) - (b.index || 0));
-
-                for (const q of filtered) {
-                    const key = `${q.year}-${q.index}`;
-                    if (globalSeen.has(key)) continue;
-                    globalSeen.add(key);
-                    accumulated.push(q);
-                    if (accumulated.length === 45) break;
-                }
-            }
-
-            if (accumulated.length === 0) throw new Error(`Pool vazio para ${caderno.disc}`);
-
-            const normalized = accumulated.map((q, i) => ({
-                ...normalizeQuestion(q),
-                enemNumber: caderno.start + i,  // número real na prova (1–45 ou 46–90)
-                enemArea: caderno.label,         // nome completo do caderno
-            }));
-
-            result.push(...normalized);
-        }
-
+        [c1, c2].forEach((qs, ci) => {
+            qs.slice(0, 45).forEach((q, i) => {
+                result.push({
+                    ...normalizeQuestion(q),
+                    enemNumber: config[ci].start + i,
+                    enemArea: config[ci].label,
+                });
+            });
+        });
         return result;
 
     } catch (err) {
         console.warn('⚠️ getENEMDayQuestions falhou:', err.message);
-        return null; // null → startQuiz usa banco local
+        return null;
     }
 }
 
@@ -284,8 +414,11 @@ async function checkAPIStatus() {
 window.enemAPI = {
     getQuizQuestions,
     getENEMDayQuestions,
+    getQuizQuestionsIfCached,
+    getENEMDayQuestionsIfCached,
     fetchAvailableYears,
     checkAPIStatus,
+    prewarmENEM,
     DISC_MAP,
     DISC_LABELS,
     ENEM_DAY_CONFIG,

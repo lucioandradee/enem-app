@@ -3,7 +3,7 @@
    Cache-first para assets • Network-first para API
    ===================================================== */
 
-const CACHE_NAME = 'enem-master-v11';
+const CACHE_NAME = 'enem-master-v12';
 const STATIC_ASSETS = [
     '/',
     '/style.css',

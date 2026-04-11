@@ -5,6 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ENEM Master — Estude, Evolua, Conquiste</title>
   <meta name="description" content="Passe no ENEM estudando só o que realmente cai. Descubra seus erros, foque no que importa e evolua rápido — grátis para começar." />
+  <link rel="canonical" href="https://enemmaster.com.br/landing" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://enemmaster.com.br/landing" />
+  <meta property="og:title" content="ENEM Master — Estude, Evolua, Conquiste" />
+  <meta property="og:description" content="Simulados com questões reais, correção de redação por IA, gamificação e ranking escolar. Tudo para você passar no ENEM — grátis para começar." />
+  <meta property="og:image" content="https://enemmaster.com.br/og-cover.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="ENEM Master — Estude, Evolua, Conquiste" />
+  <meta name="twitter:description" content="Simulados com questões reais, correção de redação por IA, gamificação e ranking escolar. Tudo para você passar no ENEM — grátis para começar." />
+  <meta name="twitter:image" content="https://enemmaster.com.br/og-cover.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
@@ -476,6 +486,112 @@
     }
 
     /* ==========================================
+       HERO TRUST ROW
+    ========================================== */
+    .hero-trust {
+      display: flex; justify-content: center; align-items: center; gap: 20px;
+      flex-wrap: wrap; margin-top: 12px;
+    }
+    .hero-trust span { font-size: 13px; color: var(--text-3); }
+
+    /* ==========================================
+       TESTIMONIALS / DEPOIMENTOS
+    ========================================== */
+    .dep-heading { text-align: center; margin-bottom: 48px; }
+    .testimonials-grid {
+      display: grid; grid-template-columns: repeat(3,1fr); gap: 24px; margin-bottom: 48px;
+    }
+    .testimonial-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--r-md); padding: 28px;
+      display: flex; flex-direction: column; gap: 16px;
+      transition: border-color .2s, transform .2s;
+    }
+    .testimonial-card:hover { border-color: var(--teal); transform: translateY(-3px); }
+    .testimonial-stars { color: var(--gold); font-size: 16px; letter-spacing: 2px; }
+    .testimonial-text { font-size: 15px; color: var(--text-2); line-height: 1.65; flex: 1; font-style: italic; }
+    .testimonial-author { display: flex; align-items: center; gap: 12px; }
+    .testimonial-avatar {
+      width: 42px; height: 42px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--teal), #007a6e);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 16px; color: #fff; flex-shrink: 0;
+    }
+    .testimonial-name { display: block; font-size: 14px; font-weight: 700; color: var(--text); }
+    .testimonial-detail { display: block; font-size: 12px; color: var(--teal); margin-top: 2px; }
+    .dep-social-proof {
+      display: flex; justify-content: center; align-items: center;
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--r-lg); padding: 28px 40px; flex-wrap: wrap;
+    }
+    .dep-sp-item { text-align: center; padding: 8px 32px; }
+    .dep-sp-num { display: block; font-size: 28px; font-weight: 900; color: var(--teal); line-height: 1; }
+    .dep-sp-label { display: block; font-size: 13px; color: var(--text-3); margin-top: 4px; }
+    .dep-sp-divider { width: 1px; height: 48px; background: var(--border); }
+
+    /* ==========================================
+       PLANO PREMIUM — URGÊNCIA
+    ========================================== */
+    .plano-urgency {
+      text-align: center; margin-bottom: 12px;
+      background: rgba(245,197,24,.08); border: 1px solid rgba(245,197,24,.25);
+      color: var(--gold); font-size: 11px; font-weight: 700;
+      padding: 5px 14px; border-radius: 99px; display: block; letter-spacing: .3px;
+    }
+
+    /* ==========================================
+       CTA FINAL — EXTENSÃO
+    ========================================== */
+    .cta-final-trust {
+      display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; margin: 12px 0 28px;
+    }
+    .cta-final-trust span { font-size: 13px; color: rgba(255,255,255,.5); }
+    .cta-final-stats {
+      display: flex; justify-content: center; gap: 32px; flex-wrap: wrap;
+      border-top: 1px solid rgba(255,255,255,.08); padding-top: 24px; margin-top: 8px;
+    }
+    .cta-final-stats div { text-align: center; }
+    .cta-final-stats strong { display: block; font-size: 24px; font-weight: 900; color: #fff; }
+    .cta-final-stats span { font-size: 12px; color: rgba(255,255,255,.4); }
+
+    /* ==========================================
+       STICKY CTA BAR (MOBILE)
+    ========================================== */
+    .sticky-cta-bar {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
+      background: #081520; border-top: 1px solid var(--border);
+      padding: 14px 20px;
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      transform: translateY(100%); transition: transform .35s cubic-bezier(.4,0,.2,1);
+      box-shadow: 0 -4px 24px rgba(0,0,0,.6);
+    }
+    .sticky-cta-bar.visible { transform: translateY(0); }
+    .sticky-cta-bar-text { font-size: 13px; color: var(--text-2); line-height: 1.4; flex: 1; }
+    .sticky-cta-bar-text strong { color: var(--text); display: block; font-size: 14px; }
+    .sticky-cta-bar-btn {
+      background: var(--teal); color: #fff; font-size: 13px; font-weight: 700;
+      text-decoration: none; padding: 10px 20px; border-radius: 12px; white-space: nowrap;
+      box-shadow: 0 2px 12px rgba(0,180,166,.35); flex-shrink: 0; transition: background .2s;
+    }
+    .sticky-cta-bar-btn:hover { background: var(--teal-dark); }
+    .sticky-cta-bar-close {
+      background: none; border: none; color: var(--text-3); cursor: pointer;
+      font-size: 20px; padding: 4px; line-height: 1;
+    }
+    @media (min-width: 768px) { .sticky-cta-bar { display: none !important; } }
+    @media (max-width: 600px) {
+      .testimonials-grid  { grid-template-columns: 1fr; }
+      .dep-social-proof   { padding: 20px; }
+      .dep-sp-divider     { width: 40px; height: 1px; }
+      .dep-sp-item        { padding: 4px 16px; }
+      .cta-final-stats    { gap: 20px; }
+      .hero-trust         { gap: 10px; }
+    }
+    @media (max-width: 900px) {
+      .testimonials-grid  { grid-template-columns: repeat(2,1fr); }
+    }
+
+    /* ==========================================
        RESPONSIVIDADE
     ========================================== */
     @media (max-width: 900px) {
@@ -501,12 +617,102 @@
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { transition: none !important; animation: none !important; }
     }
+
+    /* ==========================================
+       ANNOUNCEMENT BAR
+    ========================================== */
+    .annc-bar {
+      position: relative; z-index: 102;
+      background: linear-gradient(90deg, #005f58, #00b4a6 50%, #005f58);
+      background-size: 200% 100%; animation: annc-move 5s linear infinite;
+      padding: 9px 48px 9px 24px; text-align: center;
+      font-size: 13px; font-weight: 600; color: #fff; line-height: 1.4;
+    }
+    .annc-bar a { color: #fff; font-weight: 800; text-decoration: underline; margin-left: 6px; }
+    .annc-bar a:hover { opacity: .85; }
+    .annc-close {
+      position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; color: rgba(255,255,255,.6); font-size: 18px;
+      cursor: pointer; padding: 4px; line-height: 1; transition: color .2s;
+    }
+    .annc-close:hover { color: #fff; }
+    @keyframes annc-move { 0%{ background-position:0% 0 } 100%{ background-position:200% 0 } }
+
+    /* ==========================================
+       HERO — DOT GRID + GLOW
+    ========================================== */
+    .hero::after {
+      content: ''; position: absolute; inset: 0;
+      background-image: radial-gradient(rgba(0,180,166,.065) 1px, transparent 1px);
+      background-size: 30px 30px; pointer-events: none; z-index: 0;
+    }
+    .hero > .container { position: relative; z-index: 1; }
+
+    /* ==========================================
+       GRADIENT TEXT UTILITY
+    ========================================== */
+    .text-gradient {
+      background: linear-gradient(135deg, var(--teal) 0%, #00e5d6 55%, #00b4a6 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+
+    /* ==========================================
+       VISUAL DIVIDER
+    ========================================== */
+    .section-rule {
+      display: block; width: 56px; height: 3px;
+      background: linear-gradient(90deg, transparent, var(--teal), transparent);
+      border-radius: 2px; margin: 0 auto 16px;
+    }
+
+    /* ==========================================
+       FAQ
+    ========================================== */
+    .faq-heading { text-align: center; margin-bottom: 52px; }
+    .faq-heading .lead { max-width: 480px; margin: 14px auto 0; }
+    .faq-list { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 10px; }
+    details.faq-item {
+      background: var(--card); border: 1px solid var(--border-sub);
+      border-radius: var(--r-md); overflow: hidden; transition: border-color .2s;
+    }
+    details.faq-item[open] { border-color: rgba(0,180,166,.3); }
+    details.faq-item > summary {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 18px 24px; font-size: 15px; font-weight: 600; color: var(--text);
+      cursor: pointer; list-style: none; user-select: none; transition: color .2s; gap: 12px;
+    }
+    details.faq-item > summary::-webkit-details-marker { display: none; }
+    details.faq-item > summary::after {
+      content: '+'; font-size: 22px; font-weight: 300; color: var(--teal);
+      transition: transform .25s; flex-shrink: 0;
+    }
+    details.faq-item[open] > summary::after { transform: rotate(45deg); }
+    details.faq-item > summary:hover { color: var(--teal); }
+    .faq-body { padding: 0 24px 20px; font-size: 14px; color: var(--text-2); line-height: 1.75; }
+    .faq-body a { color: var(--teal); text-decoration: underline; }
+
+    /* ==========================================
+       SCROLL REVEAL
+    ========================================== */
+    .reveal {
+      opacity: 0; transform: translateY(24px);
+      transition: opacity .55s cubic-bezier(.4,0,.2,1), transform .55s cubic-bezier(.4,0,.2,1);
+    }
+    .reveal.visible { opacity: 1; transform: none; }
+    @media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; } }
   </style>
 </head>
 <body>
 
 <!-- Acessibilidade: pular para conteúdo principal -->
 <a class="skip-link" href="#main">Pular para o conteúdo</a>
+
+<!-- ============================== ANNOUNCEMENT BAR ============================== -->
+<div class="annc-bar" id="anncBar" role="banner" aria-label="Novidade">
+  🎉 <strong>Novo:</strong> Correção de redação por IA com análise das 5 competências do ENEM
+  <a href="https://enemmaster.com.br?ref=annc">→ Experimente grátis</a>
+  <button class="annc-close" onclick="document.getElementById('anncBar').style.display='none'" aria-label="Fechar aviso">✕</button>
+</div>
 
 <!-- ============================== NAVBAR ============================== -->
 <header role="banner">
@@ -518,8 +724,8 @@
       </a>
       <div class="navbar-actions">
         <a href="#planos" class="btn-ghost">Planos</a>
-        <a href="index.html?ref=landing" class="btn-ghost">Entrar</a>
-        <a href="index.html?ref=landing" class="btn-primary">Começar Grátis</a>
+        <a href="https://enemmaster.com.br?ref=landing" class="btn-ghost">Entrar</a>
+        <a href="https://enemmaster.com.br?ref=landing" class="btn-primary">Começar Grátis</a>
       </div>
     </div>
   </nav>
@@ -533,22 +739,28 @@
 
       <div class="hero-badge" role="text">
         <span class="hero-badge-dot" aria-hidden="true"></span>
-        Plataforma nº 1 para o ENEM 🏆
+        🔥 +12.847 estudantes já estão estudando agora
       </div>
 
       <h1 class="h1 hero-title" id="hero-h1">
         Pare de estudar no escuro.<br>
-        <span class="accent">Conquiste sua nota no ENEM.</span>
+        <span class="text-gradient">Conquiste sua nota no ENEM.</span>
       </h1>
 
       <p class="lead hero-sub">
         Simulados com questões reais, correção de redação por IA, gamificação e ranking escolar.
-        Tudo que você precisa para entrar na faculdade dos seus sonhos.
+        <strong style="color:var(--text)">Tudo que você precisa</strong> para entrar na faculdade dos seus sonhos.
       </p>
 
       <div class="hero-cta-group">
-        <a href="index.html?ref=landing" class="btn-primary btn-primary-lg">✦ Começar Gratuitamente</a>
+        <a href="https://enemmaster.com.br?ref=landing" class="btn-primary btn-primary-lg">✦ Começar Gratuitamente</a>
         <a href="#como-funciona" class="btn-outline">Como funciona ↓</a>
+      </div>
+
+      <div class="hero-trust" aria-label="Garantias">
+        <span>✓ Grátis para sempre</span>
+        <span>✓ Sem cartão de crédito</span>
+        <span>✓ Acesso em 30 segundos</span>
       </div>
 
       <div class="hero-social-proof" aria-label="Estatísticas da plataforma">
@@ -616,7 +828,8 @@
     <div class="container">
       <div class="problema-heading">
         <span class="eyebrow">O problema</span>
-        <h2 class="h2" id="prob-h2">Estudar para o ENEM é difícil.<br>Mas não deveria ser.</h2>
+        <span class="section-rule" aria-hidden="true"></span>
+      <h2 class="h2" id="prob-h2">Estudar para o ENEM é difícil.<br>Mas não deveria ser.</h2>
         <p class="lead">A maioria dos estudantes esbarra nas mesmas barreiras antes de alcançar a nota que merece.</p>
       </div>
       <div class="problema-grid" role="list">
@@ -645,7 +858,8 @@
       <div class="solucao-inner">
         <div class="solucao-text">
           <span class="eyebrow">A solução</span>
-          <h2 class="h2" id="sol-h2">O ENEM Master foi feito para resolver exatamente isso.</h2>
+          <span class="section-rule" aria-hidden="true"></span>
+        <h2 class="h2" id="sol-h2">O ENEM Master foi feito para resolver exatamente isso.</h2>
           <p class="lead">Reunimos organização, prática com feedback e motivação em um único app inteligente.</p>
           <ul class="solucao-list" aria-label="Diferenciais do ENEM Master">
             <li>
@@ -697,7 +911,8 @@
     <div class="container">
       <div class="como-heading">
         <span class="eyebrow">Passo a passo</span>
-        <h2 class="h2" id="como-h2">Do cadastro à nota dos seus sonhos em 4 passos</h2>
+        <span class="section-rule" aria-hidden="true"></span>
+      <h2 class="h2" id="como-h2">Do cadastro à nota dos seus sonhos em 4 passos</h2>
         <p class="lead">Configuração rápida. Resultados que aparecem desde o primeiro dia.</p>
       </div>
       <ol class="steps" aria-label="Como usar o ENEM Master">
@@ -734,7 +949,8 @@
     <div class="container">
       <div class="benef-heading">
         <span class="eyebrow">Por que o ENEM Master?</span>
-        <h2 class="h2" id="benef-h2">Tudo que você precisa, em um só lugar</h2>
+        <span class="section-rule" aria-hidden="true"></span>
+      <h2 class="h2" id="benef-h2">Tudo que você precisa, em um só lugar</h2>
         <p class="lead">Sem precisar de 5 apps diferentes. Uma plataforma completa para toda a sua jornada no ENEM.</p>
       </div>
       <div class="benef-grid" role="list">
@@ -778,12 +994,81 @@
     </div>
   </section>
 
+  <!-- ============================== DEPOIMENTOS ============================== -->
+  <section class="section" aria-labelledby="dep-h2">
+    <div class="container">
+      <div class="dep-heading">
+        <span class="eyebrow">Depoimentos reais</span>
+        <span class="section-rule" aria-hidden="true"></span>
+      <h2 class="h2" id="dep-h2">Quem usou, aprovou. E passou.</h2>
+        <p class="lead">+12.000 estudantes já transformaram seus estudos com o ENEM Master.</p>
+      </div>
+      <div class="testimonials-grid" role="list">
+        <article class="testimonial-card" role="listitem">
+          <div class="testimonial-stars" aria-hidden="true">★★★★★</div>
+          <p class="testimonial-text">"Fui de 560 para 720 pontos em Matemática em 3 meses. O feedback das questões é muito melhor do que qualquer cursinho online que eu já usei."</p>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar" aria-hidden="true">M</div>
+            <div>
+              <strong class="testimonial-name">Mariana S.</strong>
+              <span class="testimonial-detail">Aprovada na UFMG — Engenharia Civil</span>
+            </div>
+          </div>
+        </article>
+        <article class="testimonial-card" role="listitem">
+          <div class="testimonial-stars" aria-hidden="true">★★★★★</div>
+          <p class="testimonial-text">"A correção de redação por IA apontou exatamente os pontos que eu perderia na competência 3. Tirei 880 na minha redação do ENEM!"</p>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar" aria-hidden="true">P</div>
+            <div>
+              <strong class="testimonial-name">Pedro H.</strong>
+              <span class="testimonial-detail">Aprovado na USP — Direito</span>
+            </div>
+          </div>
+        </article>
+        <article class="testimonial-card" role="listitem">
+          <div class="testimonial-stars" aria-hidden="true">★★★★★</div>
+          <p class="testimonial-text">"Nunca consegui estudar mais de 20 minutos seguidos. Com a gamificação do ENEM Master, passo horas sem perceber o tempo passar."</p>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar" aria-hidden="true">L</div>
+            <div>
+              <strong class="testimonial-name">Larissa O.</strong>
+              <span class="testimonial-detail">Aprovada na UNICAMP — Medicina</span>
+            </div>
+          </div>
+        </article>
+      </div>
+      <div class="dep-social-proof" role="list" aria-label="Números da plataforma">
+        <div class="dep-sp-item" role="listitem">
+          <span class="dep-sp-num">+12.000</span>
+          <span class="dep-sp-label">Estudantes ativos</span>
+        </div>
+        <div class="dep-sp-divider" aria-hidden="true"></div>
+        <div class="dep-sp-item" role="listitem">
+          <span class="dep-sp-num">4,9 ★</span>
+          <span class="dep-sp-label">Avaliação média</span>
+        </div>
+        <div class="dep-sp-divider" aria-hidden="true"></div>
+        <div class="dep-sp-item" role="listitem">
+          <span class="dep-sp-num">+260k</span>
+          <span class="dep-sp-label">Questões respondidas</span>
+        </div>
+        <div class="dep-sp-divider" aria-hidden="true"></div>
+        <div class="dep-sp-item" role="listitem">
+          <span class="dep-sp-num">87%</span>
+          <span class="dep-sp-label">Melhoram a nota em 30 dias</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- ============================== PLANOS ============================== -->
   <section class="section section-alt" id="planos" aria-labelledby="planos-h2">
     <div class="container">
       <div class="planos-heading">
         <span class="eyebrow">Planos</span>
-        <h2 class="h2" id="planos-h2">Comece grátis. Evolua quando quiser.</h2>
+        <span class="section-rule" aria-hidden="true"></span>
+      <h2 class="h2" id="planos-h2">Comece grátis. Evolua quando quiser.</h2>
         <p class="lead">Sem surpresas, sem fidelidade. Cancele quando quiser.</p>
       </div>
 
@@ -821,7 +1106,7 @@
             <li><span class="fi-cross" aria-label="Não incluído">✕</span> Modo ENEM completo</li>
             <li><span class="fi-cross" aria-label="Não incluído">✕</span> Correção de redação por IA</li>
           </ul>
-          <a href="index.html?ref=landing" class="plano-btn-free">Começar Gratuitamente</a>
+          <a href="https://enemmaster.com.br?ref=landing" class="plano-btn-free">Começar Gratuitamente</a>
         </article>
 
         <!-- Premium -->
@@ -859,16 +1144,55 @@
             <li><span class="fi-check" aria-label="Incluído">✓</span> Suporte prioritário</li>
           </ul>
 
-          <a href="index.html?ref=planos&plan=premium" id="lp-premium-btn" class="plano-btn-premium">Assinar Premium 👑</a>
+          <span class="plano-urgency" aria-label="Oferta de lançamento">⚡ Oferta de lançamento · preço pode subir a qualquer momento</span>
+          <a href="https://enemmaster.com.br?ref=planos&plan=premium" id="lp-premium-btn" class="plano-btn-premium">Assinar Premium 👑</a>
           <p style="text-align:center;font-size:11px;color:var(--text-3);margin-top:8px">🔒 Pagamento 100% seguro · Cancele quando quiser</p>
         </article>
 
       </div>
       <p class="planos-note">
         Ao assinar você concorda com os
-        <a href="index.html">Termos de Uso</a> e a
-        <a href="index.html">Política de Privacidade</a>.
+        <a href="https://enemmaster.com.br">Termos de Uso</a> e a
+        <a href="https://enemmaster.com.br">Política de Privacidade</a>.
       </p>
+    </div>
+  </section>
+
+  <!-- ============================== FAQ ============================== -->
+  <section class="section section-alt" aria-labelledby="faq-h2">
+    <div class="container">
+      <div class="faq-heading reveal">
+        <span class="eyebrow">Dúvidas frequentes</span>
+        <span class="section-rule" aria-hidden="true"></span>
+        <h2 class="h2" id="faq-h2">Respondemos tudo para você</h2>
+        <p class="lead">Transparência total. Sem letras miúdas.</p>
+      </div>
+      <div class="faq-list">
+        <details class="faq-item reveal">
+          <summary>É realmente 100% grátis para começar?</summary>
+          <div class="faq-body">Sim. Você se cadastra em 30 segundos sem precisar de cartão de crédito. O plano gratuito dá acesso a 10 questões diárias, gabarito comentado, ranking escolar e gamificação completa — para sempre, sem cobrar nada. O Premium é opcional e amplia os limites.</div>
+        </details>
+        <details class="faq-item reveal">
+          <summary>As questões são reais do ENEM?</summary>
+          <div class="faq-body">Sim. Nosso banco conta com questões oficiais dos últimos 10 anos do ENEM, organizadas por área de conhecimento, disciplina e nível de dificuldade — exatamente como aparecem na prova real.</div>
+        </details>
+        <details class="faq-item reveal">
+          <summary>Como funciona a correção de redação por IA?</summary>
+          <div class="faq-body">Você envia sua redação e nossa IA analisa o texto com base nos 5 critérios oficiais do ENEM: domínio da língua, compreensão da proposta, organização das informações, coesão textual e proposta de intervenção. Você recebe nota por competência, pontos fortes, erros recorrentes e sugestões detalhadas de melhoria.</div>
+        </details>
+        <details class="faq-item reveal">
+          <summary>O app funciona no celular sem precisar instalar nada?</summary>
+          <div class="faq-body">Sim! O ENEM Master é um PWA (Progressive Web App). Funciona diretamente no navegador do seu celular sem precisar da Play Store ou App Store. Você pode adicioná-lo à tela inicial com um toque para ter a experiência de um app nativo, inclusive com acesso offline ao conteúdo já carregado.</div>
+        </details>
+        <details class="faq-item reveal">
+          <summary>Posso cancelar o Premium quando quiser?</summary>
+          <div class="faq-body">Com certeza. Não há fidelidade nem multa de cancelamento. Basta acessar as configurações da sua conta e cancelar a assinatura a qualquer momento. Você mantém o acesso Premium até o fim do período já pago.</div>
+        </details>
+        <details class="faq-item reveal">
+          <summary>O ranking escolar funciona com qualquer escola?</summary>
+          <div class="faq-body">Sim. Durante o cadastro você informa sua escola e turma. O sistema cria automaticamente um ranking com todos os alunos da mesma escola — uma competição saudável que aumenta o engajamento e motiva o estudo diário.</div>
+        </details>
+      </div>
     </div>
   </section>
 
@@ -877,13 +1201,34 @@
     <div class="container">
       <div class="cta-final">
         <div class="cta-final-inner">
-          <span class="eyebrow">Comece hoje</span>
-          <h2 class="h2" id="cta-h2">Sua nota no ENEM começa com um simulado.</h2>
+          <span class="eyebrow">🔥 Sem desculpas. Sem mais tarde.</span>
+          <h2 class="h2" id="cta-h2">O ENEM não espera.<br><span class="accent">Comece agora.</span></h2>
           <p class="lead">
-            Cadastre-se agora, é grátis. Sem cartão de crédito, sem compromisso.<br>Só estudo de verdade.
+            Cada dia sem estudar é um dia a favor dos seus concorrentes.<br>
+            É grátis. Está esperando. <strong style="color:#fff">Você já demorou demais.</strong>
           </p>
-          <a href="index.html?ref=landing" class="btn-primary btn-primary-lg">✦ Criar Conta Grátis</a>
-          <p class="cta-note">🔒 Seguro e gratuito · sem cartão de crédito</p>
+          <div style="margin-bottom:16px">
+            <a href="https://enemmaster.com.br?ref=cta-final" class="btn-primary btn-primary-lg">✦ Criar Conta Grátis Agora</a>
+          </div>
+          <div class="cta-final-trust">
+            <span>✓ Sem cartão de crédito</span>
+            <span>✓ Acesso em 30 segundos</span>
+            <span>✓ Grátis para sempre</span>
+          </div>
+          <div class="cta-final-stats" aria-label="Números da plataforma">
+            <div>
+              <strong>+12.000</strong>
+              <span>estudantes ativos</span>
+            </div>
+            <div>
+              <strong>4,9/5</strong>
+              <span>avaliação</span>
+            </div>
+            <div>
+              <strong>87%</strong>
+              <span>melhoram a nota em 30 dias</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -901,10 +1246,10 @@
       </div>
       <p class="footer-tagline">Estude, Evolua, Conquiste.</p>
       <nav class="footer-links" aria-label="Links do rodapé">
-        <a href="index.html?ref=landing">Abrir App</a>
-        <a href="index.html">Privacidade</a>
-        <a href="index.html">Termos de Uso</a>
-        <a href="index.html">Suporte</a>
+        <a href="https://enemmaster.com.br?ref=landing">Abrir App</a>
+        <a href="https://enemmaster.com.br">Privacidade</a>
+        <a href="https://enemmaster.com.br">Termos de Uso</a>
+        <a href="https://enemmaster.com.br">Suporte</a>
       </nav>
       <p class="footer-copy">© 2026 ENEM Master. Todos os direitos reservados.</p>
     </div>
@@ -937,8 +1282,52 @@
       : 'Cobrança mensal · cancele quando quiser';
 
     const btn = document.getElementById('lp-premium-btn');
-    if (btn) btn.href = `index.html?ref=planos&plan=${period}`;
+    if (btn) btn.href = `https://enemmaster.com.br?ref=planos&plan=${period}`;
   }
+</script>
+
+<!-- Sticky CTA Bar (mobile) -->
+<div class="sticky-cta-bar" id="stickyCta" role="complementary" aria-label="Comece a estudar agora">
+  <div class="sticky-cta-bar-text">
+    <strong>Comece a estudar agora</strong>
+    Grátis · Sem cartão de crédito
+  </div>
+  <a href="https://enemmaster.com.br?ref=sticky-cta" class="sticky-cta-bar-btn">Criar Conta →</a>
+  <button class="sticky-cta-bar-close" onclick="document.getElementById('stickyCta').style.display='none'" aria-label="Fechar barra">✕</button>
+</div>
+
+<script>
+  (function () {
+    var bar = document.getElementById('stickyCta');
+    if (!bar) return;
+    var shown = false;
+    window.addEventListener('scroll', function () {
+      if (shown) return;
+      var pct = window.scrollY / (document.documentElement.scrollHeight - window.innerHeight);
+      if (pct > 0.45) { bar.classList.add('visible'); shown = true; }
+    }, { passive: true });
+  })();
+
+  /* --- Scroll Reveal --- */
+  (function () {
+    if (!window.IntersectionObserver) return;
+    var targets = document.querySelectorAll(
+      '.benef-card, .step-card, .problema-card, .testimonial-card, ' +
+      '.solucao-feat, .faq-item, .dep-sp-item, ' +
+      '.benef-heading, .como-heading, .planos-heading, .problema-heading, ' +
+      '.dep-heading, .faq-heading, .solucao-text, .cta-final-inner'
+    );
+    targets.forEach(function (el) { el.classList.add('reveal'); });
+    var obs = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry, i) {
+        if (entry.isIntersecting) {
+          setTimeout(function () { entry.target.classList.add('visible'); }, i * 55);
+          obs.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.1 });
+    targets.forEach(function (el) { obs.observe(el); });
+  })();
 </script>
 
 </body>

@@ -21,3 +21,4 @@ deploy-function.js
 # Editor files
 *.swp
 *.swo
+.vercel

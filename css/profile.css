@@ -14,7 +14,34 @@
   width: 24px; height: 24px;
   display: flex; align-items: center; justify-content: center;
   font-size: 12px; cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
 }
+.avatar-edit-btn:hover { transform: scale(1.15); box-shadow: 0 2px 8px rgba(0,180,166,0.5); }
+
+/* ---- Avatar Color Palette ---- */
+.avatar-color-palette {
+  display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;
+  margin-top: 8px;
+}
+.avatar-color-swatch {
+  width: 36px; height: 36px; border-radius: 50%;
+  border: 2px solid transparent; cursor: pointer;
+  transition: transform 0.15s, border-color 0.15s;
+}
+.avatar-color-swatch:nth-child(1) { background: linear-gradient(135deg,#00b4a6,#0077b6); }
+.avatar-color-swatch:nth-child(2) { background: linear-gradient(135deg,#7c3aed,#a78bfa); }
+.avatar-color-swatch:nth-child(3) { background: linear-gradient(135deg,#f97316,#f5c518); }
+.avatar-color-swatch:nth-child(4) { background: linear-gradient(135deg,#e11d48,#f97316); }
+.avatar-color-swatch:nth-child(5) { background: linear-gradient(135deg,#0ea5e9,#6366f1); }
+.avatar-color-swatch:nth-child(6) { background: linear-gradient(135deg,#16a34a,#0ea5e9); }
+.avatar-color-swatch:nth-child(7) { background: linear-gradient(135deg,#be185d,#7c3aed); }
+.avatar-color-swatch:nth-child(8) { background: linear-gradient(135deg,#d97706,#16a34a); }
+.avatar-color-swatch:hover { transform: scale(1.15); }
+.avatar-color-swatch.active {
+  border-color: white; transform: scale(1.15);
+  box-shadow: 0 0 0 3px rgba(255,255,255,0.25);
+}
+
 .profile-name { font-size: 22px; font-weight: 800; margin-bottom: 8px; }
 .profile-badges-row { display: flex; gap: 8px; align-items: center; }
 .level-badge-lg {
