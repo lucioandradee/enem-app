@@ -36,7 +36,10 @@ function renderProfile() {
                         <span class="ppc-name">Plano Premium</span>
                         <span class="ppc-sub">Ativo · simulados e redação ilimitados${exp ? ` · até ${exp}` : ''}</span>
                     </div>
-                    <span class="ppc-active">ATIVO</span>
+                    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0">
+                        <span class="ppc-active">ATIVO</span>
+                        <button class="ppc-cancel-btn" onclick="cancelSubscription()">Cancelar</button>
+                    </div>
                 </div>`;
         } else {
             const remText = remaining <= 0
@@ -67,6 +70,40 @@ function renderProfile() {
 
     // Retrospectiva mensal
     renderMonthlyRetro();
+
+    // Botão de cancelar assinatura nas configurações (visível só para premium)
+    const btnCancel = document.getElementById('btn-cancel-subscription');
+    if (btnCancel) btnCancel.style.display = isPremium() ? '' : 'none';
+}
+
+async function cancelSubscription() {
+    if (!confirm('Tem certeza que deseja cancelar sua assinatura Premium?\n\nVocê perderá o acesso Premium imediatamente.')) return;
+
+    try {
+        const user = typeof getCurrentUser !== 'undefined' ? await getCurrentUser() : null;
+        if (!user) {
+            _showQuickToast('❌ Você precisa estar logado para cancelar.');
+            return;
+        }
+
+        const { error } = await supabase
+            .from('users')
+            .update({ plan: 'free', plan_expires_at: null, updated_at: new Date().toISOString() })
+            .eq('id', user.id);
+
+        if (error) throw error;
+
+        state.user.plan = 'free';
+        state.user.planExpiresAt = null;
+        saveState();
+
+        _showQuickToast('Assinatura cancelada. Acesso Premium encerrado.');
+        renderProfile();
+
+    } catch (err) {
+        console.error('cancelSubscription error:', err.message);
+        _showQuickToast('❌ Erro ao cancelar: ' + err.message);
+    }
 }
 
 function renderAreaGrid() {

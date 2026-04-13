@@ -65,11 +65,26 @@ async function logout() {
         if (typeof logoutUser !== 'undefined') {
             await logoutUser();
         }
+
+        // Remover active de TODAS as telas antes de resetar o state
+        document.querySelectorAll('.screen.active').forEach(s => s.classList.remove('active'));
+
         state = JSON.parse(JSON.stringify(defaultState));
+        state.currentScreen = 'login';
         saveState();
-        navigate('login');
+
+        const loginEl = document.getElementById('screen-login');
+        if (loginEl) loginEl.classList.add('active');
+
+        const nav = document.getElementById('bottom-nav');
+        if (nav) nav.style.display = 'none';
+
         const passEl = document.getElementById('login-password');
-        if (passEl) passEl.value = '';
+        if (passEl) { passEl.value = ''; }
+        const emailEl = document.getElementById('login-email');
+        if (emailEl) { emailEl.value = ''; }
+        const errEl = document.getElementById('login-error');
+        if (errEl) { errEl.textContent = ''; }
     }
 }
 

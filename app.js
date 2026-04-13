@@ -44,6 +44,10 @@ const PAYWALL_MESSAGES = {
         title: 'Redação com IA é exclusivo Premium 👑',
         body:  'Corrija sua redação nas 5 competências com análise detalhada por IA. Assine o Premium para desbloquear!',
     },
+    tutor: {
+        title: 'Tutor IA é exclusivo Premium 👑',
+        body:  'Converse com um professor de IA especialista em todas as disciplinas do ENEM. Assine o Premium e tire suas dúvidas sem limites!',
+    },
     largeQuiz: {
         title: 'Simulados maiores são exclusivos Premium 👑',
         body:  'No plano Grátis o limite é 10 questões por simulado. Assine o Premium para simulados de até 90 questões!',
@@ -771,6 +775,19 @@ function renderDashboard() {
     document.getElementById('dash-level').textContent = s.level;
     document.getElementById('dash-xp').textContent = s.xp.toLocaleString('pt-BR');
     document.getElementById('dash-streak').textContent = s.streak + ' Dias';
+
+    // XP card — badge de nível + barra de progresso
+    const lvlBadgeEl = document.getElementById('dash-lvl-badge');
+    const xpBarEl    = document.getElementById('dash-xp-bar');
+    const xpNextEl   = document.getElementById('dash-xp-next');
+    if (lvlBadgeEl) lvlBadgeEl.textContent = `NV ${s.level}`;
+    if (xpBarEl || xpNextEl) {
+        const xpInLevel  = s.xp % 500;
+        const pct        = Math.round((xpInLevel / 500) * 100);
+        const nextLvl    = s.level + 1;
+        if (xpBarEl) setTimeout(() => { xpBarEl.style.width = pct + '%'; }, 300);
+        if (xpNextEl) xpNextEl.textContent = `${xpInLevel.toLocaleString('pt-BR')} / 500 p/ nível ${nextLvl}`;
+    }
     document.getElementById('dash-avatar').textContent = safeName[0].toUpperCase();
     if (s.avatarColor) {
         document.querySelectorAll('.avatar, .podium-avatar').forEach(el => {
@@ -795,7 +812,8 @@ function renderDashboard() {
     renderENEMCountdown();
 
     // Posição no ranking global (assíncrono, não bloqueia a UI)
-    const rankEl = document.getElementById('dash-ranking');
+    const rankEl  = document.getElementById('dash-ranking');
+    const tierEl  = document.getElementById('dash-rank-tier');
     if (rankEl && typeof getGlobalTop !== 'undefined') {
         getGlobalTop().then(res => {
             if (!res.success || !res.data || res.data.length === 0) return;
@@ -806,10 +824,12 @@ function renderDashboard() {
                 const total = res.data.length;
                 const pct = Math.round(((total - above) / total) * 100);
                 rankEl.textContent = pct >= 90 ? 'Top 10%' : pct >= 75 ? 'Top 25%' : pct >= 50 ? 'Top 50%' : `${above + 1}º`;
+                if (tierEl) tierEl.textContent = pct >= 90 ? '🥇 Pódio' : pct >= 75 ? 'Top 25%' : pct >= 50 ? 'Top 50%' : '—';
             } else {
-                const pos = myIdx + 1;
+                const pos   = myIdx + 1;
                 const total = res.data.length;
-                rankEl.textContent = pos <= 3 ? `${pos}º 🏆` : `${pos}º de ${total}`;
+                rankEl.textContent = pos <= 3 ? `${pos}º 🏆` : `${pos}º de ${total.toLocaleString('pt-BR')}`;
+                if (tierEl) tierEl.textContent = pos === 1 ? '🥇 1º' : pos <= 3 ? '🥈 Pódio' : pos <= 10 ? 'Top 10' : pos <= 50 ? 'Top 50' : pos <= 100 ? 'Top 100' : '—';
             }
         }).catch(() => {});
     }
@@ -1034,9 +1054,26 @@ function renderTodayCard() {
 // =====================================================
 // DESAFIO DIÁRIO
 // =====================================================
-const _CHALLENGE_DISCS = ['humanas', 'natureza', 'linguagens', 'matematica', 'misto'];
+const _CHALLENGE_DISCS  = ['humanas', 'natureza', 'linguagens', 'matematica', 'misto'];
 const _CHALLENGE_COUNTS = [5, 5, 10, 10];          // quantidade de questões possíveis
-const _CHALLENGE_XP    = { 5: 50, 10: 100, 15: 150 };
+const _CHALLENGE_XP     = { 5: 50, 10: 100, 15: 150 };
+
+const _DISC_ICONS = { humanas:'🌍', natureza:'🔬', linguagens:'📝', matematica:'➗', misto:'🎯' };
+const _DISC_COLORS = {
+    humanas:    'rgba(139,92,246,0.18)',
+    natureza:   'rgba(0,201,184,0.18)',
+    linguagens: 'rgba(245,197,24,0.18)',
+    matematica: 'rgba(249,115,22,0.18)',
+    misto:      'rgba(96,165,250,0.18)',
+};
+const _CHALLENGE_TYPES = { 5: 'Relâmpago ⚡', 10: 'Treino 🎯', 15: 'Maratona 🏃' };
+const _CHALLENGE_CONTEXT = {
+    humanas:    '~22% da prova · História, Geo, Filosofia e Sociologia',
+    natureza:   '45 questões no ENEM · Biologia, Física e Química',
+    linguagens: 'Interpretação de texto + inglês ou espanhol',
+    matematica: 'Álgebra, Funções, Geometria e Estatística',
+    misto:      'Simula a prova real com questões das 4 grandes áreas',
+};
 const _CHALLENGE_NAMES = {
     humanas:    'Ciências Humanas',
     natureza:   'Ciências da Natureza',
@@ -1073,17 +1110,63 @@ function renderDailyChallenge() {
 
     const discName = _CHALLENGE_NAMES[ch.discipline] || ch.discipline;
     const titleEl  = el.querySelector('.dc-title');
-    const descEl   = el.querySelector('.dc-desc');
     const xpEl     = el.querySelector('.dc-xp');
     const btnEl    = el.querySelector('.dc-btn');
     const checkEl  = el.querySelector('.dc-check');
 
     if (titleEl) titleEl.textContent = ch.done ? '✅ Desafio Concluído!' : '🎯 Desafio do Dia';
-    if (descEl)  descEl.textContent  = `${ch.count} questões de ${discName}`;
     if (xpEl)    xpEl.textContent    = `+${ch.xp} XP`;
     if (btnEl)   btnEl.style.display = ch.done ? 'none' : '';
     if (checkEl) checkEl.style.display = ch.done ? '' : 'none';
     el.classList.toggle('completed', ch.done);
+
+    // Chip de disciplina
+    const chipEl = document.getElementById('dc-disc-chip');
+    if (chipEl) {
+        chipEl.textContent = _DISC_ICONS[ch.discipline] || '🎯';
+        chipEl.style.background = _DISC_COLORS[ch.discipline] || 'rgba(0,201,184,0.18)';
+    }
+    const nameEl = document.getElementById('dc-disc-name');
+    if (nameEl) nameEl.textContent = discName;
+
+    // Tipo de treino
+    const typeEl = document.getElementById('dc-type');
+    if (typeEl) typeEl.textContent = _CHALLENGE_TYPES[ch.count] || 'Treino 🎯';
+
+    // Dificuldade (bolinhas)
+    const diffEl = document.getElementById('dc-diff');
+    const diffLabel = document.getElementById('dc-meta-diff-label');
+    const diffClass = ch.count <= 5 ? 'easy' : ch.count <= 10 ? 'medium' : 'hard';
+    const diffText  = ch.count <= 5 ? 'Fácil' : ch.count <= 10 ? 'Médio' : 'Difícil';
+    if (diffEl) diffEl.className = 'dc-diff ' + diffClass;
+    if (diffLabel) diffLabel.textContent = diffText;
+
+    // Meta (questões + tempo)
+    const metaQ = document.getElementById('dc-meta-q');
+    const metaT = document.getElementById('dc-meta-t');
+    if (metaQ) metaQ.textContent = `📋 ${ch.count} questões`;
+    if (metaT) metaT.textContent = `⏱ ~${Math.round(ch.count * 1.3)} min`;
+
+    // Contexto
+    const ctxEl = document.getElementById('dc-context');
+    if (ctxEl) ctxEl.textContent = _CHALLENGE_CONTEXT[ch.discipline] || '';
+
+    // Tracker semanal (últimos 7 dias)
+    const weekEl = document.getElementById('dc-week');
+    if (weekEl) {
+        const dayLabels = ['D','S','T','Q','Q','S','S'];
+        const streak = Math.max(0, state.user?.streak || 0);
+        weekEl.innerHTML = '';
+        for (let daysAgo = 6; daysAgo >= 0; daysAgo--) {
+            const d = new Date(); d.setDate(d.getDate() - daysAgo);
+            const isToday = daysAgo === 0;
+            const done = isToday ? ch.done : daysAgo < streak;
+            const dot = document.createElement('div');
+            dot.className = 'dc-week-dot' + (done ? ' done' : '') + (isToday ? ' today' : '');
+            dot.textContent = dayLabels[d.getDay()];
+            weekEl.appendChild(dot);
+        }
+    }
 }
 
 function startDailyChallenge() {
@@ -1395,8 +1478,10 @@ function init() {
     const _urlParams    = new URLSearchParams(window.location.search);
     const _refSource    = (_urlParams.get('ref') || _urlParams.get('utm_source') || '').toLowerCase();
     const _forceFunnel  = _refSource === 'landing' || _refSource === 'landing_page';
+    const _forceLogin    = _refSource === 'login';
+    const _paymentReturn = _refSource === 'payment-success' || _refSource === 'cakto-return';
     // Limpar parâmetro da URL sem recarregar a página
-    if (_forceFunnel && window.history?.replaceState) {
+    if ((_forceFunnel || _forceLogin || _paymentReturn) && window.history?.replaceState) {
         window.history.replaceState({}, '', window.location.pathname);
     }
 
@@ -1429,10 +1514,26 @@ function init() {
                 });
             } else {
                 // Sem sessão: entrada pelo funil OU usuário novo → onboarding
-                if (_forceFunnel || (!state.onboardingDone && !isReturningUser)) {
+                if (!_forceLogin && (_forceFunnel || (!state.onboardingDone && !isReturningUser))) {
                     document.getElementById('screen-onboarding').classList.add('active');
                     nav.style.display = 'none';
                     state.currentScreen = 'onboarding';
+                } else if (_paymentReturn) {
+                    // Retorno do gateway: mostrar login com banner de sucesso
+                    document.getElementById('screen-login').classList.add('active');
+                    nav.style.display = 'none';
+                    state.currentScreen = 'login';
+                    // Pré-preencher e-mail pendente e exibir banner de confirmação
+                    try {
+                        const _pendingEmail = sessionStorage.getItem('_pendingEmail') || '';
+                        if (_pendingEmail) {
+                            const emailEl = document.getElementById('login-email');
+                            if (emailEl) emailEl.value = _pendingEmail;
+                        }
+                    } catch { /* noop */ }
+                    _showPaymentSuccessBanner();
+                    // Iniciar polling para detectar ativação automática via webhook
+                    _startPlanPolling('login', false);
                 } else {
                     if (isReturningUser && !state.onboardingDone) state.onboardingDone = true;
                     document.getElementById('screen-login').classList.add('active');

@@ -2,7 +2,7 @@
   "name": "ENEM Master",
   "short_name": "ENEM Master",
   "description": "Estude, Evolua, Conquiste — Plataforma gamificada para o ENEM",
-  "start_url": "/",
+  "start_url": "/app",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#0a1929",

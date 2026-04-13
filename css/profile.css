@@ -169,6 +169,13 @@
   cursor: pointer; flex-shrink: 0; transition: transform .18s, box-shadow .18s;
 }
 .ppc-upgrade-btn:hover { transform: translateY(-1px); box-shadow: var(--shadow-teal); }
+.ppc-cancel-btn {
+  font-size: 11px; font-weight: 600; color: var(--text-secondary);
+  background: transparent; border: 1px solid var(--border-subtle);
+  padding: 4px 10px; border-radius: var(--radius-sm);
+  cursor: pointer; transition: color .15s, border-color .15s;
+}
+.ppc-cancel-btn:hover { color: #ff4d6a; border-color: rgba(255,77,106,.4); }
 
 /* ---- Stats Chart ---- */
 .stats-chart { display: flex; align-items: flex-end; gap: 6px; height: 60px; padding: 0 4px; margin: 8px 0 4px; }

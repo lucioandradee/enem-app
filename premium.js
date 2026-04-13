@@ -18,6 +18,55 @@ const CAKTO_CHECKOUT_URLS = {
     anual:  'https://pay.cakto.com.br/nuf3enq',
 };
 
+// ── Banner de confirmação pós-pagamento (retorno do gateway) ──────────────────
+function _showPaymentSuccessBanner() {
+    // Remover banner anterior se existir
+    document.getElementById('_ps-banner')?.remove();
+
+    let pendingEmail = '';
+    try { pendingEmail = sessionStorage.getItem('_pendingEmail') || ''; } catch { /* noop */ }
+
+    const banner = document.createElement('div');
+    banner.id = '_ps-banner';
+    banner.setAttribute('role', 'status');
+    banner.setAttribute('aria-live', 'polite');
+    banner.style.cssText = [
+        'position:fixed', 'bottom:80px', 'left:12px', 'right:12px', 'z-index:9990',
+        'background:linear-gradient(135deg,#022a1e,#022040)',
+        'border:1.5px solid rgba(0,180,166,.45)',
+        'border-radius:14px', 'padding:14px 16px',
+        'display:flex', 'align-items:flex-start', 'gap:12px',
+        'box-shadow:0 8px 32px rgba(0,0,0,.6)',
+        'animation:_psbIn .35s cubic-bezier(.34,1.56,.64,1) both',
+    ].join(';');
+
+    banner.innerHTML = `
+        <span style="font-size:26px;flex-shrink:0">🎉</span>
+        <div style="flex:1">
+            <p style="font-size:13px;font-weight:700;color:#00e5c9;margin:0 0 3px">Pagamento recebido!</p>
+            <p style="font-size:12px;color:rgba(255,255,255,.7);margin:0;line-height:1.5">
+                ${pendingEmail
+                    ? `Sua conta Premium está sendo ativada para <strong style="color:#fff">${pendingEmail}</strong>.`
+                    : 'Sua conta Premium está sendo ativada.'
+                }
+                Faça login ou <strong style="color:#00e5c9">verifique seu e-mail</strong> para acessar.
+            </p>
+        </div>
+        <button onclick="this.parentElement.remove()" aria-label="Fechar"
+            style="background:none;border:none;color:rgba(255,255,255,.5);font-size:18px;cursor:pointer;padding:0;flex-shrink:0;line-height:1">✕</button>
+    `;
+
+    // Adicionar keyframe de animação se ainda não existir
+    if (!document.getElementById('_psbStyle')) {
+        const s = document.createElement('style');
+        s.id = '_psbStyle';
+        s.textContent = '@keyframes _psbIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}';
+        document.head.appendChild(s);
+    }
+
+    document.body.appendChild(banner);
+}
+
 const PLAN_PRICES = {
     mensal: { label: 'R$ 19,90',  period: '/mês', title: 'Premium Mensal',  sub: 'Acesso ilimitado · cancele quando quiser' },
     anual:  { label: 'R$ 149,00', period: '/ano', title: 'Premium Anual 🏆', sub: 'Economize 37% · R$ 12,42/mês · melhor custo-benefício' },

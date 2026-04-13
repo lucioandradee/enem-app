@@ -49,6 +49,7 @@ Deno.serve(async (req: Request) => {
 
     // ─── Detectar gateway e extrair dados ──────────────────────
     let buyerEmail: string | null = null;
+    let buyerName: string = '';
     let durationDays = 30;
     let planAction: 'activate' | 'deactivate' = 'activate';
     let gateway = 'unknown';
@@ -72,6 +73,7 @@ Deno.serve(async (req: Request) => {
         }
 
         buyerEmail   = buyer?.email ?? null;
+        buyerName    = buyer?.name  ?? '';
         const offer  = purchase?.offer?.code ?? '';
         durationDays = offer.toLowerCase().includes('anual') ? 365 : 30;
     }
@@ -90,6 +92,7 @@ Deno.serve(async (req: Request) => {
         }
 
         buyerEmail   = (body as any)?.Customer?.email ?? null;
+        buyerName    = (body as any)?.Customer?.full_name ?? (body as any)?.Customer?.name ?? '';
         const freq   = (body as any)?.Product?.description ?? '';
         durationDays = freq.toLowerCase().includes('anual') ? 365 : 30;
     }
@@ -108,6 +111,9 @@ Deno.serve(async (req: Request) => {
         }
 
         buyerEmail   = (body as any)?.payer?.email ?? null;
+        buyerName    = (body as any)?.payer?.first_name
+                    ? `${(body as any)?.payer?.first_name} ${(body as any)?.payer?.last_name ?? ''}`.trim()
+                    : '';
         durationDays = (body as any)?.metadata?.plan === 'anual' ? 365 : 30;
     }
 
@@ -116,10 +122,13 @@ Deno.serve(async (req: Request) => {
         gateway     = 'cakto';
         caktoEvent  = ((body as any)?.event ?? '').toUpperCase();
 
-        // ── E-mail do comprador ─────────────────────────────────
+        // ── E-mail e nome do comprador ──────────────────────────
         buyerEmail = (body as any)?.data?.buyer?.email
                   ?? (body as any)?.data?.customer?.email
                   ?? null;
+        buyerName  = (body as any)?.data?.buyer?.name
+                  ?? (body as any)?.data?.customer?.name
+                  ?? '';
 
         // ── Duração baseada no plano ────────────────────────────
         const planName = (body as any)?.data?.purchase?.offer?.code
@@ -188,45 +197,103 @@ Deno.serve(async (req: Request) => {
         return new Response(JSON.stringify({ ok: false, error: 'buyer_email_missing' }), { status: 422 });
     }
 
-    // ─── Atualizar plano no Supabase ───────────────────────────
-    const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
+    // ─── Atualizar / criar conta no Supabase ──────────────────
+    const APP_URL = Deno.env.get('APP_URL') || 'https://enemmaster.com.br';
+    const admin   = createClient(SUPABASE_URL, SERVICE_ROLE);
+    const now     = new Date().toISOString();
 
-    let updatePayload: Record<string, unknown>;
+    if (planAction === 'deactivate') {
+        // Remover acesso Premium imediatamente
+        const { error } = await admin
+            .from('users')
+            .update({ plan: 'free', plan_expires_at: null, updated_at: now })
+            .eq('email', buyerEmail);
 
-    if (planAction === 'activate') {
-        const expiresAt = new Date();
-        expiresAt.setDate(expiresAt.getDate() + durationDays);
-        updatePayload = {
-            plan: 'premium',
-            plan_expires_at: expiresAt.toISOString(),
-            updated_at: new Date().toISOString(),
-        };
-    } else {
-        // deactivate: remove acesso Premium imediatamente
-        updatePayload = {
-            plan: 'free',
-            plan_expires_at: null,
-            updated_at: new Date().toISOString(),
-        };
-    }
-
-    const { error } = await admin
-        .from('users')
-        .update(updatePayload)
-        .eq('email', buyerEmail);
-
-    if (error) {
-        console.error('❌ Erro ao atualizar plano:', error.message, '| Email:', buyerEmail);
-        return new Response(JSON.stringify({ ok: false, error: error.message }), { status: 500 });
-    }
-
-    if (planAction === 'activate') {
-        console.log(`✅ Premium ativado | ${buyerEmail} | ${durationDays}d | gateway: ${gateway} | evento: ${caktoEvent || 'n/a'}`);
-    } else {
+        if (error) {
+            console.error('❌ Erro ao remover plano:', error.message, '| Email:', buyerEmail);
+            return new Response(JSON.stringify({ ok: false, error: error.message }), { status: 500 });
+        }
         console.log(`🔒 Premium removido | ${buyerEmail} | gateway: ${gateway} | evento: ${caktoEvent}`);
+        return new Response(JSON.stringify({ ok: true, email: buyerEmail, planAction, durationDays: 0, gateway }), {
+            status: 200, headers: { 'Content-Type': 'application/json' },
+        });
     }
 
-    return new Response(JSON.stringify({ ok: true, email: buyerEmail, planAction, durationDays: planAction === 'activate' ? durationDays : 0, gateway }), {
+    // ── Ativação: verificar se o usuário já tem conta ─────────
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + durationDays);
+    const premiumPayload = {
+        plan: 'premium',
+        plan_expires_at: expiresAt.toISOString(),
+        updated_at: now,
+    };
+
+    const { data: existingUser } = await admin
+        .from('users')
+        .select('id')
+        .eq('email', buyerEmail)
+        .maybeSingle();
+
+    if (existingUser) {
+        // Conta já existe: apenas ativar Premium
+        const { error } = await admin
+            .from('users')
+            .update(premiumPayload)
+            .eq('email', buyerEmail);
+
+        if (error) {
+            console.error('❌ Erro ao ativar plano:', error.message, '| Email:', buyerEmail);
+            return new Response(JSON.stringify({ ok: false, error: error.message }), { status: 500 });
+        }
+        console.log(`✅ Premium ativado (conta existente) | ${buyerEmail} | ${durationDays}d | gateway: ${gateway} | evento: ${caktoEvent || 'n/a'}`);
+    } else {
+        // Conta não existe: enviar convite e criar registro
+        const displayName = buyerName.trim() || buyerEmail.split('@')[0];
+
+        // inviteUserByEmail cria o auth user e envia e-mail com link de acesso
+        const { data: inviteData, error: inviteError } = await admin.auth.admin.inviteUserByEmail(
+            buyerEmail,
+            {
+                redirectTo: `${APP_URL}/app?ref=payment-success`,
+                data: { full_name: displayName },
+            }
+        );
+
+        const authUserId: string | null = inviteData?.user?.id ?? null;
+
+        if (inviteError) {
+            // Usuário pode já existir no auth mas não na tabela — tenta upsert mesmo assim
+            console.warn(`⚠️ inviteUserByEmail: ${inviteError.message} | tentando upsert direto`);
+            await admin.from('users').upsert(
+                { email: buyerEmail, name: displayName, ...premiumPayload, created_at: now },
+                { onConflict: 'email' }
+            );
+        } else {
+            console.log(`📧 Convite enviado para ${buyerEmail} | auth_id: ${authUserId}`);
+
+            if (authUserId) {
+                const { error: insertError } = await admin.from('users').insert({
+                    id: authUserId,
+                    email: buyerEmail,
+                    name: displayName,
+                    plan: 'premium',
+                    plan_expires_at: expiresAt.toISOString(),
+                    created_at: now,
+                    updated_at: now,
+                });
+                if (insertError) {
+                    console.warn(`⚠️ insert falhou (${insertError.message}), tentando upsert`);
+                    await admin.from('users').upsert(
+                        { email: buyerEmail, name: displayName, ...premiumPayload, created_at: now },
+                        { onConflict: 'email' }
+                    );
+                }
+            }
+        }
+        console.log(`✅ Premium ativado (conta criada) | ${buyerEmail} | ${durationDays}d | gateway: ${gateway} | evento: ${caktoEvent || 'n/a'}`);
+    }
+
+    return new Response(JSON.stringify({ ok: true, email: buyerEmail, planAction, durationDays, gateway }), {
         status: 200,
         headers: { 'Content-Type': 'application/json' },
     });

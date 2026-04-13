@@ -176,38 +176,203 @@ async function loadAll() {
     loadStats();
     loadUsers();
     loadWebhookLogs();
+    loadSubscriptionMetrics();
 }
 
-// ── Stats ─────────────────────────────────────────────────────────────────────
+// ── Stats / KPIs ──────────────────────────────────────────────────────────────
+const PRICE_MENSAL = 19.90;
+
 async function loadStats() {
+    const nowIso       = new Date().toISOString();
+    const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
+    const startOfToday = new Date(new Date().setHours(0,0,0,0)).toISOString();
+
+    // ── Usuários ────────────────────────────────────────────────────────────
     try {
-        const [{ count: total }, { count: premium }] = await Promise.all([
+        const [
+            { count: total },
+            { count: active },
+            { count: newToday },
+        ] = await Promise.all([
             supabase.from('users').select('*', { count: 'exact', head: true }),
-            supabase.from('users').select('*', { count: 'exact', head: true }).eq('plan', 'premium'),
+            supabase.from('users').select('*', { count: 'exact', head: true })
+                .eq('plan', 'premium')
+                .or(`plan_expires_at.is.null,plan_expires_at.gt.${nowIso}`),
+            supabase.from('users').select('*', { count: 'exact', head: true })
+                .gte('created_at', startOfToday),
         ]);
 
-        // Active = premium AND not expired (plan_expires_at > now, or null when no expiry set)
-        const { count: active } = await supabase
-            .from('users')
-            .select('*', { count: 'exact', head: true })
-            .eq('plan', 'premium')
-            .or('plan_expires_at.is.null,plan_expires_at.gt.' + new Date().toISOString());
+        document.getElementById('stat-total').textContent  = total  ?? '—';
+        document.getElementById('stat-active').textContent = active ?? '—';
 
-        document.getElementById('stat-total').textContent   = total   ?? '—';
-        document.getElementById('stat-premium').textContent = premium ?? '—';
-        document.getElementById('stat-active').textContent  = active  ?? '—';
+        const pct = total > 0 ? Math.round((active / total) * 100) : 0;
+        const activeSub = document.getElementById('stat-active-sub');
+        if (activeSub) activeSub.textContent = `${pct}% do total`;
+
+        const todaySub = document.getElementById('stat-new-today-sub');
+        if (todaySub && newToday > 0) todaySub.textContent = `+${newToday} hoje`;
+
+        // MRR e ARR estimados (base conservadora: todos mensal)
+        const mrr = (active ?? 0) * PRICE_MENSAL;
+        const arr = mrr * 12;
+        document.getElementById('stat-mrr').textContent = mrr > 0
+            ? 'R$ ' + mrr.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+            : 'R$ 0,00';
+        document.getElementById('stat-arr').textContent = arr > 0
+            ? 'R$ ' + arr.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+            : 'R$ 0,00';
+
     } catch (err) {
-        console.warn('loadStats error:', err.message);
+        console.warn('loadStats (users) error:', err.message);
+    }
+
+    // ── Webhooks: novas e canceladas no mês ─────────────────────────────────
+    try {
+        const EVENTS_NEW    = ['PURCHASE_APPROVED','PURCHASE.APPROVED','SUBSCRIPTION_CREATED','SUBSCRIPTION.CREATED','SUBSCRIPTION_APPROVED','SUBSCRIPTION.APPROVED'];
+        const EVENTS_CANCEL = ['SUBSCRIPTION_CANCELLED','SUBSCRIPTION.CANCELLED','PURCHASE_REFUNDED','PURCHASE.REFUNDED','SUBSCRIPTION_REJECTED','SUBSCRIPTION.REJECTED','SUBSCRIPTION_RENEWAL_FAILED','SUBSCRIPTION.RENEWAL_FAILED'];
+
+        const [{ data: logsNew }, { data: logsCancel }, { count: whTotal }] = await Promise.all([
+            supabase.from('webhook_logs')
+                .select('event_type')
+                .gte('created_at', startOfMonth)
+                .in('event_type', EVENTS_NEW),
+            supabase.from('webhook_logs')
+                .select('event_type')
+                .gte('created_at', startOfMonth)
+                .in('event_type', EVENTS_CANCEL),
+            supabase.from('webhook_logs').select('*', { count: 'exact', head: true }),
+        ]);
+
+        const newMonth      = logsNew?.length    ?? 0;
+        const cancelMonth   = logsCancel?.length ?? 0;
+        const activeCnt     = parseInt(document.getElementById('stat-active').textContent) || 0;
+        const churnRate     = activeCnt > 0 ? ((cancelMonth / activeCnt) * 100).toFixed(1) + '%' : '0%';
+
+        document.getElementById('stat-new-month').textContent      = newMonth;
+        document.getElementById('stat-cancelled-month').textContent = cancelMonth;
+        document.getElementById('stat-churn').textContent           = churnRate;
+        document.getElementById('stat-webhooks').textContent        = whTotal ?? '—';
+
+        const mLabel = new Date().toLocaleString('pt-BR', { month: 'long' });
+        const sub = document.getElementById('stat-new-month-sub');
+        if (sub) sub.textContent = mLabel;
+
+    } catch (err) {
+        // tabela webhook_logs pode não existir ainda
+        document.getElementById('stat-new-month').textContent      = 'N/A';
+        document.getElementById('stat-cancelled-month').textContent = 'N/A';
+        document.getElementById('stat-churn').textContent           = 'N/A';
+        document.getElementById('stat-webhooks').textContent        = 'N/A';
+    }
+}
+
+// ── Subscription Metrics (bar chart mensal) ───────────────────────────────────
+async function loadSubscriptionMetrics() {
+    const wrap = document.getElementById('mrr-bars-wrap');
+    if (!wrap) return;
+
+    const EVENTS_NEW    = ['PURCHASE_APPROVED','PURCHASE.APPROVED','SUBSCRIPTION_CREATED','SUBSCRIPTION.CREATED','SUBSCRIPTION_APPROVED','SUBSCRIPTION.APPROVED'];
+    const EVENTS_CANCEL = ['SUBSCRIPTION_CANCELLED','SUBSCRIPTION.CANCELLED','PURCHASE_REFUNDED','PURCHASE.REFUNDED','SUBSCRIPTION_REJECTED','SUBSCRIPTION.REJECTED','SUBSCRIPTION_RENEWAL_FAILED','SUBSCRIPTION.RENEWAL_FAILED'];
+
+    // Últimos 6 meses
+    const months = [];
+    for (let i = 5; i >= 0; i--) {
+        const d   = new Date();
+        d.setDate(1);
+        d.setMonth(d.getMonth() - i);
+        months.push({
+            label : d.toLocaleString('pt-BR', { month: 'short', year: '2-digit' }),
+            start : new Date(d.getFullYear(), d.getMonth(), 1).toISOString(),
+            end   : new Date(d.getFullYear(), d.getMonth() + 1, 1).toISOString(),
+        });
     }
 
     try {
-        const { count: wh } = await supabase
+        const { data: logsAll, error } = await supabase
             .from('webhook_logs')
-            .select('*', { count: 'exact', head: true });
-        document.getElementById('stat-webhooks').textContent = wh ?? '—';
-    } catch {
-        document.getElementById('stat-webhooks').textContent = 'N/A';
+            .select('event_type, created_at')
+            .gte('created_at', months[0].start);
+
+        if (error) {
+            if (error.code === '42P01') { wrap.innerHTML = '<p style="color:var(--text-3);font-size:13px">Nenhum dado de webhook ainda.</p>'; return; }
+            throw error;
+        }
+
+        const rows = months.map(m => {
+            const newCnt    = (logsAll || []).filter(l => l.created_at >= m.start && l.created_at < m.end && EVENTS_NEW.includes(l.event_type)).length;
+            const cancelCnt = (logsAll || []).filter(l => l.created_at >= m.start && l.created_at < m.end && EVENTS_CANCEL.includes(l.event_type)).length;
+            const mrr       = newCnt * PRICE_MENSAL;
+            return { ...m, newCnt, cancelCnt, mrr };
+        });
+
+        const maxNew = Math.max(1, ...rows.map(r => r.newCnt));
+
+        wrap.innerHTML = `
+        <table class="mrr-table">
+          <thead><tr>
+            <th style="width:80px">Mês</th>
+            <th>Novas</th>
+            <th>Canceladas</th>
+            <th style="text-align:right">MRR est.</th>
+          </tr></thead>
+          <tbody>
+            ${rows.map(r => `
+            <tr>
+              <td class="mono" style="color:var(--text-2);font-size:12px">${escapedHtml(r.label)}</td>
+              <td>
+                <div class="mrr-bar-row">
+                  <div class="mrr-bar-wrap"><div class="mrr-bar-fill mrr-bar-new" style="width:${Math.round((r.newCnt/maxNew)*100)}%"></div></div>
+                  <span class="mrr-bar-header">${r.newCnt}</span>
+                </div>
+              </td>
+              <td style="color:var(--red);font-size:13px;font-weight:600">${r.cancelCnt}</td>
+              <td style="text-align:right;font-size:13px;color:var(--teal)">
+                ${r.mrr > 0 ? 'R$ ' + r.mrr.toLocaleString('pt-BR', { minimumFractionDigits:2, maximumFractionDigits:2 }) : '—'}
+              </td>
+            </tr>`).join('')}
+          </tbody>
+        </table>`;
+
+    } catch (err) {
+        wrap.innerHTML = `<p style="color:var(--red);font-size:13px">Erro: ${escapedHtml(err.message)}</p>`;
     }
+}
+
+// ── User search & filter ──────────────────────────────────────────────────────
+let _userFilter = 'all';
+
+function setUserFilter(filter, el) {
+    _userFilter = filter;
+    document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+    if (el) el.classList.add('active');
+    filterUsers();
+}
+
+function filterUsers() {
+    const q     = (document.getElementById('user-search')?.value || '').toLowerCase().trim();
+    const rows  = document.querySelectorAll('#users-tbody tr');
+    const nowMs = Date.now();
+
+    rows.forEach(row => {
+        if (row.classList.contains('loading-row')) return;
+
+        const email    = row.cells[0]?.textContent?.toLowerCase() || '';
+        const name     = row.cells[1]?.textContent?.toLowerCase() || '';
+        const planText = (row.cells[2]?.textContent || '').toLowerCase();
+        const expiryEl = row.cells[3];
+        const expiryText = expiryEl?.textContent?.trim() || '';
+
+        // plan filter
+        let planOk = true;
+        if (_userFilter === 'premium')  planOk = planText.includes('premium');
+        if (_userFilter === 'free')     planOk = planText.includes('free');
+        if (_userFilter === 'expired')  planOk = expiryText.startsWith('⚠');
+
+        // text filter
+        const textOk = !q || email.includes(q) || name.includes(q);
+
+        row.style.display = planOk && textOk ? '' : 'none';
+    });
 }
 
 // ── Users ─────────────────────────────────────────────────────────────────────
@@ -286,6 +451,7 @@ async function loadUsers() {
     } finally {
         btn.disabled = false;
         btn.classList.remove('spinning');
+        filterUsers();
     }
 }
 

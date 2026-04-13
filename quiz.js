@@ -462,7 +462,8 @@ function renderQuestion() {
     document.getElementById('confirm-btn').disabled = false;
     document.getElementById('quiz-footer-hint').textContent = 'SELECIONE UMA ALTERNATIVA';
     document.getElementById('hint-box').style.display = 'none';
-    document.getElementById('hint-btn').style.display = '';
+    // Oculta dica no Modo ENEM (prova oficial não tem dica)
+    document.getElementById('hint-btn').style.display = quizState.isENEMMode ? 'none' : '';
     const _gb = document.getElementById('gabarito-box');
     if (_gb) { _gb.style.display = 'none'; _gb.innerHTML = ''; }
 }
@@ -1282,13 +1283,83 @@ function updateTimerDisplay() {
 // =====================================================
 // HINT
 // =====================================================
+// Dicas por área/disciplina para questões da API que chegam sem hint
+const _AREA_HINTS = {
+    'CIÊNCIAS HUMANAS': [
+        'Relacione o contexto histórico com as causas e consequências apresentadas no enunciado.',
+        'Em questões de filosofia, identifique o filósofo ou corrente filosófica antes de avaliar as alternativas.',
+        'Para sociologia: verifique se as alternativas usam os conceitos de Durkheim, Weber ou Marx corretamente.',
+        'Em história, associe o período histórico às suas características políticas, econômicas e sociais.',
+        'Leia a charge ou imagem com atenção — o símbolo central costuma ser a chave da resposta.',
+        'Questões de geografia: relacione o fenômeno com o bioma, região ou processo econômico citado.',
+        'Para questões sobre direitos humanos, pense na perspectiva de quem foi historicamente excluído.',
+    ],
+    'CIÊNCIAS DA NATUREZA': [
+        'Identifique qual lei ou princípio científico é cobrado antes de analisar as alternativas.',
+        'Em química orgânica, atenção ao grupo funcional — ele define as propriedades da substância.',
+        'Para física: isole a variável pedida e aplique a fórmula correta com as unidades corretas.',
+        'Em biologia celular, relacione a organela com sua função específica no metabolismo.',
+        'Questões ambientais: relacione o problema com o ciclo biogeoquímico ou o bioma afetado.',
+        'Em termodinâmica, observe se o sistema absorve ou cede calor — sinal de Q faz diferença.',
+        'Para genética: monte o quadro de Punnett se a questão envolver cruzamentos monibridistas.',
+    ],
+    'LINGUAGENS': [
+        'Em questões de literatura, identifique o período literário pelos recursos estilísticos do texto.',
+        'Para gramática: releia a frase substituindo a opção pelo elemento original para testar a coerência.',
+        'Em interpretação textual, a resposta correta está sempre sustentada por algum trecho do texto.',
+        'Textos publicitários e charges: o humor ou ironia geralmente carregam a crítica social cobrada.',
+        'Para questões de variação linguística, lembre que todas as variedades são igualmente válidas.',
+        'Em poesia, atenção ao tom (irônico, lírico, épico) e às figuras de linguagem presentes.',
+        'Questões de língua estrangeira: use o contexto para inferir o significado, mesmo sem saber todas as palavras.',
+    ],
+    'MATEMÁTICA': [
+        'Represente o problema graficamente ou com variáveis antes de calcular.',
+        'Em porcentagem e juros, cuidado com a base de cálculo — porcentagem sobre porcentagem acumula.',
+        'Para geometria: identifique os triângulos retângulos escondidos no problema (Pitágoras e trigonometria).',
+        'Em funções, substitua valores extremos para identificar o comportamento da curva.',
+        'Questões de probabilidade: liste o espaço amostral antes de montar a fração.',
+        'Para PA/PG, escreva os 3 primeiros termos com a fórmula geral e veja o padrão.',
+        'Em estatística, verifique se a questão pede média, mediana ou moda — não são a mesma coisa.',
+    ],
+};
+
+function _getSmartHint(q) {
+    if (q.hint) return q.hint;
+    // Tenta gerar dica específica a partir do enunciado
+    const txt = (q.question || '').toLowerCase();
+    // Alguns padrões comuns no ENEM
+    if (/fotoss[íi]ntese|cloroplasto|clorofila/.test(txt))   return 'A fotossíntese ocorre em 2 etapas: fase fotoquímica (luz → ATP/NADPH) e ciclo de Calvin (CO₂ → glicose).';
+    if (/meiose|gameta|fert[ií]l/.test(txt))                  return 'A meiose reduz o número de cromossomos à metade — essencial para que a fecundação restaure o número diploide.';
+    if (/dna|rna|prote[íi]na|transcri|tradu/.test(txt))       return 'Fluxo: DNA → (transcrição) → RNA → (tradução) → Proteína. Cada códon do RNAm corresponde a um aminoácido.';
+    if (/newton|for[çc]a|acelera[çc][ãa]o/.test(txt))         return 'F = m·a (2ª Lei). Identifique todas as forças, faça o diagrama de corpo livre e aplique ΣF = m·a.';
+    if (/energia cin[ée]|pot[êe]ncial|trabalho/.test(txt))    return 'Energia mecânica = Ec + Ep. Se não há atrito, ela se conserva. Trabalho = variação de energia cinética.';
+    if (/ph|[áa]cido|base|neutro|h\+/.test(txt))              return 'pH < 7 → ácido; pH = 7 → neutro; pH > 7 → base. pH = -log[H⁺]. Memorize a escala.';
+    if (/lei de mendel|dominante|recessiv/.test(txt))         return 'Monte o quadro de Punnett! Dominant (A) × recessivo (a): Aa × Aa → 1 AA : 2 Aa : 1 aa (1/4 recessivo fenotipicamente).';
+    if (/revolução fran|bastilha|ancien r[ée]gime/.test(txt)) return 'A Revolução Francesa (1789) destruiu os privilégios do Antigo Regime — clero e nobreza perderam seus direitos feudais.';
+    if (/ditadura|ai-5|militar|censura/.test(txt))            return 'O AI-5 (1968) foi o ato mais duro da ditadura: fechou o Congresso, instaurou censura e suspendeu o habeas corpus.';
+    if (/escravid[ãa]o|lei [áa]urea|abolição/.test(txt))      return 'A abolição formal (1888) não foi acompanhada de reforma agrária ou inclusão social — perpetuando a desigualdade racial.';
+    if (/imperativo categ|kant/.test(txt))                    return 'Kant: age só conforme uma máxima que possas querer que se torne lei universal (imperativo categórico).';
+    if (/marx|mais-valia|prolet[áa]rio|burgu/.test(txt))      return 'Para Marx: burguesia (donos dos meios de produção) × proletariado (força de trabalho). A mais-valia é o lucro não pago ao trabalhador.';
+    if (/durkheim|fato social|anomia/.test(txt))              return 'Fatos sociais (Durkheim) são externos, coercitivos e gerais — existem independentemente do indivíduo.';
+    if (/fun[çc][ãa]o afim|fun[çc][ãa]o 1.*grau/.test(txt))  return 'f(x) = ax + b. Raiz: x = -b/a. Crescente se a > 0; decrescente se a < 0. Verifique o sinal de a primeiro.';
+    if (/fun[çc][ãa]o quadr[áa]tica|par[áa]bola/.test(txt))   return 'f(x) = ax²+bx+c. Vértice: x = -b/2a. Δ = b²-4ac. Se Δ < 0, não há raízes reais.';
+    if (/logaritmo|log/.test(txt))                            return 'logₐ(b) = x ↔ aˣ = b. Propriedades: log(A·B) = logA + logB; log(A/B) = logA - logB; log(Aⁿ) = n·logA.';
+    if (/juros compost|montante/.test(txt))                   return 'M = C·(1+i)ⁿ. Juros compostos incidem sobre o montante acumulado — crescimento exponencial, não linear.';
+    if (/probabilidade|espa[çc]o amostral/.test(txt))         return 'P(A) = casos favoráveis ÷ total de casos. Liste o espaço amostral completo antes de calcular.';
+    if (/trigon|seno|coseno|tangente/.test(txt))              return 'No triângulo retângulo: seno = CO/H, cosseno = CA/H, tangente = CO/CA. Memorize: SOH-CAH-TOA.';
+    // Fallback inteligente por área
+    const areaHints = _AREA_HINTS[q.area] || _AREA_HINTS['CIÊNCIAS HUMANAS'];
+    // Usa o índice da questão para variar a dica (não repete sempre a mesma)
+    const idx = (quizState.currentIndex || 0) % areaHints.length;
+    return areaHints[idx];
+}
+
 function showHint() {
+    if (quizState.isENEMMode) return; // sem dica no modo ENEM
     const q = quizState.questions[quizState.currentIndex];
     const hintBox = document.getElementById('hint-box');
     if (hintBox.style.display === 'none' || hintBox.style.display === '') {
-        const hintText = q.hint
-            ? '💡 ' + q.hint
-            : '💡 Leia o enunciado com atenção e elimine as alternativas que contradizem o contexto. Analise cada opção antes de confirmar.';
+        const hintText = '💡 ' + _getSmartHint(q);
         hintBox.innerHTML = _safeHTML(renderMarkdown(hintText));
         hintBox.style.display = 'block';
     } else {

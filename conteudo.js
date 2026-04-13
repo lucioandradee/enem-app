@@ -672,6 +672,12 @@ function renderConteudo() {
 }
 
 function switchConteudoTab(tab, btn) {
+    // Tutor IA é exclusivo do Premium
+    if (tab === 'tutor' && typeof isPremium === 'function' && !isPremium()) {
+        if (typeof showFeaturePaywall === 'function') showFeaturePaywall('tutor');
+        else if (typeof navigate === 'function') navigate('premium');
+        return;
+    }
     document.querySelectorAll('.conteudo-tab').forEach(t => t.classList.remove('active'));
     // Oculta todos os painéis respeitando o display correto de cada um
     document.querySelectorAll('.conteudo-panel').forEach(p => {
@@ -1584,14 +1590,47 @@ function _escapeTutorText(str) {
         .replace(/'/g, '&#39;');
 }
 
+// Converte markdown simples para HTML seguro (texto já escapado via _escapeTutorText)
+function _mdToHtml(safe) {
+    function inline(t) {
+        return t
+            .replace(/`([^`]+)`/g, '<code>$1</code>')
+            .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*((?!\s)[^*\n]+?(?<!\s))\*/g, '<em>$1</em>');
+    }
+    const lines = safe.split('\n');
+    let out = '';
+    let inUl = false, inOl = false;
+    for (const line of lines) {
+        const ulM = line.match(/^[•\-\*]\s+(.+)/);
+        const olM = !ulM && line.match(/^\d+\.\s+(.+)/);
+        if (ulM) {
+            if (inOl) { out += '</ol>'; inOl = false; }
+            if (!inUl) { out += '<ul>'; inUl = true; }
+            out += `<li>${inline(ulM[1])}</li>`;
+        } else if (olM) {
+            if (inUl) { out += '</ul>'; inUl = false; }
+            if (!inOl) { out += '<ol>'; inOl = true; }
+            out += `<li>${inline(olM[1])}</li>`;
+        } else {
+            if (inUl) { out += '</ul>'; inUl = false; }
+            if (inOl) { out += '</ol>'; inOl = false; }
+            out += line.trim() === '' ? '<br>' : inline(line) + '<br>';
+        }
+    }
+    if (inUl) out += '</ul>';
+    if (inOl) out += '</ol>';
+    return out.replace(/(<br>)+$/, '');
+}
+
 function _renderTutorMessages() {
     const el = document.getElementById('tutor-messages');
     if (!el) return;
     el.innerHTML = _tutorMessages.map(m => {
         if (m.role === 'typing') return `<div class="tutor-msg ai"><div class="tutor-avatar tutor-avatar-ai">🤖</div><div class="tutor-bubble tutor-typing"><span></span><span></span><span></span></div></div>`;
-        // Escape HTML primeiro, depois aplica markdown - evita XSS
+        // Escape HTML primeiro, depois aplica markdown via _mdToHtml — evita XSS
         const safe = _escapeTutorText(m.text);
-        const bubble = safe.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\*(.+?)\*/g,'<em>$1</em>').replace(/\n/g,'<br>');
+        const bubble = _mdToHtml(safe);
         if (m.role === 'ai') {
             return `<div class="tutor-msg ai"><div class="tutor-avatar tutor-avatar-ai">🤖</div><div class="tutor-bubble">${bubble}</div></div>`;
         }
@@ -1623,6 +1662,11 @@ function tutorNovaConversa() {
 }
 
 async function sendTutorMessage() {
+    if (typeof isPremium === 'function' && !isPremium()) {
+        if (typeof showFeaturePaywall === 'function') showFeaturePaywall('tutor');
+        else if (typeof navigate === 'function') navigate('premium');
+        return;
+    }
     const input = document.getElementById('tutor-input');
     const text  = (input?.value || '').trim();
     if (!text) return;
@@ -1631,6 +1675,11 @@ async function sendTutorMessage() {
 }
 
 function sendTutorSuggestion(text) {
+    if (typeof isPremium === 'function' && !isPremium()) {
+        if (typeof showFeaturePaywall === 'function') showFeaturePaywall('tutor');
+        else if (typeof navigate === 'function') navigate('premium');
+        return;
+    }
     const input = document.getElementById('tutor-input');
     if (input) { input.value = text; }
     // Limpa o input após um tick para o usuário ver o que foi enviado
@@ -1644,56 +1693,57 @@ async function _processTutorText(text) {
     _renderTutorMessages();
 
     let response = null;
-    for (const [pattern, answer] of Object.entries(_TUTOR_KB)) {
-        if (new RegExp(pattern, 'i').test(text)) { response = answer; break; }
-    }
 
+    // ── 1. Edge Function — IA real (servidor, sem chave necessária) ──────────
+    try {
+        const sb = typeof supabase !== 'undefined' ? supabase : null;
+        if (sb) {
+            const { data: sd } = await sb.auth.getSession().catch(() => ({ data: null }));
+            const jwt = sd?.session?.access_token;
+            if (jwt) {
+                const history = _tutorMessages
+                    .filter(m => m.role === 'user' || m.role === 'ai')
+                    .slice(-18)
+                    .map(m => ({ role: m.role === 'ai' ? 'assistant' : 'user', content: m.text }));
+
+                const ctrl = new AbortController();
+                const timer = setTimeout(() => ctrl.abort(), 30000);
+                try {
+                    const res = await fetch(
+                        'https://nkuiwdolkluetsadauwb.supabase.co/functions/v1/tutor-ia',
+                        {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${jwt}`,
+                            },
+                            body: JSON.stringify({ message: text, history }),
+                            signal: ctrl.signal,
+                        }
+                    );
+                    clearTimeout(timer);
+                    if (res.ok) {
+                        const d = await res.json().catch(() => null);
+                        if (d?.reply) response = d.reply;
+                    }
+                    // 403 = não relacionado ao conteúdo ou outro bloqueio → cai no fallback offline
+                } catch { clearTimeout(timer); /* timeout ou rede — cai no fallback */ }
+            }
+        }
+    } catch { /* segurança: nunca quebrar aqui */ }
+
+    // ── 2. KB offline rápido (palavras-chave exatas) ─────────────────────────
     if (!response) {
-        const groqKey = localStorage.getItem('groq_key');
-        if (groqKey) {
-            try {
-                const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-                    method: 'POST',
-                    headers: { 'Content-Type':'application/json', 'Authorization':`Bearer ${groqKey}` },
-                    body: JSON.stringify({
-                        model: 'llama-3.3-70b-versatile',
-                        messages: [
-                            { role:'system', content:`Você é o Tutor IA do ENEM Master, um professor altamente especializado em todas as disciplinas do ENEM brasileiro. Seu objetivo é explicar qualquer conteúdo de forma didática, clara e completa.
-
-DISCIPLINAS que você domina completamente:
-- MATEMÁTICA: aritmética, álgebra, funções (afim, quadrática, exponencial, logarítmica, modular), trigonometria, geometria plana e espacial, geometria analítica, estatística, probabilidade, combinatória, PA, PG, matrizes, sistemas lineares, inequações, juros simples e compostos
-- FÍSICA: mecânica (Newton, cinemática, dinâmica), energia, termodinâmica, óptica, ondulatória, eletricidade, eletromagnetismo, física moderna, relatividade, gravitação
-- QUÍMICA: tabela periódica, ligações químicas, funções inorgânicas, estequiometria, soluções, termoquímica, eletroquímica, equilíbrio químico, química orgânica (funções, reações, polímeros), radioatividade
-- BIOLOGIA: biologia celular, genética molecular (DNA, RNA, proteínas), genética mendeliana, evolução, ecologia, fisiologia humana (todos os sistemas), botânica, zoologia, virologia, microbiologia, biotecnologia
-- CIÊNCIAS HUMANAS: história do Brasil (colônia ao contemporâneo), história geral (Antiguidade ao contemporâneo), geografia brasileira e mundial, sociologia (Marx, Weber, Durkheim), filosofia (grega, moderna, contemporânea), questões sociais (racismo, feminismo, desigualdade, meio ambiente)
-- LINGUAGENS: redação dissertativo-argumentativa do ENEM (estrutura, competências, proposta de intervenção), análise literária (todos os períodos literários brasileiros), figuras de linguagem, gêneros textuais, coesão e coerência, gramática normativa, variação linguística, inglês e espanhol
-
-REGRAS DE RESPOSTA:
-1. Responda SEMPRE em português brasileiro
-2. Use formatação **negrito** para termos-chave, *itálico* para ênfase
-3. Use exemplos práticos e contextualizados quando possível
-4. Estruture a resposta com clareza (introdução → desenvolvimento → exemplo/aplicação)
-5. Para matemática: inclua fórmulas, passo a passo e exemplos numéricos
-6. Para ciências: inclua equações/reações quando relevante
-7. Para humanas: inclua datas, contexto e consequências
-8. Para linguagens: inclua exemplos literários ou textuais
-9. Seja completo mas conciso: máximo 4 parágrafos ou uma lista bem organizada
-10. Se a pergunta for muito ampla, dê uma visão geral e pergunte qual aspecto aprofundar` },
-                            ..._tutorMessages.filter(m=>m.role!=='typing').slice(-10).map(m=>({ role: m.role==='ai'?'assistant':'user', content: m.text })),
-                        ],
-                        temperature: 0.4, max_tokens: 700,
-                    }),
-                });
-                if (res.ok) { const d = await res.json(); response = d.choices?.[0]?.message?.content || null; }
-            } catch { /* ignore */ }
+        for (const [pattern, answer] of Object.entries(_TUTOR_KB)) {
+            if (new RegExp(pattern, 'i').test(text)) { response = answer; break; }
         }
     }
 
-    // 2º fallback: detecção ampla por palavras-chave de disciplina
+    // ── 3. Detecção ampla por disciplina ────────────────────────────────────
     if (!response) response = _looseTutorMatch(text);
 
-    // 3º fallback: resposta genérica amigável (praticamente nunca deve chegar aqui)
-    if (!response) response = '**Pode perguntar de outra forma?** 😊\n\nSou especialista em todas as disciplinas do ENEM! Tente reformular, por exemplo:\n\n*"O que é fotossíntese?"*, *"Como calcular área de um triângulo?"*, *"O que foi a Revolução Francesa?"*, *"Como escrever a proposta de intervenção?"*\n\nOu pergunte diretamente: *"Me explique Matemática"*, *"Quero revisar Biologia"*, *"Fale sobre a Era Vargas"*';
+    // ── 4. Fallback genérico (não deve acontecer com Edge Function ativa) ───
+    if (!response) response = '**Pode reformular a pergunta?** 😊\n\nSou especialista em todas as disciplinas do ENEM! Exemplos:\n\n- *"O que é fotossíntese?"*\n- *"Como calcular área de um triângulo?"*\n- *"O que foi a Revolução Francesa?"*\n- *"Como escrever a proposta de intervenção?"*';
 
     _tutorMessages = _tutorMessages.filter(m => m.role !== 'typing');
     _tutorMessages.push({ role:'ai', text: response });

@@ -40,9 +40,21 @@
   transition: all 0.2s;
   border: none;
   margin: 4px 0;
+  position: relative; overflow: hidden;
 }
 .cta-btn:hover  { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,180,166,0.4); }
 .cta-btn:active { transform: translateY(0); }
+.cta-btn::after {
+  content: ''; position: absolute;
+  top: 0; left: -100%; width: 50%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.14), transparent);
+  animation: cta-shimmer 3.5s ease 0.5s infinite;
+  pointer-events: none;
+}
+@keyframes cta-shimmer {
+  0%        { left: -100%; }
+  40%, 100% { left: 150%; }
+}
 
 .outline-btn {
   width: 100%;
@@ -94,7 +106,16 @@
   display: flex; align-items: center; justify-content: space-between;
   padding: 18px 0 10px;
 }
-.section-title { font-size: 11px; font-weight: 700; color: var(--text-secondary); letter-spacing: 1px; text-transform: uppercase; }
+.section-title {
+  font-size: 11px; font-weight: 700; color: var(--teal); letter-spacing: 1px; text-transform: uppercase;
+  display: flex; align-items: center; gap: 8px;
+}
+.section-title::before {
+  content: ''; display: block;
+  width: 3px; height: 12px;
+  background: linear-gradient(180deg, var(--teal), rgba(0,180,166,0.25));
+  border-radius: 2px; flex-shrink: 0;
+}
 
 /* ---- Stat Card (shared) ---- */
 .stat-card {
@@ -107,6 +128,31 @@
 .stat-label  { font-size: 10px; font-weight: 600; color: var(--text-secondary); letter-spacing: 0.5px; }
 .stat-value  { font-size: 22px; font-weight: 800; }
 .stat-value.teal { color: var(--teal); }
+
+/* XP / Ranking enhanced cards */
+.stat-card-head { display: flex; justify-content: space-between; align-items: center; }
+.stat-lvl-badge {
+  font-size: 9px; font-weight: 800; letter-spacing: 0.5px;
+  background: rgba(0,201,184,0.15); color: var(--teal);
+  padding: 2px 7px; border-radius: 20px;
+}
+.stat-xp-bar-wrap {
+  height: 3px; background: var(--border-subtle); border-radius: 2px;
+  margin-top: 8px; overflow: hidden;
+}
+.stat-xp-bar {
+  height: 100%; width: 0%;
+  background: linear-gradient(90deg, var(--teal), #4cd9c8);
+  border-radius: 2px;
+  transition: width 0.8s cubic-bezier(.2,.8,.3,1);
+}
+.stat-xp-next { font-size: 9px; color: var(--text-secondary); margin-top: 4px; }
+.stat-rank-tier {
+  font-size: 9px; font-weight: 800; letter-spacing: 0.5px;
+  background: rgba(245,197,24,0.15); color: #f5c518;
+  padding: 2px 7px; border-radius: 20px;
+}
+.stat-rank-sub { font-size: 9px; color: var(--text-secondary); margin-top: 2px; }
 
 /* ---- Progress Bar ---- */
 .progress-label-row {
@@ -271,3 +317,13 @@
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border-subtle); border-radius: 2px; }
+
+/* ---- Stat Card Variants ---- */
+.stat-card-xp {
+  background: linear-gradient(135deg, rgba(0,180,166,0.13) 0%, var(--bg-card) 65%);
+  border-color: rgba(0,180,166,0.28);
+}
+.stat-card-rank {
+  background: linear-gradient(135deg, rgba(245,197,24,0.11) 0%, var(--bg-card) 65%);
+  border-color: rgba(245,197,24,0.25);
+}

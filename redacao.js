@@ -142,19 +142,6 @@ function _updateRedacaoCounter() {
     if (cEl) cEl.textContent = `${chars}/3000 caracteres`;
 }
 
-function _saveRedacaoKey() {
-    const inp = document.getElementById('redacao-groq-key-input');
-    const key = (inp?.value || '').trim();
-    if (!key.startsWith('gsk_')) {
-        _showQuickToast('❌ Chave inválida. Deve começar com gsk_');
-        return;
-    }
-    localStorage.setItem('groq_key', key);
-    const wrap = document.getElementById('redacao-groq-key-wrap');
-    if (wrap) wrap.style.display = 'none';
-    _showQuickToast('✅ Chave salva! Clique em Corrigir novamente.');
-}
-
 function drawNewTheme() {
     if (currentThemeCategory === 'enem') {
         currentThemeIdx = (currentThemeIdx + 1) % ENEM_THEMES.length;
@@ -166,6 +153,102 @@ function drawNewTheme() {
     if (textarea) { textarea.value = ''; _updateRedacaoCounter.call(textarea); }
     const resultEl = document.getElementById('redacao-result');
     if (resultEl) resultEl.style.display = 'none';
+}
+
+// ── Obtém userId do state ou do localStorage como fallback ──────────────────
+function _getRedacaoUserId() {
+    // 1. state em memória (caminho normal)
+    if (state?.user?.id && state.user.id.length >= 30) return state.user.id;
+
+    // 2. Fallback: lê direto do localStorage (mobile PWA pode resetar state em memória)
+    try {
+        const raw = localStorage.getItem('enem_state');
+        if (raw) {
+            const saved = JSON.parse(raw);
+            const id = saved?.user?.id;
+            if (id && id.length >= 30) return id;
+        }
+    } catch { /* noop */ }
+
+    // 3. Fallback Supabase: lê sessão salva no localStorage pelo SDK
+    try {
+        const keys = Object.keys(localStorage).filter(k => k.startsWith('sb-') && k.includes('auth-token'));
+        for (const key of keys) {
+            const raw = localStorage.getItem(key);
+            if (!raw) continue;
+            const parsed = JSON.parse(raw);
+            const id =
+                parsed?.user?.id ||
+                parsed?.currentSession?.user?.id ||
+                parsed?.session?.user?.id;
+            if (id && id.length >= 30) return id;
+        }
+    } catch { /* noop */ }
+
+    return null;
+}
+
+async function _callCorrigirEdge(userId, theme, text, attempt) {
+    attempt = attempt || 1;
+    const EDGE_URL = 'https://nkuiwdolkluetsadauwb.supabase.co/functions/v1/corrigir-redacao';
+    const ctrl  = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 35000);
+    let res;
+    try {
+        const anonKey = (typeof SUPABASE_ANON_KEY !== 'undefined' && SUPABASE_ANON_KEY) ? SUPABASE_ANON_KEY : '';
+        res = await fetch(EDGE_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                ...(anonKey ? { apikey: anonKey } : {}),
+            },
+            body: JSON.stringify({ theme, text, userId }),
+            signal: ctrl.signal,
+        });
+    } catch (netErr) {
+        clearTimeout(timer);
+        if (netErr.name === 'AbortError') {
+            if (attempt < 2) return _callCorrigirEdge(userId, theme, text, 2);
+            throw new Error('Tempo limite esgotado. Verifique sua conexão e tente novamente.');
+        }
+        throw new Error('Sem conexão com a internet. Verifique sua rede e tente novamente.');
+    }
+    clearTimeout(timer);
+
+    if (res.ok) {
+        const body = await res.json().catch(() => null);
+        if (body?.c1) return body;
+        throw new Error('Resposta inesperada da IA. Tente novamente.');
+    }
+
+    // 401 → perfil não encontrado (userId inválido ou não logado)
+    if (res.status === 401) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body?.error || 'Sessão expirada. Saia e entre novamente na sua conta.');
+    }
+
+    // 403 → paywall
+    if (res.status === 403) {
+        const body = await res.json().catch(() => ({}));
+        const err  = new Error(body?.error || 'Recurso exclusivo do plano Premium.');
+        err._gate  = true;
+        throw err;
+    }
+
+    // 429 → rate limit
+    if (res.status === 429) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body?.error || 'Limite diário de correções atingido. Volte amanhã!');
+    }
+
+    // 5xx → retenta uma vez
+    if (res.status >= 500 && attempt < 2) {
+        await new Promise(r => setTimeout(r, 1500));
+        return _callCorrigirEdge(userId, theme, text, 2);
+    }
+
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body?.error || `Erro ${res.status}. Tente novamente.`);
 }
 
 async function submitEssay() {
@@ -188,127 +271,13 @@ async function submitEssay() {
     btn.textContent = '⏳ Corrigindo com IA...';
 
     try {
-        const EDGE_URL = 'https://nkuiwdolkluetsadauwb.supabase.co/functions/v1/corrigir-redacao';
-
-        let result = null;
-
-        // 1ª tentativa: Edge Function do servidor (chave central)
-        try {
-            // Garante sessão válida — no mobile ela pode expirar silenciosamente
-            let { data: sessionData } = await supabase.auth.getSession().catch(() => ({ data: null }));
-            if (!sessionData?.session?.access_token) {
-                const { data: refreshed } = await supabase.auth.refreshSession().catch(() => ({ data: null }));
-                sessionData = refreshed;
-            }
-            const authToken = sessionData?.session?.access_token ?? '';
-
-            if (authToken) {
-                // Timeout de 28s — evita requisição pendurada no mobile
-                const edgeCtrl  = new AbortController();
-                const edgeTimer = setTimeout(() => edgeCtrl.abort(), 28000);
-                let res;
-                try {
-                    res = await fetch(EDGE_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
-                        body: JSON.stringify({ theme, text }),
-                        signal: edgeCtrl.signal,
-                    });
-                } finally {
-                    clearTimeout(edgeTimer);
-                }
-
-                if (res.ok) {
-                    const body = await res.json().catch(() => null);
-                    if (body?.c1) result = body;
-                } else if (res.status === 403) {
-                    // 403 = usuário não é premium — ÚNICO status que interrompe o fluxo
-                    const body = await res.json().catch(() => ({}));
-                    const gateErr = new Error(body?.error || 'Recurso exclusivo do plano Premium.');
-                    gateErr._gate = true;
-                    throw gateErr;
-                }
-                // 401, 429, 500, 502, 503, 404, timeout → cai no fallback Groq silenciosamente
-            }
-        } catch (edgeErr) {
-            if (edgeErr._gate) throw edgeErr; // re-lança só o paywall
-            console.warn('[redacao] Edge Function indisponível:', edgeErr.message, '— usando fallback Groq');
+        // Obtém userId do state ou localStorage (funciona mesmo com JWT expirado no mobile)
+        const userId = _getRedacaoUserId();
+        if (!userId) {
+            throw new Error('Você precisa estar logado para corrigir redações. Faça login e tente novamente.');
         }
 
-        // 2ª tentativa: Groq API diretamente com chave do usuário
-        if (!result) {
-            const apiKey = localStorage.getItem('groq_key') || '';
-            if (!apiKey) {
-                const stored = document.getElementById('redacao-groq-key-wrap');
-                if (stored) stored.style.display = '';
-                const inp = document.getElementById('redacao-groq-key-input');
-                if (inp) inp.focus();
-                throw new Error('A correção automática está indisponível. Insira sua chave Groq abaixo para continuar.');
-            }
-
-            const PROMPT = `Você é um corretor oficial credenciado do ENEM com 10 anos de experiência. Leia ATENTAMENTE a redação abaixo e corrija com rigor real — as notas devem refletir o texto específico enviado.
-
-TEMA: "${theme}"
-
-REDAÇÃO DO ALUNO:
-${text}
-
-INSTRUÇÕES por competência (notas em múltiplos de 40: 0, 40, 80, 120, 160 ou 200):
-- C1 (Norma culta): identifique erros gramaticais, ortográficos ou de pontuação que aparecem no texto. Se houver erros graves ou frequentes, limite a nota a no máximo 120.
-- C2 (Repertório e tema): o aluno fugiu do tema, tangenciou ou desenvolveu bem? Comente a qualidade e pertinência do repertório sociocultural usado.
-- C3 (Argumentação): os argumentos são coerentes e progressivos? A tese está clara? Há contradições ou argumentos superficiais?
-- C4 (Coesão): identifique os conectivos usados. O texto tem boa articulação entre parágrafos? Há repetições excessivas de palavras?
-- C5 (Proposta de intervenção): a proposta contém os 5 elementos obrigatórios (ação + agente + modo/instrumento + efeito esperado + finalidade)? Respeita os direitos humanos?
-
-Seja HONESTO e RIGOROSO. Redações diferentes devem receber notas diferentes — nunca repita automaticamente os mesmos valores. Mencione aspectos concretos do texto fornecido nos feedbacks.
-
-Retorne APENAS JSON válido sem markdown:
-{"c1":{"nota":NUMERO,"feedback":"feedback específico sobre esta redação"},"c2":{"nota":NUMERO,"feedback":"..."},"c3":{"nota":NUMERO,"feedback":"..."},"c4":{"nota":NUMERO,"feedback":"..."},"c5":{"nota":NUMERO,"feedback":"..."},"total":SOMA_DAS_5_NOTAS,"comentario_geral":"Análise geral desta redação específica, citando pontos fortes e fracos concretos encontrados no texto."}`;
-
-            // Timeout de 28s — evita requisição pendurada no mobile
-            const groqCtrl  = new AbortController();
-            const groqTimer = setTimeout(() => groqCtrl.abort(), 28000);
-            let groqRes;
-            try {
-                groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
-                    body: JSON.stringify({
-                        model: 'llama-3.3-70b-versatile',
-                        messages: [{ role: 'user', content: PROMPT }],
-                        temperature: 0.6,
-                        max_tokens: 2000,
-                    }),
-                    signal: groqCtrl.signal,
-                });
-            } catch (netErr) {
-                if (netErr.name === 'AbortError')
-                    throw new Error('Tempo limite esgotado. Verifique sua conexão e tente novamente.');
-                throw new Error('Sem conexão com a internet. Verifique sua rede e tente novamente.');
-            } finally {
-                clearTimeout(groqTimer);
-            }
-
-            if (groqRes.status === 401) throw new Error('Chave Groq inválida. Verifique e tente novamente.');
-            if (groqRes.status === 429) throw new Error('Serviço de IA sobrecarregado. Aguarde 30 segundos e tente novamente.');
-            if (groqRes.status >= 500) throw new Error('O serviço de IA está temporariamente fora do ar. Tente novamente em alguns minutos.');
-            if (!groqRes.ok)           throw new Error(`Erro ${groqRes.status} na API de IA. Tente novamente.`);
-
-            const groqData = await groqRes.json().catch(() => null);
-            if (!groqData) throw new Error('Resposta da IA em formato inesperado. Tente novamente.');
-            const raw = groqData.choices?.[0]?.message?.content || '';
-            const m   = raw.match(/\{[\s\S]*\}/);
-            if (!m) throw new Error('A IA retornou um formato inesperado. Tente novamente.');
-            try {
-                result = JSON.parse(m[0]);
-            } catch {
-                throw new Error('Não foi possível interpretar a resposta da IA. Tente novamente.');
-            }
-        }
-
-        if (!result || !result.c1) throw new Error('Resposta inesperada da IA.');
-        const keyWrap = document.getElementById('redacao-groq-key-wrap');
-        if (keyWrap) keyWrap.style.display = 'none';
+        const result = await _callCorrigirEdge(userId, theme, text);
 
         _displayEssayResult(result);
 
@@ -333,11 +302,16 @@ Retorne APENAS JSON válido sem markdown:
 
     } catch (err) {
         console.error('❌ Erro na correção:', err);
+        // 403 Premium gate → abre paywall
+        if (err._gate) {
+            showFeaturePaywall('redacaoIA');
+            return;
+        }
         const msg = err.message || 'Ocorreu um erro inesperado. Tente novamente.';
         // Mostra o erro na área de resultado (sem alert bloqueante)
         const resultEl = document.getElementById('redacao-result');
         if (resultEl) {
-            resultEl.style.display = '';
+            resultEl.style.display = 'flex';
             resultEl.innerHTML = `<div style="color:#ef4444;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);border-radius:12px;padding:20px;text-align:center;font-size:15px;font-weight:600;line-height:1.5">❌ ${msg}</div>`;
             resultEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         } else if (typeof _showQuickToast === 'function') {
@@ -356,6 +330,8 @@ function _displayEssayResult(result) {
     const compEl    = document.getElementById('redacao-competencias');
     const totalEl   = document.getElementById('redacao-total');
     const commentEl = document.getElementById('redacao-comment');
+
+    if (!resultEl || !compEl) return;
 
     compEl.innerHTML = '';
     COMPETENCIAS.forEach(c => {
@@ -408,6 +384,6 @@ function _displayEssayResult(result) {
     if (totalEl)   { totalEl.textContent = total; totalEl.style.color = totalColor; }
     if (commentEl) commentEl.textContent = result.comentario_geral || '';
 
-    resultEl.style.display = '';
+    resultEl.style.display = 'flex';
     resultEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
