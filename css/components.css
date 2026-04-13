@@ -19,12 +19,17 @@
   width: 36px; height: 36px;
   border-radius: 50%;
   background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
   color: var(--text-primary);
-  font-size: 16px;
   display: flex; align-items: center; justify-content: center;
   transition: all 0.2s;
+  flex-shrink: 0;
 }
-.back-btn:hover { background: rgba(255,255,255,0.15); }
+.back-btn:hover {
+  background: rgba(0,180,166,0.15);
+  border-color: rgba(0,180,166,0.4);
+  color: var(--teal);
+}
 
 /* ---- Buttons ---- */
 .cta-btn {
@@ -252,9 +257,14 @@
   background: linear-gradient(135deg, var(--teal), #0077b6);
   display: flex; align-items: center; justify-content: center;
   font-size: 18px; font-weight: 700; color: white;
-  border: 2px solid var(--teal); flex-shrink: 0;
+  border: 2px solid rgba(0,180,166,0.6);
+  box-shadow: 0 0 0 3px rgba(0,180,166,0.15);
+  flex-shrink: 0;
 }
-.avatar.large { width: 80px; height: 80px; font-size: 28px; border-width: 3px; }
+.avatar.large {
+  width: 80px; height: 80px; font-size: 28px; border-width: 3px;
+  box-shadow: 0 0 0 5px rgba(0,180,166,0.18), 0 8px 24px rgba(0,0,0,0.3);
+}
 .avatar.small { width: 38px; height: 38px; font-size: 14px; }
 
 /* ---- Badge Toast ---- */
@@ -312,6 +322,23 @@
   background: var(--red); border-radius: 50%;
   border: 2px solid var(--bg-secondary);
 }
+
+/* ---- btn-primary (usado em desafio diário e outros elementos) ---- */
+.btn-primary {
+  width: 100%;
+  padding: 15px 16px;
+  background: linear-gradient(135deg, var(--teal), var(--teal-dark));
+  color: white;
+  font-size: 14px; font-weight: 800;
+  letter-spacing: 0.5px;
+  border-radius: var(--radius-md);
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  box-shadow: var(--shadow-teal);
+  transition: all 0.2s; border: none;
+  position: relative; overflow: hidden;
+}
+.btn-primary:hover  { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,180,166,0.4); }
+.btn-primary:active { transform: translateY(0); }
 
 /* ---- Scrollbar (desktop) ---- */
 ::-webkit-scrollbar { width: 4px; }

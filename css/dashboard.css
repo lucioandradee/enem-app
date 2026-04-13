@@ -73,6 +73,11 @@
   background: var(--bg-card); border: 1px solid var(--border);
   border-radius: var(--radius-lg); padding: 18px; margin: 14px 0;
   position: relative; overflow: hidden;
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+.subject-card:hover {
+  border-color: rgba(0,180,166,0.35);
+  box-shadow: 0 6px 28px rgba(0,180,166,0.12);
 }
 .subject-card::before {
   content: ''; position: absolute;
@@ -132,7 +137,13 @@
 .dc-check { font-size: 13px; font-weight: 600; color: var(--green); }
 .dc-btn   { width: 100%; margin-top: 2px; }
 
-/* ---- Retry mistakes ---- */
+/* ---- Mini Cards ---- */
+/* Streak card - orange glow */
+.mini-card:first-child {
+  border-color: rgba(249,115,22,0.25);
+  background: linear-gradient(135deg, rgba(249,115,22,0.08) 0%, var(--bg-card) 55%);
+}
+.mini-card:first-child .mini-card-value { color: #fb923c; }
 .retry-mistakes-btn {
   width: 100%; padding: 12px;
   background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.3);
@@ -141,14 +152,31 @@
 }
 .retry-mistakes-btn:hover { background: rgba(239,68,68,0.2); }
 
-/* ---- Bônus XP ---- */
+/* ---- Retry mistakes ---- */
 .result-xp-bonus  { opacity: 0.85; }
 .bonus-highlight  { font-size: 12px; font-weight: 700; color: var(--gold); }
 
-/* ---- Area Card ---- */
+/* ---- Bônus XP ---- */
 .area-card .area-questions { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
 
-/* ---- Paused Quiz Card ---- */
+/* ---- Home CTA ---- */
+.home-cta-btn {
+  padding: 14px 18px !important;
+  justify-content: flex-start !important;
+  gap: 14px !important;
+  background: linear-gradient(135deg, var(--teal) 0%, #0077b6 100%) !important;
+  box-shadow: 0 6px 24px rgba(0,180,166,0.35) !important;
+}
+.home-cta-btn .home-cta-inner { flex: 1; display: flex; flex-direction: column; align-items: flex-start; line-height: 1; gap: 3px; }
+.home-cta-btn .home-cta-inner strong { font-size: 16px; font-weight: 900; letter-spacing: 0.5px; }
+.home-cta-btn .home-cta-inner small  { font-size: 11px; font-weight: 500; opacity: 0.82; }
+
+/* ---- Daily Challenge button ---- */
+.dc-btn {
+  width: 100%; margin-top: 4px;
+}
+
+/* ---- Area Card ---- */
 .paused-quiz-card {
   background: linear-gradient(135deg, #0d2744, #0f2f50);
   border: 1.5px solid rgba(0,180,166,0.4); border-radius: 14px;
