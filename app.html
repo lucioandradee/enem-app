@@ -1920,7 +1920,10 @@
                                 <span class="fc-lvl-badge" id="fc-lvl-badge">FÁCIL</span>
                             </div>
                             <p class="flashcard-question" id="fc-question">Carregando...</p>
-                            <span class="flashcard-hint">Toque para revelar</span>
+                            <span class="flashcard-hint">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M7 10l5 5 5-5"/></svg>
+                                Toque para ver a resposta
+                            </span>
                         </div>
                         <div class="flashcard-face flashcard-back">
                             <span class="flashcard-area" id="fc-area-back"></span>
@@ -1932,15 +1935,27 @@
                 <!-- 4 ações em UMA linha: ← | Confundo | Sei! | → -->
                 <div class="fc-actions-row">
                     <button class="fc-act-nav" onclick="prevFlashcard()" title="Anterior"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><polyline points="15 18 9 12 15 6"/></svg></button>
-                    <button class="fc-act-no" onclick="rateFlashcard(false)">😕 Confundo</button>
-                    <button class="fc-act-yes" onclick="rateFlashcard(true)">✅ Sei!</button>
-                    <button class="fc-act-nav" onclick="nextFlashcard()" title="Próximo">→</button>
+                    <button class="fc-act-no" onclick="rateFlashcard(false)">
+                        <span class="fc-act-icon">✗</span> Ainda confuso
+                    </button>
+                    <button class="fc-act-yes" onclick="rateFlashcard(true)">
+                        <span class="fc-act-icon">✓</span> Domino isso!
+                    </button>
+                    <button class="fc-act-nav" onclick="nextFlashcard()" title="Próximo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg></button>
                 </div>
 
             </div>
 
             <!-- ── PAINEL: Resumos ── -->
             <div class="conteudo-panel" id="conteudo-panel-resumos">
+                <!-- Hero dos Resumos -->
+                <div class="resumos-hero">
+                    <div class="resumos-hero-left">
+                        <p class="resumos-hero-title">Resumos por Disciplina</p>
+                        <p class="resumos-hero-sub">Teoria objetiva · Foco no ENEM · Atualizado</p>
+                    </div>
+                    <span class="resumos-hero-badge">📖</span>
+                </div>
                 <!-- Barra de leitura no topo -->
                 <div class="resumo-read-bar" id="resumo-read-bar"></div>
                 <div id="resumos-list" class="resumos-list-inner"></div>
@@ -1951,7 +1966,10 @@
             <div class="conteudo-panel conteudo-panel-tutor" id="conteudo-panel-tutor">
                 <!-- Cabeçalho: título + botão Nova conversa -->
                 <div class="tutor-header">
-                    <span class="tutor-header-title">🤖 Tutor IA</span>
+                    <div class="tutor-header-info">
+                        <span class="tutor-header-title">🤖 Tutor IA</span>
+                        <span class="tutor-header-sub">Especialista exclusivo em ENEM</span>
+                    </div>
                     <button class="tutor-new-btn" onclick="tutorNovaConversa()" title="Limpar conversa">+ Nova conversa</button>
                 </div>
                 <!-- Grid 3x4 de sugestões rápidas (visível antes da primeira mensagem) -->
@@ -1972,14 +1990,24 @@
                 <div class="tutor-messages-scroll" id="tutor-messages"></div>
                 <div class="tutor-input-row">
                     <input class="tutor-input" id="tutor-input" type="text"
-                        placeholder="Pergunte sobre qualquer disciplina do ENEM..."
+                        placeholder="Ex: Explique a Revolução Industrial para o ENEM..."
                         onkeydown="if(event.key==='Enter')sendTutorMessage()" />
-                    <button class="tutor-send-btn" onclick="sendTutorMessage()">➤</button>
+                    <button class="tutor-send-btn" onclick="sendTutorMessage()">
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
+                    </button>
                 </div>
             </div>
 
             <!-- ── PAINEL: Progresso ── -->
             <div class="conteudo-panel" id="conteudo-panel-progresso">
+                <!-- Hero Progresso -->
+                <div class="prog-hero">
+                    <div>
+                        <p class="prog-hero-title">Sua evolução nos Flashcards</p>
+                        <p class="prog-hero-sub">Continue dominando · cada card conta</p>
+                    </div>
+                    <button class="prog-hero-cta" onclick="navigate('analise')">Ver análise completa →</button>
+                </div>
                 <!-- Contador de streak -->
                 <div class="prog-streak-card">
                     <span class="prog-streak-icon">🔥</span>
