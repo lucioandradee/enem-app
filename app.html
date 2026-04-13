@@ -1211,43 +1211,85 @@
 
                 <!-- Step 2: Meta -->
                 <div class="ob-step" id="ob-step-2">
-                    <div class="ob-emoji">🎯</div>
-                    <h2 class="ob-title">Qual é a sua meta?</h2>
-                    <p class="ob-desc">Isso vai personalizar seu cronograma de estudos.</p>
-                    <div class="ob-goals-grid">
-                        <button class="ob-goal-btn" data-goal="Medicina na Federal 🏥" onclick="selectGoal(this)">🩺<span>Medicina</span></button>
-                        <button class="ob-goal-btn" data-goal="Direito na Federal ⚖️" onclick="selectGoal(this)">⚖️<span>Direito</span></button>
-                        <button class="ob-goal-btn" data-goal="Engenharia na Federal ⚙️" onclick="selectGoal(this)">⚙️<span>Engenharia</span></button>
-                        <button class="ob-goal-btn" data-goal="Administração na Federal 📊" onclick="selectGoal(this)">📊<span>Administração</span></button>
-                        <button class="ob-goal-btn" data-goal="Ciências da Computação 💻" onclick="selectGoal(this)">💻<span>Computação</span></button>
-                        <button class="ob-goal-btn" data-goal="outro" onclick="selectGoal(this)">🌟<span>Outro</span></button>
+                    <span class="ob2-label">Passo 2 de 3 — Personalização</span>
+                    <h2 class="ob2-title">Em qual curso você<br><span class="ob2-title-accent">quer entrar?</span></h2>
+                    <p class="ob2-desc">Calculamos a nota de corte e montamos seu plano focado no que realmente importa.</p>
+                    <div class="ob2-grid">
+                        <button class="ob-goal-btn ob2-card" data-goal="Medicina na Federal 🏥" onclick="selectGoal(this)">
+                            <span class="ob2-card-icon">🩺</span>
+                            <span class="ob2-card-name">Medicina</span>
+                            <span class="ob2-card-tag">Alta concorrência</span>
+                        </button>
+                        <button class="ob-goal-btn ob2-card" data-goal="Direito na Federal ⚖️" onclick="selectGoal(this)">
+                            <span class="ob2-card-icon">⚖️</span>
+                            <span class="ob2-card-name">Direito</span>
+                            <span class="ob2-card-tag">Top 15%</span>
+                        </button>
+                        <button class="ob-goal-btn ob2-card" data-goal="Engenharia na Federal ⚙️" onclick="selectGoal(this)">
+                            <span class="ob2-card-icon">⚙️</span>
+                            <span class="ob2-card-name">Engenharia</span>
+                            <span class="ob2-card-tag">Foco CN + MT</span>
+                        </button>
+                        <button class="ob-goal-btn ob2-card" data-goal="Administração na Federal 📊" onclick="selectGoal(this)">
+                            <span class="ob2-card-icon">📊</span>
+                            <span class="ob2-card-name">Administração</span>
+                            <span class="ob2-card-tag">Nota acessível</span>
+                        </button>
+                        <button class="ob-goal-btn ob2-card" data-goal="Ciências da Computação 💻" onclick="selectGoal(this)">
+                            <span class="ob2-card-icon">💻</span>
+                            <span class="ob2-card-name">Computação</span>
+                            <span class="ob2-card-tag">Foco em MT</span>
+                        </button>
+                        <button class="ob-goal-btn ob2-card" data-goal="outro" onclick="selectGoal(this)">
+                            <span class="ob2-card-icon">🌟</span>
+                            <span class="ob2-card-name">Outro</span>
+                            <span class="ob2-card-tag">Personalizado</span>
+                        </button>
                     </div>
-                    <div id="ob-outro-wrap" style="display:none; margin-top:12px;">
-                        <input type="text" id="ob-outro-input" maxlength="60" placeholder="Ex: Psicologia, Veterinária, Arquitetura…" style="width:100%; padding:12px 14px; border-radius:12px; border:2px solid var(--teal,#00b4a6); background:#1a2540; color:#fff; font-size:15px; outline:none; box-sizing:border-box;" />
+                    <div id="ob-outro-wrap" style="display:none; margin-top:12px; width:100%;">
+                        <input type="text" id="ob-outro-input" maxlength="60" placeholder="Ex: Psicologia, Veterinária, Arquitetura…" style="width:100%; padding:13px 14px; border-radius:14px; border:1.5px solid var(--teal); background:rgba(255,255,255,.04); color:#fff; font-size:15px; outline:none; box-sizing:border-box; font-family:inherit;" />
                     </div>
-                    <button class="cta-btn ob-btn" style="margin-top:24px; width:100%" onclick="onboardingNext()">Continuar →</button>
+                    <button class="ob2-cta-btn" onclick="onboardingNext()">
+                        Personalizar meu plano
+                        <svg viewBox="0 0 20 20" fill="currentColor" width="17" height="17" aria-hidden="true"><path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+                    </button>
                 </div>
 
                 <!-- Step 3: Matérias fracas -->
                 <div class="ob-step" id="ob-step-3">
-                    <div class="ob-emoji">📚</div>
-                    <h2 class="ob-title">Quais áreas precisa melhorar?</h2>
-                    <p class="ob-desc">Vamos focar mais nessas disciplinas no seu cronograma diário.</p>
-                    <div class="ob-subjects-grid">
-                        <button class="ob-subj-btn" data-subj="humanas" onclick="toggleSubj(this)">
-                            <span>🌍</span><span>Humanas</span>
+                    <span class="ob3-label">Passo 3 de 3 — Quase lá!</span>
+                    <h2 class="ob3-title">Onde você mais<br><span class="ob3-title-accent">precisa evoluir?</span></h2>
+                    <p class="ob3-desc">Priorizaremos essas áreas no seu cronograma diário. Selecione quantas quiser.</p>
+                    <div class="ob3-grid">
+                        <button class="ob-subj-btn ob3-card" data-subj="humanas" onclick="toggleSubj(this)">
+                            <div class="ob3-card-icon">🌍</div>
+                            <span class="ob3-card-name">Humanas</span>
+                            <span class="ob3-card-pct">21% da prova</span>
                         </button>
-                        <button class="ob-subj-btn" data-subj="natureza" onclick="toggleSubj(this)">
-                            <span>🔬</span><span>Natureza</span>
+                        <button class="ob-subj-btn ob3-card" data-subj="natureza" onclick="toggleSubj(this)">
+                            <div class="ob3-card-icon">🔬</div>
+                            <span class="ob3-card-name">Natureza</span>
+                            <span class="ob3-card-pct">21% da prova</span>
                         </button>
-                        <button class="ob-subj-btn" data-subj="linguagens" onclick="toggleSubj(this)">
-                            <span>📝</span><span>Linguagens</span>
+                        <button class="ob-subj-btn ob3-card" data-subj="linguagens" onclick="toggleSubj(this)">
+                            <div class="ob3-card-icon">📝</div>
+                            <span class="ob3-card-name">Linguagens</span>
+                            <span class="ob3-card-pct">27% da prova</span>
                         </button>
-                        <button class="ob-subj-btn" data-subj="matematica" onclick="toggleSubj(this)">
-                            <span>➗</span><span>Matemática</span>
+                        <button class="ob-subj-btn ob3-card" data-subj="matematica" onclick="toggleSubj(this)">
+                            <div class="ob3-card-icon">➗</div>
+                            <span class="ob3-card-name">Matemática</span>
+                            <span class="ob3-card-pct">25% da prova</span>
                         </button>
                     </div>
-                    <button class="cta-btn ob-btn" style="margin-top:24px; width:100%" onclick="onboardingNext()">Começar a Estudar 🚀</button>
+                    <p class="ob3-tip">
+                        <svg viewBox="0 0 20 20" fill="currentColor" width="13" height="13"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
+                        Você pode ajustar isso depois nas Configurações
+                    </p>
+                    <button class="ob3-cta-btn" onclick="onboardingNext()">
+                        <svg viewBox="0 0 20 20" fill="currentColor" width="18" height="18" aria-hidden="true"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                        Montar meu cronograma
+                    </button>
                 </div>
             </div>
         </section>
