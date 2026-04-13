@@ -41,16 +41,16 @@
 }
 .login-brand-logo {
   width: 42px; height: 42px;
-  background: linear-gradient(135deg, var(--teal) 0%, #007a6e 100%);
   border-radius: 13px;
-  display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 4px 16px rgba(0,180,166,.4);
+  overflow: hidden;
   flex-shrink: 0;
 }
+.login-brand-logo img { display: block; width: 42px; height: 42px; }
 .login-brand-name {
-  font-size: 18px; font-weight: 400; color: var(--text-primary); letter-spacing: -.3px;
+  font-size: 22px; font-weight: 400; color: var(--text-primary); letter-spacing: -.4px;
 }
-.login-brand-name strong { font-weight: 900; }
+.login-brand-name em { font-style: normal; font-weight: 400; color: var(--teal); }
+.login-brand-name strong { font-weight: 900; color: #fff; }
 
 /* Headline */
 .login-headline-block {
@@ -230,16 +230,16 @@
 }
 .ob1-topbar-logo {
   width: 38px; height: 38px;
-  background: linear-gradient(135deg, var(--teal) 0%, #007a6e 100%);
   border-radius: 11px;
-  display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 4px 14px rgba(0,180,166,.4);
+  overflow: hidden;
   flex-shrink: 0;
 }
+.ob1-topbar-logo img { display: block; width: 38px; height: 38px; }
 .ob1-topbar-name {
-  font-size: 16px; font-weight: 400; letter-spacing: -.3px; color: var(--text-primary);
+  font-size: 19px; font-weight: 400; letter-spacing: -.3px; color: var(--text-primary);
 }
-.ob1-topbar-name strong { font-weight: 900; }
+.ob1-topbar-name em { font-style: normal; font-weight: 400; color: var(--teal); }
+.ob1-topbar-name strong { font-weight: 900; color: #fff; }
 
 .ob1-title {
   font-size: 26px; font-weight: 900; line-height: 1.15;
