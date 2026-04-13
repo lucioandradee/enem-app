@@ -3,9 +3,9 @@
    Cache-first para assets • Network-first para API
    ===================================================== */
 
-const CACHE_NAME = 'enem-master-v12';
+const CACHE_NAME = 'enem-master-v15';
 const STATIC_ASSETS = [
-    '/',
+    '/app',
     '/style.css',
     '/manifest.json',
     'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap',
@@ -35,6 +35,19 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
     const url = new URL(event.request.url);
 
+    // SW, arquivos JS e HTML principais → sempre Network first (nunca cache stale)
+    if (
+        url.pathname === '/sw.js' ||
+        url.pathname.endsWith('.js') ||
+        url.pathname === '/app' ||
+        url.pathname === '/app.html' ||
+        url.pathname === '/' ||
+        url.pathname === '/index.html'
+    ) {
+        event.respondWith(networkFirst(event.request));
+        return;
+    }
+
     // API do ENEM → Network first, cache fallback
     if (url.hostname === 'api.enem.dev') {
         event.respondWith(networkFirst(event.request));
@@ -47,7 +60,7 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // Assets estáticos → Cache first
+    // Demais assets estáticos (CSS, fontes, imagens locais) → Cache first
     if (event.request.method === 'GET') {
         event.respondWith(cacheFirst(event.request));
     }
