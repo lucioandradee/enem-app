@@ -170,7 +170,7 @@ const defaultState = {
         level: 1,
         xp: 0,
         streak: 0,
-        goal: 'Rumo à Federal 🚀',
+        goal: 'Rumo à Federal',
         plan: 'free',           // 'free' | 'premium'
         questoesHoje: 0,        // questões respondidas hoje (controle de limite)
         questoesHojeData: '',   // data do contador (ex: "Mon Mar 23 2026")
