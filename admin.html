@@ -57,48 +57,60 @@
       justify-content: center;
       min-height: 100vh;
       padding: 24px;
-      background: radial-gradient(ellipse 70% 50% at 50% 40%, rgba(0,196,180,.06) 0%, transparent 60%);
+      background: radial-gradient(ellipse 80% 55% at 50% 30%, rgba(0,196,180,.08) 0%, transparent 65%);
     }
 
     .gate-card {
       background: var(--surface);
-      border: 1px solid var(--border-2);
+      border: 1px solid rgba(0,196,180,.22);
       border-radius: var(--radius);
-      padding: 40px 36px;
+      padding: 44px 40px;
       width: 100%;
-      max-width: 400px;
-      box-shadow: var(--shadow);
+      max-width: 420px;
+      box-shadow: var(--shadow), 0 0 0 1px rgba(0,196,180,.06);
+    }
+
+    .gate-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(0,196,180,.1); border: 1px solid rgba(0,196,180,.25);
+      border-radius: 100px; padding: 4px 12px;
+      font-size: 11px; font-weight: 700; color: var(--teal);
+      text-transform: uppercase; letter-spacing: .6px;
+      margin-bottom: 24px;
     }
 
     .gate-card .logo {
       display: flex;
       align-items: center;
-      gap: 10px;
-      margin-bottom: 28px;
+      gap: 12px;
+      margin-bottom: 24px;
     }
 
     .logo-icon {
-      width: 36px;
-      height: 36px;
-      background: linear-gradient(135deg, var(--teal) 0%, #0099dd 100%);
-      border-radius: 10px;
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(135deg, var(--teal) 0%, #007a6e 100%);
+      border-radius: 14px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 18px;
+      font-size: 22px;
+      box-shadow: 0 6px 20px rgba(0,196,180,.35);
     }
 
     .gate-card h1 {
-      font-size: 22px;
-      font-weight: 700;
+      font-size: 24px;
+      font-weight: 800;
       color: var(--text);
-      margin-bottom: 4px;
+      margin-bottom: 6px;
+      letter-spacing: -.3px;
     }
 
-    .gate-card p {
+    .gate-card > p {
       color: var(--text-2);
-      font-size: 13px;
-      margin-bottom: 28px;
+      font-size: 14px;
+      margin-bottom: 32px;
+      line-height: 1.5;
     }
 
     .field-label {
@@ -158,14 +170,18 @@
     .btn:disabled { opacity: .45; cursor: not-allowed; transform: none; }
 
     .btn-primary {
-      background: var(--teal);
-      color: #000;
+      background: linear-gradient(135deg, var(--teal) 0%, #00c9b8 100%);
+      color: #fff;
       width: 100%;
       justify-content: center;
-      padding: 11px 16px;
-      font-size: 14px;
+      padding: 14px 16px;
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: -.2px;
+      box-shadow: 0 4px 20px rgba(0,196,180,.4);
     }
-    .btn-primary:hover:not(:disabled) { opacity: .87; }
+    .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(0,196,180,.55); }
+    .btn-primary:active:not(:disabled) { transform: translateY(0); }
 
     .btn-success {
       background: var(--green-dim);
@@ -576,12 +592,101 @@
     ::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 3px; }
     ::-webkit-scrollbar-thumb:hover { background: var(--text-3); }
 
-    /* Responsive */
+    /* ── KPI extras ─────────────────────────────────── */
+    .kpi-section-label {
+      font-size: 11px; font-weight: 700; color: var(--text-3);
+      text-transform: uppercase; letter-spacing: .8px;
+      padding: 0 2px;
+    }
+
+    .stats-block { display: flex; flex-direction: column; gap: 8px; }
+
+    .stat-card .stat-sub {
+      font-size: 11px; color: var(--text-3); margin-top: 2px;
+    }
+    .stat-card.stat-highlight {
+      border-color: rgba(0,196,180,.3);
+      background: linear-gradient(135deg, var(--surface) 60%, rgba(0,196,180,.06));
+    }
+    .stat-card .stat-delta {
+      display: inline-flex; align-items: center; gap: 3px;
+      font-size: 11px; font-weight: 700; margin-top: 4px;
+      padding: 2px 6px; border-radius: 4px;
+    }
+    .delta-up   { background: var(--green-dim); color: var(--green); }
+    .delta-down { background: var(--red-dim);   color: var(--red); }
+    .delta-flat { background: var(--surface-2); color: var(--text-3); }
+
+    /* ── Métricas mensais ────────────────────────────── */
+    .mrr-bars { display: flex; flex-direction: column; gap: 10px; padding: 20px 24px; }
+    .mrr-bar-row {
+      display: grid; grid-template-columns: 72px 1fr 70px 70px 70px;
+      align-items: center; gap: 12px; font-size: 12px;
+    }
+    .mrr-bar-row .bar-month { color: var(--text-2); font-weight: 600; }
+    .mrr-bar-wrap {
+      height: 8px; background: var(--surface-2); border-radius: 4px; overflow: hidden;
+    }
+    .mrr-bar-fill {
+      height: 100%; border-radius: 4px;
+      background: linear-gradient(90deg, var(--teal), #0099cc);
+      transition: width .6s cubic-bezier(.4,0,.2,1);
+    }
+    .mrr-bar-fill.mrr-bar-new { background: linear-gradient(90deg, var(--teal), #0099cc); }
+
+    /* Tabela de métricas mensais (gerada por loadSubscriptionMetrics) */
+    .mrr-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .mrr-table th { padding: 8px 16px; text-align: left; color: var(--text-3); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; border-bottom: 1px solid var(--border); }
+    .mrr-table td { padding: 10px 16px; border-bottom: 1px solid var(--border); }
+    .mrr-table tbody tr:last-child td { border-bottom: none; }
+    .mrr-table tbody tr:hover { background: var(--surface-2); }
+    .mrr-bar-row .bar-novas   { color: var(--green); text-align: right; }
+    .mrr-bar-row .bar-cancel  { color: var(--red);   text-align: right; }
+    .mrr-bar-row .bar-mrr-val { color: var(--teal);  text-align: right; font-weight: 700; }
+
+    .mrr-bar-header {
+      display: grid; grid-template-columns: 72px 1fr 70px 70px 70px;
+      gap: 12px; padding: 0 0 8px;
+      font-size: 10px; font-weight: 700; color: var(--text-3);
+      text-transform: uppercase; letter-spacing: .6px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 4px;
+    }
+    .mrr-bar-header span:nth-child(3),
+    .mrr-bar-header span:nth-child(4),
+    .mrr-bar-header span:nth-child(5) { text-align: right; }
+
+    /* ── User search ─────────────────────────────────── */
+    .table-toolbar {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 24px; border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+    .table-search {
+      flex: 1; min-width: 180px;
+      background: var(--surface-2); border: 1px solid var(--border-2);
+      border-radius: var(--radius-sm); padding: 7px 12px;
+      color: var(--text); font-family: inherit; font-size: 13px; outline: none;
+      transition: border-color .2s;
+    }
+    .table-search:focus { border-color: var(--teal); }
+    .table-search::placeholder { color: var(--text-3); }
+    .filter-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+    .filter-chip {
+      padding: 4px 10px; border-radius: 100px; font-size: 11px; font-weight: 600;
+      border: 1px solid var(--border-2); background: transparent; color: var(--text-2);
+      cursor: pointer; font-family: inherit; transition: all .15s;
+    }
+    .filter-chip.active { background: var(--teal-dim); border-color: var(--teal-glow); color: var(--teal); }
+
+    /* ── Responsive ──────────────────────────────────── */
     @media (max-width: 768px) {
       .topbar { padding: 0 16px; }
       .main { padding: 20px 16px 40px; gap: 20px; }
       .card-header { padding: 14px 16px; }
       thead th, tbody td { padding: 10px 12px; }
+      .mrr-bar-row { grid-template-columns: 56px 1fr 56px 56px 60px; gap: 8px; }
+      .mrr-bar-header { grid-template-columns: 56px 1fr 56px 56px 60px; gap: 8px; }
     }
   </style>
 </head>
@@ -590,26 +695,34 @@
 <!-- ── Auth Gate ─────────────────────────────────────── -->
 <div id="gate">
   <div class="gate-card">
+
+    <div class="gate-badge">🔒 Área Restrita</div>
+
     <div class="logo">
       <div class="logo-icon">🎓</div>
       <div>
-        <div style="font-size:16px;font-weight:800;letter-spacing:-.3px">ENEM Master</div>
-        <div style="font-size:11px;color:var(--text-2);font-weight:500">Admin Dashboard</div>
+        <div style="font-size:18px;font-weight:900;letter-spacing:-.4px">ENEM Master</div>
+        <div style="font-size:12px;color:var(--text-2);font-weight:600;letter-spacing:.3px">Admin Dashboard</div>
       </div>
     </div>
-    <h1>Acesso Restrito</h1>
-    <p>Faça login com sua conta de administrador para continuar.</p>
+
+    <h1>Acesso Administrativo</h1>
+    <p>Entre com sua conta de administrador para gerenciar a plataforma.</p>
+
     <div class="field-wrap">
-      <label class="field-label" for="gate-email">Email</label>
+      <label class="field-label" for="gate-email">E-mail</label>
       <input id="gate-email" class="field-input" type="email" placeholder="admin@email.com" autocomplete="username" />
     </div>
     <div class="field-wrap">
       <label class="field-label" for="gate-pass">Senha</label>
       <input id="gate-pass" class="field-input" type="password" placeholder="••••••••" autocomplete="current-password" />
     </div>
+
     <button id="gate-btn" class="btn btn-primary" onclick="adminLogin()">
-      <span id="gate-btn-text">Entrar</span>
+      <span id="gate-btn-text">Entrar no painel</span>
+      <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16" aria-hidden="true"><path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
     </button>
+
     <p id="gate-error">E-mail ou senha incorretos.</p>
   </div>
 </div>
@@ -635,27 +748,82 @@
   <main class="main">
 
     <!-- Stats -->
-    <div class="stats-row">
-      <div class="stat-card">
-        <span class="stat-label">Total Usuários</span>
-        <span class="stat-value" id="stat-total">—</span>
+    <div class="stats-block">
+
+      <div class="kpi-section-label">💰 Receita</div>
+      <div class="stats-row">
+        <div class="stat-card stat-highlight">
+          <span class="stat-label">MRR (estimado)</span>
+          <span class="stat-value teal" id="stat-mrr">—</span>
+          <span class="stat-sub">receita mensal recorrente</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">ARR (estimado)</span>
+          <span class="stat-value" id="stat-arr">—</span>
+          <span class="stat-sub">receita anual projetada</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Novas Assinaturas</span>
+          <span class="stat-value green" id="stat-new-month">—</span>
+          <span class="stat-sub" id="stat-new-month-sub">este mês</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Cancelamentos</span>
+          <span class="stat-value" id="stat-cancelled-month" style="color:var(--red)">—</span>
+          <span class="stat-sub">este mês</span>
+        </div>
       </div>
-      <div class="stat-card">
-        <span class="stat-label">Usuários Premium</span>
-        <span class="stat-value amber" id="stat-premium">—</span>
+
+      <div class="kpi-section-label" style="margin-top:6px">👥 Usuários</div>
+      <div class="stats-row">
+        <div class="stat-card">
+          <span class="stat-label">Total Usuários</span>
+          <span class="stat-value" id="stat-total">—</span>
+          <span class="stat-sub" id="stat-new-today-sub"></span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Assinaturas Ativas</span>
+          <span class="stat-value amber" id="stat-active">—</span>
+          <span class="stat-sub" id="stat-active-sub"></span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Churn Rate (mês)</span>
+          <span class="stat-value" id="stat-churn">—</span>
+          <span class="stat-sub">cancelamentos ÷ ativas</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Eventos Webhook</span>
+          <span class="stat-value green" id="stat-webhooks">—</span>
+          <span class="stat-sub">total recebidos</span>
+        </div>
       </div>
-      <div class="stat-card">
-        <span class="stat-label">Premium Ativo</span>
-        <span class="stat-value teal" id="stat-active">—</span>
+
+    </div>
+
+    <!-- ── Seção: Métricas de Receita ──────────────── -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <div class="icon teal">📈</div>
+          <div>
+            <h2>Receita por Mês</h2>
+            <p>Novas assinaturas, cancelamentos e MRR estimado nos últimos 6 meses</p>
+          </div>
+        </div>
+        <button class="btn-refresh" id="btn-refresh-metrics" onclick="loadSubscriptionMetrics()">
+          <svg class="refresh-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M23 4v6h-6M1 20v-6h6"/>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+          </svg>
+          Atualizar
+        </button>
       </div>
-      <div class="stat-card">
-        <span class="stat-label">Eventos Webhook</span>
-        <span class="stat-value green" id="stat-webhooks">—</span>
+      <div class="mrr-bars" id="mrr-bars-wrap">
+        <div style="text-align:center;padding:24px;color:var(--text-3)"><span class="spinner"></span></div>
       </div>
     </div>
 
-    <!-- ── Seção: Ativar Manual ─────────────────────── -->
-    <div class="card">
+    <!-- ── Seção: Ativar Manual ─────────────────────── -->    <div class="card">
       <div class="card-header">
         <div class="card-title">
           <div class="icon green">⚡</div>
@@ -699,6 +867,15 @@
           </svg>
           Atualizar
         </button>
+      </div>
+      <div class="table-toolbar">
+        <input type="text" class="table-search" id="user-search" placeholder="🔍  Buscar por e-mail ou nome..." oninput="filterUsers()" />
+        <div class="filter-chips">
+          <button class="filter-chip active" data-filter="all"      onclick="setUserFilter('all',this)">Todos</button>
+          <button class="filter-chip"        data-filter="premium"  onclick="setUserFilter('premium',this)">👑 Premium</button>
+          <button class="filter-chip"        data-filter="free"     onclick="setUserFilter('free',this)">Free</button>
+          <button class="filter-chip"        data-filter="expired"  onclick="setUserFilter('expired',this)">⚠ Expirado</button>
+        </div>
       </div>
       <div class="table-wrap">
         <table>

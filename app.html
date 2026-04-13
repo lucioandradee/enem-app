@@ -1,0 +1,2150 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+    <title>ENEM Master — Estude, Evolua, Conquiste</title>
+    <meta name="description"
+        content="Plataforma gamificada de estudos para o ENEM com simulados, ranking escolar e conquistas." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="style.css?v=9" />
+    <link rel="manifest" href="manifest.json" />
+    <link rel="icon" href="icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="icon-192.png" />
+    <meta name="theme-color" content="#00b4a6" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="ENEM Master" />
+    <!-- Security: CSP — restringe fontes de scripts, conexões, imagens e estilos -->
+    <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; connect-src 'self' https://*.supabase.co https://api.enem.dev https://api.groq.com https://fonts.googleapis.com https://fonts.gstatic.com https://accounts.google.com https://cdn.jsdelivr.net; img-src 'self' https: data: blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com; font-src 'self' https://fonts.gstatic.com data:; frame-src https://accounts.google.com; object-src 'none'; base-uri 'self'; form-action 'self' https://accounts.google.com;" />
+    <!-- Security: previne sniffing de MIME type -->
+    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+    <!-- Security: bloqueia abertura em iframes (clickjacking) -->
+    <meta http-equiv="X-Frame-Options" content="DENY" />
+</head>
+
+<body>
+
+    <!-- ===================== APP WRAPPER ===================== -->
+    <div id="app">
+
+        <!-- ===================== SCREEN: DASHBOARD ===================== -->
+        <section id="screen-home" class="screen active">
+            <div class="screen-scroll">
+                <!-- Header -->
+                <div class="dashboard-header">
+                    <div class="user-info">
+                        <div class="avatar-wrap">
+                            <div class="avatar" id="dash-avatar">A</div>
+                            <span class="level-badge">LVL <span id="dash-level">1</span></span>
+                        </div>
+                        <div>
+                            <p class="greeting">Bom dia, <span id="dash-name">Estudante</span>! 👋</p>
+                            <h2 class="goal-text">Rumo à Federal 🚀</h2>
+                        </div>
+                    </div>
+                    <button class="bell-btn" id="notif-btn" onclick="navigate('notifications')">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                        </svg>
+                        <span class="notif-badge" id="notif-count">3</span>
+                    </button>
+                </div>
+
+                <!-- Stats Row -->
+                <div class="stats-row">
+                    <div class="stat-card stat-card-xp">
+                        <div class="stat-card-head">
+                            <span class="stat-label">⚡ TOTAL XP</span>
+                            <span class="stat-lvl-badge" id="dash-lvl-badge">NV 1</span>
+                        </div>
+                        <span class="stat-value" id="dash-xp">0</span>
+                        <div class="stat-xp-bar-wrap"><div class="stat-xp-bar" id="dash-xp-bar" style="width:0%"></div></div>
+                        <span class="stat-xp-next" id="dash-xp-next">0 / 500 p/ nível 2</span>
+                    </div>
+                    <div class="stat-card stat-card-rank">
+                        <div class="stat-card-head">
+                            <span class="stat-label">🏆 RANKING</span>
+                            <span class="stat-rank-tier" id="dash-rank-tier">—</span>
+                        </div>
+                        <span class="stat-value teal" id="dash-ranking">—</span>
+                        <span class="stat-rank-sub">posição global</span>
+                    </div>
+                </div>
+
+                <!-- ENEM Countdown -->
+                <div class="countdown-widget" id="enem-countdown">
+                    <div class="cd-main-row">
+                        <span class="cd-label">ENEM 2026</span>
+                        <span class="cd-days" id="countdown-days">—</span>
+                        <span class="cd-days-text">dias restantes</span>
+                        <span id="cd-h" style="display:none"></span>
+                        <span id="cd-m" style="display:none"></span>
+                        <span id="cd-s" style="display:none"></span>
+                    </div>
+                    <p class="cd-motivation" id="countdown-motivation"></p>
+                </div>
+
+                <!-- Weekly Schedule -->
+                <div class="section-header">
+                    <span class="section-title">CRONOGRAMA DA SEMANA</span>
+                    <button class="link-btn" onclick="showWeekSchedule()">Ver tudo</button>
+                </div>
+                <div class="week-row" id="week-row"></div>
+
+                <!-- Today's Subject Card -->
+                <div class="subject-card" id="today-card">
+                    <div class="subject-tag" id="today-area">CIÊNCIAS DA NATUREZA</div>
+                    <div class="subject-icon" id="today-icon">🧬</div>
+                    <h3 class="subject-title" id="today-title">Biologia: Genética</h3>
+                    <p class="subject-sub" id="today-sub">Leis de Mendel e Heredogramas</p>
+                    <div class="progress-label-row">
+                        <span class="progress-label">Progresso do dia</span>
+                        <span class="progress-count teal" id="today-progress">4/10 Questões</span>
+                    </div>
+                    <div class="progress-bar-wrap">
+                        <div class="progress-bar" id="today-bar" style="width:40%"></div>
+                    </div>
+                </div>
+
+                <!-- Banner: simulado pausado -->
+                <div id="paused-quiz-banner"></div>
+
+                <!-- CTA Button -->
+                <button class="cta-btn" onclick="navigate('quiz-setup')">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+                        <polygon points="5,3 19,12 5,21" />
+                    </svg>
+                    COMEÇAR A ESTUDAR AGORA
+                </button>
+
+                <!-- Gamification Cards -->
+                <div class="mini-cards-row">
+                    <div class="mini-card">
+                        <span class="mini-card-label">🔥 Ofensiva</span>
+                        <span class="mini-card-value" id="dash-streak">15 Dias</span>
+                        <span class="mini-card-sub">Mantendo o ritmo! 🔥</span>
+                    </div>
+                    <div class="mini-card sparkline-card" id="history-sparkline-card">
+                        <span class="mini-card-label sparkline-label">📈 Histórico</span>
+                        <svg id="history-sparkline" class="sparkline-svg" xmlns="http://www.w3.org/2000/svg"></svg>
+                        <span class="mini-card-sub sparkline-empty">Faça seu 1º quiz</span>
+                        <span class="mini-card-sub sparkline-sub" style="display:none"></span>
+                    </div>
+                </div>
+
+                <!-- Desafio Diário -->
+                <div class="daily-challenge-card" id="daily-challenge-card">
+                    <div class="dc-header">
+                        <span class="dc-title">🎯 Desafio do Dia</span>
+                        <span class="dc-xp">+50 XP</span>
+                    </div>
+                    <div class="dc-disc-row">
+                        <span class="dc-disc-chip" id="dc-disc-chip">🔬</span>
+                        <div class="dc-disc-info">
+                            <span class="dc-disc-name" id="dc-disc-name">Ciências da Natureza</span>
+                            <span class="dc-type" id="dc-type">Treino 🎯</span>
+                        </div>
+                        <div class="dc-diff" id="dc-diff"><span></span><span></span><span></span></div>
+                    </div>
+                    <div class="dc-meta-row">
+                        <span id="dc-meta-q">📋 10 questões</span>
+                        <span class="dc-meta-sep">·</span>
+                        <span id="dc-meta-t">⏱ ~12 min</span>
+                        <span class="dc-meta-sep">·</span>
+                        <span id="dc-meta-diff-label">Médio</span>
+                    </div>
+                    <p class="dc-context" id="dc-context">Área com maior cobrança no ENEM</p>
+                    <div class="dc-week" id="dc-week"></div>
+                    <div class="dc-check" style="display:none">✅ Desafio concluído! Bom trabalho hoje.</div>
+                    <button class="dc-btn btn-primary" onclick="startDailyChallenge()">Aceitar Desafio →</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Modal: Pausar simulado -->
+        <div class="pause-quiz-overlay" id="pause-quiz-overlay" style="display:none" onclick="closePauseModal()">
+            <div class="pause-quiz-sheet" onclick="event.stopPropagation()">
+                <div class="pause-sheet-handle"></div>
+                <div class="pause-sheet-hero">
+                    <span class="pause-sheet-emoji">⏸️</span>
+                    <div>
+                        <h3 class="pause-sheet-title">Pausar simulado?</h3>
+                        <p class="pause-sheet-sub">Seu progresso é salvo. Continue de onde parou quando quiser.</p>
+                    </div>
+                </div>
+                <button class="cta-btn" onclick="pauseQuiz()">⏸ Pausar e Sair</button>
+                <button class="btn-outline-full" onclick="closePauseModal()">↩ Continuar Estudando</button>
+                <button class="btn-ghost-danger" onclick="abandonQuiz()">🗑️ Abandonar Simulado</button>
+            </div>
+        </div>
+
+        <!-- Bottom-sheet: Histórico de Atividades -->
+        <div class="week-sheet-overlay" id="activity-sheet-overlay" onclick="closeActivityHistory()">
+            <div class="week-sheet" onclick="event.stopPropagation()">
+                <div class="week-sheet-handle"></div>
+                <div class="week-sheet-header">
+                    <span class="week-sheet-title">Histórico de Simulados</span>
+                    <button class="icon-btn" onclick="closeActivityHistory()">✕</button>
+                </div>
+                <div class="week-sheet-body" id="activity-sheet-body"></div>
+            </div>
+        </div>
+
+        <!-- Bottom-sheet: Cronograma Semanal -->
+        <div class="week-sheet-overlay" id="week-sheet-overlay" onclick="closeWeekSchedule()">
+            <div class="week-sheet" onclick="event.stopPropagation()">
+                <div class="week-sheet-handle"></div>
+                <div class="week-sheet-header">
+                    <span class="week-sheet-title">Cronograma da Semana</span>
+                    <button class="icon-btn" onclick="closeWeekSchedule()">✕</button>
+                </div>
+                <div class="week-sheet-body" id="week-sheet-body"></div>
+            </div>
+        </div>
+
+        <!-- ===================== SCREEN: QUIZ SETUP ===================== -->
+        <section id="screen-quiz-setup" class="screen">
+            <div class="inner-header">
+                <button class="back-btn" onclick="navigate('home')">←</button>
+                <h2 class="inner-title">Novo Simulado</h2>
+                <div></div>
+            </div>
+            <div class="screen-scroll">
+                <!-- Banner: simulado pausado -->
+                <div id="paused-quiz-banner-setup"></div>
+
+                <!-- Modo ENEM Completo -->
+                <div class="enem-mode-card" id="enem-banner" style="border-color:#00b4a6">
+                    <!-- Linha compacta (sempre visível) -->
+                    <div class="enem-mode-left enem-banner-toggle" onclick="toggleENEMBanner()" role="button" aria-expanded="false" style="cursor:pointer;justify-content:space-between;">
+                        <div style="display:flex;align-items:center;gap:12px;">
+                            <span class="enem-mode-icon">🏛️</span>
+                            <div>
+                                <p class="enem-mode-title">MODO ENEM COMPLETO</p>
+                                <p class="enem-mode-sub">Simulado oficial • 180 questões • 2 dias</p>
+                                <p class="enem-mode-sub">Estrutura idêntica à prova real do INEP 🏆</p>
+                            </div>
+                        </div>
+                        <span class="enem-banner-chevron" id="enem-banner-chevron">›</span>
+                    </div>
+
+                    <!-- Botão sempre visível -->
+                    <button class="cta-btn enem-mode-btn" id="enem-toggle-btn" onclick="toggleENEMBanner()" style="background:linear-gradient(135deg,#00b4a6,#0077b6)">
+                        📋 Ver Cadernos
+                    </button>
+
+                    <!-- Corpo colapsável -->
+                    <div class="enem-banner-body" id="enem-banner-body">
+                        <!-- Estatísticas rápidas -->
+                        <div class="enem-banner-stats">
+                            <div class="enem-stat"><span class="enem-stat-val">180</span><span class="enem-stat-lbl">questões</span></div>
+                            <div class="enem-stat-divider"></div>
+                            <div class="enem-stat"><span class="enem-stat-val">2</span><span class="enem-stat-lbl">dias de prova</span></div>
+                            <div class="enem-stat-divider"></div>
+                            <div class="enem-stat"><span class="enem-stat-val">5h30</span><span class="enem-stat-lbl">por dia</span></div>
+                            <div class="enem-stat-divider"></div>
+                            <div class="enem-stat"><span class="enem-stat-val">4</span><span class="enem-stat-lbl">áreas</span></div>
+                        </div>
+
+                        <!-- Dia 1 -->
+                        <div class="enem-day-block">
+                            <div class="enem-day-header">
+                                <div class="enem-day-badge enem-day-badge-1">1° DIA</div>
+                                <div class="enem-day-meta">
+                                    <span class="enem-day-meta-item">⏱ 5h30min</span>
+                                    <span class="enem-day-meta-item">📋 90 questões</span>
+                                </div>
+                            </div>
+                            <div class="enem-cadernos">
+                                <div class="enem-caderno"><span class="enem-caderno-range">Q. 01–45</span><span class="enem-caderno-name">Linguagens, Códigos e suas Tecnologias</span></div>
+                                <div class="enem-caderno"><span class="enem-caderno-range">Q. 46–90</span><span class="enem-caderno-name">Ciências Humanas e suas Tecnologias</span></div>
+                            </div>
+                            <button class="cta-btn enem-day-btn" id="enem-mode-btn" onclick="startENEMMode(1)">🎯 Iniciar 1° Dia de Prova</button>
+                        </div>
+
+                        <!-- Dia 2 -->
+                        <div class="enem-day-block">
+                            <div class="enem-day-header">
+                                <div class="enem-day-badge enem-day-badge-2">2° DIA</div>
+                                <div class="enem-day-meta">
+                                    <span class="enem-day-meta-item">⏱ 5h30min</span>
+                                    <span class="enem-day-meta-item">📋 90 questões</span>
+                                </div>
+                            </div>
+                            <div class="enem-cadernos">
+                                <div class="enem-caderno"><span class="enem-caderno-range">Q. 91–135</span><span class="enem-caderno-name">Ciências da Natureza e suas Tecnologias</span></div>
+                                <div class="enem-caderno"><span class="enem-caderno-range">Q. 136–180</span><span class="enem-caderno-name">Matemática e suas Tecnologias</span></div>
+                            </div>
+                            <button class="cta-btn enem-day-btn enem-day-btn-alt" id="enem-mode-btn-2" onclick="startENEMMode(2)">🎯 Iniciar 2° Dia de Prova</button>
+                        </div>
+
+                        <!-- Rodapé informativo -->
+                        <div class="enem-banner-footer">
+                            <div class="enem-footer-item">📊 Gabarito comentado ao final</div>
+                            <div class="enem-footer-item">🎯 Questões reais do ENEM (INEP)</div>
+                            <div class="enem-footer-item">📈 Análise por área do conhecimento</div>
+                        </div>
+                    </div><!-- /enem-banner-body -->
+                </div>
+                <div class="setup-divider">— ou monte seu simulado personalizado —</div>
+
+                <!-- Redação ENEM -->
+                <div class="enem-mode-card" style="margin-top:4px;border-color:#a78bfa">
+                    <div class="enem-mode-left">
+                        <span class="enem-mode-icon">✍️</span>
+                        <div>
+                            <p class="enem-mode-title" style="color:#a78bfa">REDAÇÃO ENEM</p>
+                            <p class="enem-mode-sub">Escreva e corrija pelas 5 competências</p>
+                            <p class="enem-mode-sub">Correção instantânea por IA 🤖</p>
+                        </div>
+                    </div>
+                    <button class="cta-btn enem-mode-btn" style="background:linear-gradient(135deg,#7c3aed,#a78bfa)" onclick="navigate('redacao')">
+                        ✍️ Escrever
+                    </button>
+                </div>
+
+                <p class="setup-label">ESCOLHA A DISCIPLINA</p>
+                <div class="disc-grid">
+                    <button class="disc-card" data-disc="humanas" onclick="selectDisc(this)">
+                        <span class="disc-icon">🌍</span>
+                        <span class="disc-name">Ciências Humanas</span>
+                    </button>
+                    <button class="disc-card" data-disc="natureza" onclick="selectDisc(this)">
+                        <span class="disc-icon">🔬</span>
+                        <span class="disc-name">Ciências da Natureza</span>
+                    </button>
+                    <button class="disc-card" data-disc="linguagens" onclick="selectDisc(this)">
+                        <span class="disc-icon">📝</span>
+                        <span class="disc-name">Linguagens</span>
+                    </button>
+                    <button class="disc-card" data-disc="matematica" onclick="selectDisc(this)">
+                        <span class="disc-icon">➗</span>
+                        <span class="disc-name">Matemática</span>
+                    </button>
+                </div>
+                <button class="disc-card disc-card-full" data-disc="misto" onclick="selectDisc(this)">
+                    <span class="disc-icon">🎯</span>
+                    <div>
+                        <span class="disc-name">Misto — Todas as Áreas</span>
+                        <span class="disc-sub">Como no ENEM real</span>
+                    </div>
+                </button>
+
+                <!-- Filtro por Tópico -->
+                <div class="topic-filter-wrap" id="topic-filter-wrap">
+                    <p class="setup-label">FILTRAR POR TÓPICO <span class="opt-badge">OPCIONAL</span></p>
+                    <div class="topic-chips" id="topic-chips"></div>
+                </div>
+
+                <p class="setup-label">QUANTAS QUESTÕES?</p>
+                <div class="count-row">
+                    <button class="count-btn" data-count="5" onclick="selectCount(this)">5</button>
+                    <button class="count-btn selected" data-count="10" onclick="selectCount(this)">10</button>
+                    <button class="count-btn" data-count="15" onclick="selectCount(this)">15</button>
+                    <button class="count-btn" data-count="20" onclick="selectCount(this)">20</button>
+                </div>
+
+                <!-- Banner de limite do plano -->
+                <div class="quiz-limit-banner" id="quiz-plan-limit" style="display:none"></div>
+
+                <div class="api-source-card" id="api-source-card">
+                    <span class="api-source-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#00b4a6" stroke-width="1.8" width="26" height="26"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></span>
+                    <div>
+                        <p class="api-source-title">+3.000 Questões Reais do ENEM</p>
+                        <p class="api-source-sub" id="api-source-sub">Verificando banco de dados...</p>
+                    </div>
+                    <span class="api-source-status" id="api-source-status">⏳</span>
+                </div>
+
+                <button class="cta-btn" id="start-quiz-btn" onclick="initQuizFromSetup()">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+                        <polygon points="5,3 19,12 5,21" />
+                    </svg>
+                    INICIAR SIMULADO
+                </button>
+                <button class="outline-btn" style="margin-top:10px" onclick="initQuizFromSetup(true)">
+                    Usar Banco Local
+                </button>
+            </div>
+        </section>
+
+        <!-- ===================== SCREEN: QUIZ ===================== -->
+        <section id="screen-quiz" class="screen">
+
+            <!-- Overlay de Instruções ENEM (pré-prova) -->
+            <div class="enem-instructions-overlay" id="enem-instructions-overlay">
+                <div class="enem-inst-card">
+                    <div class="enem-inst-header">
+                        <span class="enem-inst-seal">🏛️</span>
+                        <div>
+                            <p class="enem-inst-eyebrow">SIMULADO OFICIAL</p>
+                            <p class="enem-inst-day-title" id="enem-inst-day-title">1° DIA DE PROVA</p>
+                            <p class="enem-inst-day-desc" id="enem-inst-day-desc">Linguagens + Ciências Humanas</p>
+                        </div>
+                    </div>
+                    <div class="enem-inst-rules">
+                        <div class="enem-inst-rule"><span class="enem-inst-rule-icon">📋</span><span>90 questões de múltipla escolha</span></div>
+                        <div class="enem-inst-rule"><span class="enem-inst-rule-icon">⏱</span><span>5 horas e 30 minutos de duração</span></div>
+                        <div class="enem-inst-rule"><span class="enem-inst-rule-icon">📘</span><span>2 cadernos de conhecimento em sequência</span></div>
+                        <div class="enem-inst-rule"><span class="enem-inst-rule-icon">⚡</span><span>O tempo corre mesmo ao pausar o app</span></div>
+                    </div>
+                    <div class="enem-inst-cadernos-wrap">
+                        <p class="enem-inst-cadernos-title">CADERNOS DESTA PROVA</p>
+                        <div id="enem-inst-cadernos"></div>
+                    </div>
+                    <button class="cta-btn enem-inst-start-btn" id="enem-inst-start-btn">🏛️ INICIAR PROVA AGORA</button>
+                    <button class="enem-inst-cancel-btn" id="enem-inst-cancel-btn">Cancelar</button>
+                </div>
+            </div>
+
+            <!-- Loading Overlay -->
+            <div class="quiz-loading-overlay" id="quiz-loading-overlay">
+                <div class="loading-spinner"></div>
+                <p class="loading-text">Buscando questões reais do ENEM...</p>
+                <p class="loading-sub" id="loading-sub-text">Aguarde um momento 🎓</p>
+            </div>
+            <div class="quiz-header">
+                <button class="back-btn" onclick="onPauseQuizRequest()">✕</button>
+                <div class="quiz-meta">
+                    <span class="quiz-area" id="quiz-area-label">CIÊNCIAS HUMANAS</span>
+                    <span class="quiz-type" id="quiz-type-label">Simulado ENEM</span>
+                    <span class="quiz-caderno-chip" id="quiz-caderno-chip" style="display:none">CADERNO 1/2</span>
+                </div>
+                <div class="quiz-timer" id="quiz-timer">⏱ 12:45</div>
+            </div>
+            <div class="quiz-progress-wrap">
+                <div class="quiz-progress-bar" id="quiz-progress-bar" style="width:40%"></div>
+            </div>
+            <p class="quiz-question-count" id="quiz-q-count">Questão 4 de 10</p>
+            <div class="quiz-caderno-banner" id="quiz-caderno-banner" style="display:none">
+                <span class="caderno-icon">📘</span>
+                <span id="quiz-caderno-label">CADERNO 1 · LINGUAGENS, CÓDIGOS E SUAS TECNOLOGIAS</span>
+            </div>
+
+            <div class="screen-scroll quiz-scroll">
+                <div class="quiz-tag-wrap">
+                    <span class="quiz-tag" id="quiz-tag">HISTÓRIA GERAL</span>
+                    <span class="quiz-source-badge" id="quiz-source-badge" style="display:none">API ENEM</span>
+                </div>
+                <div class="quiz-context-images" id="quiz-context-images"></div>
+                <div class="quiz-context" id="quiz-context"></div>
+                <p class="quiz-question" id="quiz-question">Carregando questão...</p>
+                <blockquote class="quiz-quote" id="quiz-quote"></blockquote>
+
+                <div class="quiz-options" id="quiz-options"></div>
+
+                <button class="hint-btn" id="hint-btn" onclick="showHint()">💡 Ver dica ou Revisar Conceito</button>
+                <div class="hint-box" id="hint-box" style="display:none"></div>
+                <div class="gabarito-box" id="gabarito-box" style="display:none"></div>
+            </div>
+
+            <div class="quiz-footer">
+                <button class="cta-btn" id="confirm-btn" onclick="confirmAnswer()">Confirmar Resposta →</button>
+                <p class="quiz-footer-hint" id="quiz-footer-hint">SELECIONE UMA ALTERNATIVA</p>
+            </div>
+        </section>
+
+        <!-- ===================== SCREEN: QUIZ RESULT ===================== -->
+        <section id="screen-result" class="screen">
+            <div class="screen-scroll result-screen">
+                <div class="result-emoji" id="result-emoji">🎉</div>
+                <h2 class="result-title" id="result-title">Simulado Concluído!</h2>
+                <p class="result-sub" id="result-sub">Você acertou 7 de 10 questões</p>
+                <div class="result-score-ring">
+                    <svg viewBox="0 0 120 120" width="140" height="140">
+                        <circle cx="60" cy="60" r="50" fill="none" stroke="#1a3a4a" stroke-width="10" />
+                        <circle cx="60" cy="60" r="50" fill="none" stroke="#00b4a6" stroke-width="10"
+                            stroke-dasharray="314" stroke-dashoffset="94" stroke-linecap="round"
+                            transform="rotate(-90 60 60)" id="result-ring" />
+                    </svg>
+                    <div class="result-score-text">
+                        <span class="result-pct" id="result-pct">70%</span>
+                        <span class="result-pct-label">Acertos</span>
+                    </div>
+                </div>
+                <div class="result-stats">
+                    <div class="result-stat"><span class="rs-icon">✅</span><span
+                            id="res-correct">7</span><span>Corretas</span></div>
+                    <div class="result-stat"><span class="rs-icon">❌</span><span
+                            id="res-wrong">3</span><span>Erradas</span></div>
+                    <div class="result-stat"><span class="rs-icon">⚡</span><span id="res-xp">+70</span><span>XP
+                            Ganho</span></div>
+                    <div class="result-stat result-xp-bonus" id="res-xp-bonus-row" style="display:none">
+                        <span class="rs-icon">🔥</span><span id="res-xp-bonus" class="bonus-highlight"></span><span>Bônus</span>
+                    </div>
+                </div>
+
+                <!-- Análise de desempenho por área -->
+                <div id="result-analysis" style="display:none">
+                    <p class="result-section-label" id="result-breakdown-label">📊 DESEMPENHO POR ÁREA</p>
+                    <div id="result-breakdown"></div>
+
+                    <!-- Estimativa TRI simplificada -->
+                    <div class="result-tri-card" id="result-tri-card">
+                        <div class="result-tri-label-col">
+                            <p class="result-tri-title" id="result-tri-title">🎯 Estimativa ENEM</p>
+                            <p class="result-tri-desc" id="result-tri-desc">Baseado no seu desempenho</p>
+                        </div>
+                        <span class="result-tri-score" id="result-tri-score">—</span>
+                    </div>
+
+                    <!-- Recomendações -->
+                    <p class="result-section-label">💡 PRÓXIMOS PASSOS</p>
+                    <div id="result-recommendations"></div>
+
+                    <!-- Botão Refazer Erros -->
+                    <div id="retry-mistakes-wrap" style="display:none;margin-top:8px">
+                        <button class="retry-mistakes-btn" onclick="retryMistakes()">🔁 Refazer Erros desta Sessão</button>
+                    </div>
+                </div>
+
+                <!-- Compartilhar -->
+                <button class="share-btn" id="result-share-btn" onclick="shareResult()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                        <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+                        <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+                        <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+                    </svg>
+                    Compartilhar Resultado
+                </button>
+
+                <button class="cta-btn" onclick="navigate('home')" style="margin-top:16px">Voltar ao Início</button>
+                <button class="outline-btn" onclick="navigate('quiz-setup')" style="margin-top:12px">Novo Simulado</button>
+            </div>
+        </section>
+
+        <!-- ===================== SCREEN: RANKING ===================== -->
+        <section id="screen-ranking" class="screen">
+            <div class="inner-header">
+                <button class="back-btn" onclick="navigate('home')">←</button>
+                <h2 class="inner-title" id="ranking-title">Ranking</h2>
+                <button class="icon-btn" onclick="refreshRanking()" id="ranking-refresh-btn" title="Atualizar">&#x21bb;</button>
+            </div>
+
+            <!-- Tabs Escola / Global -->
+            <div class="ranking-tabs" role="tablist">
+                <button class="ranking-tab active" id="tab-escola" role="tab" onclick="switchRankingTab('escola')">🏫 Minha Escola</button>
+                <button class="ranking-tab" id="tab-global" role="tab" onclick="switchRankingTab('global')">🌎 Global</button>
+            </div>
+
+            <div class="screen-scroll ranking-scroll">
+                <!-- Pódio -->
+                <div class="podium" id="podium-wrap">
+                    <div class="podium-item second">
+                        <div class="podium-avatar" id="pod-2-av">J</div>
+                        <div class="podium-medal silver">2º</div>
+                        <p class="podium-name" id="pod-2-name">—</p>
+                        <p class="podium-pts" id="pod-2-pts">— pts</p>
+                    </div>
+                    <div class="podium-item first">
+                        <div class="podium-crown">👑</div>
+                        <div class="podium-avatar gold-ring" id="pod-1-av">L</div>
+                        <div class="podium-medal gold">OURO</div>
+                        <p class="podium-name" id="pod-1-name">—</p>
+                        <p class="podium-pts gold-text" id="pod-1-pts">— pts</p>
+                    </div>
+                    <div class="podium-item third">
+                        <div class="podium-avatar" id="pod-3-av">M</div>
+                        <div class="podium-medal bronze">3º</div>
+                        <p class="podium-name" id="pod-3-name">—</p>
+                        <p class="podium-pts" id="pod-3-pts">— pts</p>
+                    </div>
+                </div>
+
+                <!-- Banner de convite -->
+                <div class="invite-banner" onclick="inviteFriends()" role="button" aria-label="Convidar amigos">
+                    <div class="invite-icon">👥</div>
+                    <div class="invite-text">
+                        <strong>Convide seus amigos</strong>
+                        <p>Ganhe 50 XP por cada amigo que entrar!</p>
+                    </div>
+                    <span class="invite-arrow">›</span>
+                </div>
+
+                <!-- Cabeçalho da lista -->
+                <div class="ranking-list-header">
+                    <span id="ranking-list-label">TOP ALUNOS</span>
+                    <span class="ranking-avg" id="ranking-avg">Média: —</span>
+                </div>
+                <div class="ranking-list" id="ranking-list"></div>
+            </div>
+
+            <!-- Rodapé: posição do usuário -->
+            <div class="user-rank-footer" id="user-rank-footer">
+                <div class="avatar small" id="rank-footer-av">A</div>
+                <div class="user-rank-info">
+                    <span class="user-rank-pos" id="user-rank-pos">— Você</span>
+                    <span class="user-rank-sub">Sua Posição</span>
+                </div>
+                <div class="user-rank-right">
+                    <span class="user-rank-pts" id="user-rank-pts">0 pts</span>
+                    <span class="user-rank-gap" id="user-rank-gap">Faça um simulado 📈</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===================== SCREEN: CONQUISTAS ===================== -->
+        <section id="screen-achievements" class="screen">
+            <div class="inner-header">
+                <button class="back-btn" onclick="navigate('profile')">←</button>
+                <h2 class="inner-title">Conquistas</h2>
+                <button class="icon-btn teal-icon">🏅</button>
+            </div>
+            <div class="screen-scroll">
+
+                <!-- Stats Strip -->
+                <div class="ach-stats-strip">
+                    <div class="ach-stat">
+                        <span class="ach-stat-val" id="ach-total-unlocked">—</span>
+                        <span class="ach-stat-label">Desbloqueadas</span>
+                    </div>
+                    <div class="ach-stat-divider"></div>
+                    <div class="ach-stat">
+                        <span class="ach-stat-val gold" id="ach-total-xp">—</span>
+                        <span class="ach-stat-label">XP Obtidos</span>
+                    </div>
+                    <div class="ach-stat-divider"></div>
+                    <div class="ach-stat">
+                        <span class="ach-stat-val teal" id="ach-completion">—</span>
+                        <span class="ach-stat-label">Completo</span>
+                    </div>
+                </div>
+
+                <!-- Next Big Achievement -->
+                <div class="next-achievement-card">
+                    <div class="na-icon-wrap">
+                        <div class="na-icon">🎓</div>
+                    </div>
+                    <div class="na-info">
+                        <span class="na-label">⚡ PRÓXIMA CONQUISTA</span>
+                        <h3 class="na-title">Próxima Conquista</h3>
+                        <p class="na-desc">Complete mais simulados para desbloquear.</p>
+                        <div class="progress-label-row">
+                            <span class="progress-label">Progresso geral</span>
+                            <span class="progress-count teal">0%</span>
+                        </div>
+                        <div class="progress-bar-wrap">
+                            <div class="progress-bar" style="width:0%"></div>
+                        </div>
+                        <div class="na-footer-row">
+                            <p class="na-remaining">—</p>
+                            <span class="na-xp-reward na-xp-el">+50 XP</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ofensiva Badges -->
+                <div class="badge-section">
+                    <div class="badge-section-header">
+                        <div class="badge-section-title">
+                            <span class="badge-tier-pill bronze-tier">BRONZE</span>
+                            <span>🔥 Ofensiva</span>
+                        </div>
+                        <span class="badge-count teal">0/5 Desbloqueados</span>
+                    </div>
+                    <div class="badge-grid"></div>
+                </div>
+
+                <!-- Especialista Badges -->
+                <div class="badge-section">
+                    <div class="badge-section-header">
+                        <div class="badge-section-title">
+                            <span class="badge-tier-pill silver-tier">PRATA</span>
+                            <span>🎯 Especialista</span>
+                        </div>
+                        <span class="badge-count teal">0/4 Desbloqueados</span>
+                    </div>
+                    <div class="badge-grid"></div>
+                </div>
+
+                <!-- Maratonista Badges -->
+                <div class="badge-section">
+                    <div class="badge-section-header">
+                        <div class="badge-section-title">
+                            <span class="badge-tier-pill gold-tier">OURO</span>
+                            <span>🏃 Maratonista</span>
+                        </div>
+                        <span class="badge-count teal">0/3 Desbloqueados</span>
+                    </div>
+                    <div class="badge-grid"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===================== SCREEN: REVISÃO DE ERROS ===================== -->
+        <section id="screen-review" class="screen">
+            <div class="inner-header">
+                <button class="back-btn" onclick="navigate('profile')">←</button>
+                <h2 class="inner-title">Revisão de Erros</h2>
+                <button class="icon-btn" onclick="clearWrongAnswers()" title="Limpar">🗑️</button>
+            </div>
+            <div class="review-tabs" id="review-tabs"></div>
+            <div class="screen-scroll" id="review-list"></div>
+        </section>
+
+        <!-- ===================== SCREEN: PERFIL ===================== -->
+        <section id="screen-profile" class="screen">
+            <div class="screen-scroll">
+                <!-- Profile Header -->
+                <div class="profile-header">
+                    <div class="profile-avatar-wrap">
+                        <div class="avatar large" id="profile-avatar">A</div>
+                        <span class="avatar-edit-btn" onclick="openAvatarEditModal()">✏️</span>
+                    </div>
+                    <h2 class="profile-name" id="profile-name">Alex</h2>
+                    <div class="profile-badges-row">
+                        <span class="level-badge-lg">LVL <span id="profile-level">15</span></span>
+                        <span class="xp-badge">⚡ +<span id="profile-xp">1.250</span> XP</span>
+                    </div>
+                </div>
+
+                <div id="profile-plan-status"></div>
+
+                <!-- Retrospectiva Mensal -->
+                <div id="monthly-retro-wrap"></div>
+
+                <!-- Performance by Area -->
+                <div class="section-header">
+                    <span class="section-title">Desempenho por Área</span>
+                    <button class="link-btn" onclick="navigate('review')">Ver erros</button>
+                </div>
+                <div class="area-grid" id="area-grid">
+                    <div class="area-card">
+                        <span class="area-icon">📚</span>
+                        <span class="area-name">HUMANAS</span>
+                        <span class="area-pct teal">75%</span>
+                        <div class="progress-bar-wrap thin">
+                            <div class="progress-bar" style="width:75%"></div>
+                        </div>
+                    </div>
+                    <div class="area-card">
+                        <span class="area-icon">🔬</span>
+                        <span class="area-name">NATUREZA</span>
+                        <span class="area-pct teal">60%</span>
+                        <div class="progress-bar-wrap thin">
+                            <div class="progress-bar" style="width:60%"></div>
+                        </div>
+                    </div>
+                    <div class="area-card">
+                        <span class="area-icon">📝</span>
+                        <span class="area-name">LINGUAGENS</span>
+                        <span class="area-pct teal">85%</span>
+                        <div class="progress-bar-wrap thin">
+                            <div class="progress-bar" style="width:85%"></div>
+                        </div>
+                    </div>
+                    <div class="area-card">
+                        <span class="area-icon">➗</span>
+                        <span class="area-name">MATEMÁTICA</span>
+                        <span class="area-pct teal">50%</span>
+                        <div class="progress-bar-wrap thin">
+                            <div class="progress-bar" style="width:50%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Conquistas Recentes -->
+                <div class="section-header">
+                    <span class="section-title">Conquistas Recentes</span>
+                    <button class="link-btn" onclick="navigate('achievements')">Ver todas →</button>
+                </div>
+                <div class="recent-badges-scroll" id="recent-badges-scroll"></div>
+
+                <!-- Personal Goals -->
+                <div class="section-header">
+                    <span class="section-title">Metas Pessoais</span>
+                    <button class="goals-edit-btn" onclick="openGoalsModal()">✏️ Editar</button>
+                </div>
+                <div class="goals-list" id="goals-list"></div>
+
+                <!-- Ações -->
+                <div class="section-header" style="margin-top:8px">
+                    <span class="section-title">Mais</span>
+                </div>
+                <div class="profile-account-actions">
+                    <button class="profile-action-row" onclick="navigate('analise')">
+                        <span>📊 Análise detalhada</span>
+                        <span class="arrow">›</span>
+                    </button>
+                    <button class="profile-action-row" onclick="navigate('settings')">
+                        <span>⚙️ Configurações</span>
+                        <span class="arrow">›</span>
+                    </button>
+                    <button class="profile-action-row danger" onclick="logout()">
+                        <span>🚪 Sair da conta</span>
+                        <span class="arrow">›</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===================== SCREEN: CONFIGURAÇÕES ===================== -->
+        <section id="screen-settings" class="screen">
+            <div class="inner-header">
+                <button class="back-btn" onclick="navigate('profile')">←</button>
+                <h2 class="inner-title">Configurações</h2>
+                <div></div>
+            </div>
+            <div class="screen-scroll">
+                <!-- Settings Profile Header -->
+                <div class="settings-profile-header">
+                    <div class="avatar large" id="settings-avatar"></div>
+                    <h3 id="settings-name"></h3>
+                    <p class="settings-goal teal" id="settings-goal"></p>
+                </div>
+
+                <!-- Profile Section -->
+                <div class="settings-section">
+                    <div class="settings-section-title">👤 Perfil</div>
+                    <div class="settings-field">
+                        <label for="input-name">NOME COMPLETO</label>
+                        <input type="text" id="input-name" value="" placeholder="Seu nome completo" />
+                    </div>
+                    <div class="settings-field">
+                        <label for="input-email">E-MAIL</label>
+                        <input type="email" id="input-email" value=""
+                            placeholder="seu@email.com" />
+                    </div>
+                    <div class="settings-field">
+                        <label for="input-school">INSTITUIÇÃO DE ENSINO</label>
+                        <input type="text" id="input-school" value=""
+                            placeholder="Digite sua escola ou universidade" />
+                    </div>
+                </div>
+
+                <!-- Preferences Section -->
+                <div class="settings-section">
+                    <div class="settings-section-title">🔔 Preferências e Privacidade</div>
+                    <div class="settings-toggle-row">
+                        <div>
+                            <p class="toggle-label">Lembretes de Estudo</p>
+                            <p class="toggle-sub">Notificações diárias do cronograma</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="toggle-reminders" checked />
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="settings-toggle-row">
+                        <div>
+                            <p class="toggle-label">Alertas de Resultados</p>
+                            <p class="toggle-sub">Avisos sobre simulados e correção</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="toggle-alerts" checked />
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="settings-toggle-row">
+                        <div>
+                            <p class="toggle-label">Perfil Público</p>
+                            <p class="toggle-sub">Permitir que outros vejam seu progresso</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="toggle-public" />
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Push Notifications Card -->
+                <div class="push-notif-card" id="push-notif-card">
+                    <div class="push-notif-icon">🔔</div>
+                    <div class="push-notif-info">
+                        <p class="push-notif-title">Notificações Push</p>
+                        <p class="push-notif-sub" id="push-notif-status">Ative para lembretes de estudo diários</p>
+                    </div>
+                    <button class="push-notif-btn" id="push-notif-btn" onclick="requestPushPermission()">Ativar</button>
+                </div>
+
+                <!-- Security Section -->
+                <div class="settings-section">
+                    <div class="settings-section-title">🔒 Segurança</div>
+                    <button class="settings-link-row" id="change-password-btn" onclick="changePassword()">
+                        <span>🔑 Alterar Senha</span>
+                        <span class="arrow">›</span>
+                    </button>
+                    <p id="change-password-msg" style="display:none;font-size:12px;margin:6px 0 0 4px;"></p>
+                </div>
+
+                <button class="cta-btn" id="save-settings-btn" onclick="saveSettings()">Salvar Alterações</button>
+                <button class="settings-link-row" onclick="navigate('plans')">
+                    <span>👑 Planos e Assinatura</span>
+                    <span class="arrow">›</span>
+                </button>
+                <button class="settings-link-row" id="btn-cancel-subscription" onclick="cancelSubscription()" style="display:none">
+                    <span style="color:#ff4d6a">❌ Cancelar Assinatura</span>
+                    <span class="arrow" style="color:#ff4d6a">›</span>
+                </button>
+                <button class="settings-link-row" onclick="navigate('support')">
+                    <span>❓ Suporte e FAQ</span>
+                    <span class="arrow">›</span>
+                </button>
+                <button class="settings-link-row" onclick="navigate('privacy')">
+                    <span>🔐 Política de Privacidade</span>
+                    <span class="arrow">›</span>
+                </button>
+                <button class="settings-link-row" onclick="navigate('terms')">
+                    <span>📄 Termos de Uso</span>
+                    <span class="arrow">›</span>
+                </button>
+                <button class="logout-btn" onclick="logout()">
+                    <span>🚪</span> Sair da Conta
+                </button>
+                <p class="app-version">ENEM Master v2.4.1</p>
+            </div>
+        </section>
+
+        <!-- ===================== SCREEN: SUPORTE E FAQ ===================== -->
+        <section id="screen-support" class="screen">
+            <div class="inner-header">
+                <button class="back-btn" onclick="navigate('home')">←</button>
+                <h2 class="inner-title">Suporte e FAQ</h2>
+                <button class="bell-btn" onclick="navigate('notifications')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                    </svg>
+                </button>
+            </div>
+            <div class="screen-scroll">
+                <!-- Search -->
+                <div class="support-search-wrap">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" class="support-search" placeholder="Como podemos ajudar?" id="faq-search"
+                        aria-label="Buscar no suporte" oninput="filterFAQ()" />
+                </div>
+
+                <!-- Popular Topics -->
+                <p class="support-label">TÓPICOS POPULARES</p>
+                <div class="chips-row">
+                    <button class="chip active">Gabaritos</button>
+                    <button class="chip">Cálculo TRI</button>
+                    <button class="chip">Redação</button>
+                    <button class="chip">Ranking</button>
+                    <button class="chip">Assinatura</button>
+                </div>
+
+                <!-- Categories -->
+                <p class="support-label">Categorias</p>
+                <div class="categories-grid">
+                    <div class="category-card"><span class="cat-icon">👤</span><strong>Conta</strong><span>Perfil e
+                            senha</span></div>
+                    <div class="category-card"><span class="cat-icon">📝</span><strong>Simulados</strong><span>Correção
+                            e tempo</span></div>
+                    <div class="category-card"><span class="cat-icon">🏆</span><strong>Ranking</strong><span>Pontuação e
+                            regras</span></div>
+                    <div class="category-card" onclick="navigate('plans')"><span class="cat-icon">💳</span><strong>Assinatura</strong><span>Planos e
+                            pagamentos</span></div>
+                </div>
+
+                <!-- FAQ -->
+                <p class="support-label">Dúvidas Frequentes</p>
+                <div class="faq-list" id="faq-list">
+                    <div class="faq-item">
+                        <button class="faq-question" onclick="toggleFAQ(this)">
+                            Como funciona a correção TRI?
+                            <span class="faq-arrow">›</span>
+                        </button>
+                        <div class="faq-answer">
+                            A Teoria de Resposta ao Item (TRI) avalia a consistência das suas respostas, dando pesos
+                            diferentes para questões fáceis, médias e difíceis. Acertar questões difíceis que a maioria
+                            erra vale mais pontos.
+                        </div>
+                    </div>
+                    <div class="faq-item">
+                        <button class="faq-question" onclick="toggleFAQ(this)">
+                            Quando sai o gabarito do Simulado?
+                            <span class="faq-arrow">›</span>
+                        </button>
+                        <div class="faq-answer">
+                            O gabarito é liberado imediatamente após você concluir o simulado. A correção detalhada com
+                            explicações fica disponível na tela de resultado.
+                        </div>
+                    </div>
+                    <div class="faq-item">
+                        <button class="faq-question" onclick="toggleFAQ(this)">
+                            Posso pausar um simulado em andamento?
+                            <span class="faq-arrow">›</span>
+                        </button>
+                        <div class="faq-answer">
+                            Sim! Você pode pausar o simulado a qualquer momento. O cronômetro para e suas respostas são
+                            salvas automaticamente. Basta retornar ao app para continuar de onde parou.
+                        </div>
+                    </div>
+                    <div class="faq-item">
+                        <button class="faq-question" onclick="toggleFAQ(this)">
+                            Como funciona o sistema de XP e níveis?
+                            <span class="faq-arrow">›</span>
+                        </button>
+                        <div class="faq-answer">
+                            Você ganha XP ao responder questões, completar simulados e manter sua ofensiva. Cada acerto
+                            vale 10 XP, e bônus são aplicados por sequência de acertos e dificuldade da questão.
+                        </div>
+                    </div>
+                    <div class="faq-item">
+                        <button class="faq-question" onclick="toggleFAQ(this)">
+                            Como entro no ranking da minha escola?
+                            <span class="faq-arrow">›</span>
+                        </button>
+                        <div class="faq-answer">
+                            Basta cadastrar sua instituição de ensino nas Configurações de Conta. Você será
+                            automaticamente incluído no ranking da sua escola e poderá competir com seus colegas.
+                        </div>
+                    </div>
+                </div>
+
+
+            </div>
+        </section>
+
+        <!-- ===================== SCREEN: NOTIFICAÇÕES ===================== -->
+        <section id="screen-notifications" class="screen">
+            <div class="inner-header">
+                <button class="back-btn" onclick="navigate('home')">←</button>
+                <h2 class="inner-title">Notificações</h2>
+                <button class="link-btn small" onclick="markAllRead()">Marcar todas como lidas</button>
+            </div>
+            <div class="notif-tabs">
+                <button class="notif-tab active" onclick="filterNotif('all', this)">Tudo</button>
+                <button class="notif-tab" onclick="filterNotif('unread', this)">Não lidas</button>
+            </div>
+            <div class="screen-scroll notif-scroll" id="notif-list"></div>
+        </section>
+
+        <!-- ===================== SCREEN: ONBOARDING ===================== -->
+        <!-- ===================== SCREEN: LOGIN ===================== -->
+        <section id="screen-login" class="screen">
+            <div class="login-wrap">
+
+                <!-- Topo: logo + marca -->
+                <div class="login-brand">
+                    <div class="login-brand-logo">
+                        <!-- Ícone de gráfico de aprovação -->
+                        <svg viewBox="0 0 36 36" fill="none" width="32" height="32" aria-hidden="true">
+                            <path d="M6 28 L12 20 L18 24 L26 12 L30 16" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            <circle cx="30" cy="16" r="2.5" fill="#fff"/>
+                        </svg>
+                    </div>
+                    <span class="login-brand-name">ENEM<strong>Master</strong></span>
+                </div>
+
+                <!-- Headline principal -->
+                <div class="login-headline-block">
+                    <h1 class="login-headline">De volta aos estudos.<br><span class="login-headline-accent">Bora passar no ENEM.</span></h1>
+                    <p class="login-subheadline">Sua sequência e progresso estão te esperando.</p>
+                </div>
+
+                <!-- Formulário -->
+                <div class="login-card">
+                    <!-- Input com ícone inline -->
+                    <div class="login-input-group">
+                        <div class="login-input-icon">
+                            <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16"><path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/><path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/></svg>
+                        </div>
+                        <input class="login-input-field" id="login-email" type="email" placeholder="Seu e-mail" autocomplete="email" />
+                    </div>
+
+                    <div class="login-input-group">
+                        <div class="login-input-icon">
+                            <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/></svg>
+                        </div>
+                        <input class="login-input-field" id="login-password" type="password" placeholder="Sua senha" autocomplete="current-password" />
+                        <button class="login-eye-btn" onclick="toggleLoginPassword(this)" tabindex="-1" type="button" aria-label="Mostrar/ocultar senha">
+                            <svg id="login-eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="login-card-row">
+                        <div class="login-error" id="login-error"></div>
+                        <button class="login-forgot" onclick="handleForgotPassword()">Esqueci a senha</button>
+                    </div>
+
+                    <button class="login-cta-btn" id="login-btn" onclick="handleLogin()">
+                        <svg viewBox="0 0 20 20" fill="currentColor" width="18" height="18" aria-hidden="true"><path fill-rule="evenodd" d="M3 3a1 1 0 011 1v12a1 1 0 11-2 0V4a1 1 0 011-1zm7.707 3.293a1 1 0 010 1.414L9.414 9H17a1 1 0 110 2H9.414l1.293 1.293a1 1 0 01-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0z" clip-rule="evenodd" transform="scale(-1,1) translate(-20,0)"/></svg>
+                        Entrar na conta
+                    </button>
+
+                    <div class="login-divider"><span>ou</span></div>
+
+                    <button class="google-login-btn" id="google-login-btn" onclick="handleGoogleLogin()" type="button">
+                        <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
+                            <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                            <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                            <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                            <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                        </svg>
+                        Continuar com Google
+                    </button>
+                </div>
+
+                <!-- Rodapé — CTA de cadastro -->
+                <div class="login-footer">
+                    <div class="login-register-block">
+                        <span>Novo por aqui?</span>
+                        <button class="login-register-btn" onclick="goToRegister()">Criar conta grátis →</button>
+                    </div>
+                    <div class="login-trust-row">
+                        <span class="login-trust-chip">
+                            <svg viewBox="0 0 20 20" fill="currentColor" width="12" height="12"><path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                            Dados protegidos
+                        </span>
+                        <span class="login-trust-chip">
+                            <svg viewBox="0 0 20 20" fill="currentColor" width="12" height="12"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                            4,9 · 50K+ alunos
+                        </span>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ===================== SCREEN: ONBOARDING ===================== -->
+        <section id="screen-onboarding" class="screen">
+            <div class="onboarding-wrap">
+                <div class="onboarding-dots" id="ob-dots">
+                    <span class="ob-dot active"></span>
+                    <span class="ob-dot"></span>
+                    <span class="ob-dot"></span>
+                </div>
+
+                <!-- Step 1: Nome e Conta -->
+                <div class="ob-step active" id="ob-step-1">
+
+                    <!-- Marca compacta no topo -->
+                    <div class="ob1-topbar">
+                        <div class="ob1-topbar-logo">
+                            <svg viewBox="0 0 28 28" fill="none" width="22" height="22" aria-hidden="true">
+                                <path d="M4 22 L9 15 L14 18 L20 9 L24 13" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <circle cx="24" cy="13" r="2" fill="#fff"/>
+                            </svg>
+                        </div>
+                        <span class="ob1-topbar-name">ENEM<strong>Master</strong></span>
+                    </div>
+
+                    <!-- Headline -->
+                    <h2 class="ob1-title">Sua vaga na federal<br><span class="ob1-title-accent">começa aqui.</span></h2>
+                    <p class="ob1-desc">Questões do ENEM real, análise de desempenho inteligente e ranking entre os melhores.</p>
+
+                    <!-- Prova social compacta -->
+                    <div class="ob1-social-proof">
+                        <div class="ob1-proof-item"><span class="ob1-proof-num">50K+</span><span class="ob1-proof-label">Alunos</span></div>
+                        <div class="ob1-proof-divider"></div>
+                        <div class="ob1-proof-item"><span class="ob1-proof-num">4.9 ★</span><span class="ob1-proof-label">Avaliação</span></div>
+                        <div class="ob1-proof-divider"></div>
+                        <div class="ob1-proof-item"><span class="ob1-proof-num">Grátis</span><span class="ob1-proof-label">Para começar</span></div>
+                    </div>
+
+                    <!-- Campos com ícone -->
+                    <div class="ob1-form">
+                        <div class="ob1-input-group">
+                            <div class="ob1-input-icon">
+                                <svg viewBox="0 0 20 20" fill="currentColor" width="15" height="15"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/></svg>
+                            </div>
+                            <input class="ob1-input-field" id="ob-name" type="text" placeholder="Seu nome completo" maxlength="60"
+                                autocomplete="name" aria-label="Nome completo"
+                                oninput="_obClearFieldError('ob-name')" />
+                            <span class="ob-field-icon" id="ob-name-icon"></span>
+                        </div>
+
+                        <div class="ob1-input-group">
+                            <div class="ob1-input-icon">
+                                <svg viewBox="0 0 20 20" fill="currentColor" width="15" height="15"><path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/><path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/></svg>
+                            </div>
+                            <input class="ob1-input-field" id="ob-email" type="email" placeholder="Seu melhor e-mail"
+                                autocomplete="email" aria-label="E-mail"
+                                oninput="_obClearFieldError('ob-email')"
+                                onblur="_obCheckEmailOnBlur()" />
+                            <span class="ob-field-icon" id="ob-email-icon"></span>
+                        </div>
+                        <span class="ob-field-hint" id="ob-email-hint"></span>
+
+                        <div class="ob1-input-group">
+                            <div class="ob1-input-icon">
+                                <svg viewBox="0 0 20 20" fill="currentColor" width="15" height="15"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/></svg>
+                            </div>
+                            <input class="ob1-input-field" id="ob-password" type="password" placeholder="Crie sua senha (mín. 8 dígitos)"
+                                autocomplete="new-password" aria-label="Senha"
+                                oninput="_obCheckPasswordStrength()" />
+                            <button class="login-eye-btn" onclick="_obTogglePassword()" tabindex="-1" type="button" aria-label="Mostrar senha">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="17" height="17">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                                </svg>
+                            </button>
+                        </div>
+
+                        <div class="ob-strength-row" id="ob-strength-row" style="display:none">
+                            <div class="ob-strength-bar"><div class="ob-strength-fill" id="ob-strength-fill"></div></div>
+                            <span class="ob-strength-label" id="ob-strength-label"></span>
+                        </div>
+
+                        <div class="login-error" id="ob-step1-error" style="margin-top:6px"></div>
+
+                        <!-- CTA -->
+                        <button class="ob1-cta-btn" id="ob-btn" onclick="onboardingNext()">
+                            Criar minha conta — é grátis
+                            <svg viewBox="0 0 20 20" fill="currentColor" width="17" height="17" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="login-divider" style="width:100%; margin:8px 0"><span>ou cadastre com</span></div>
+                    <button class="google-login-btn" onclick="handleGoogleLogin()" type="button">
+                        <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
+                            <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                            <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                            <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                            <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                        </svg>
+                        Continuar com Google
+                    </button>
+
+                    <div class="ob1-login-row">
+                        <span>Já tem conta?</span>
+                        <button class="ob1-login-link" onclick="navigate('login')" type="button">Entrar agora →</button>
+                    </div>
+
+                </div>
+
+                <!-- Step 2: Meta -->
+                <div class="ob-step" id="ob-step-2">
+                    <div class="ob-emoji">🎯</div>
+                    <h2 class="ob-title">Qual é a sua meta?</h2>
+                    <p class="ob-desc">Isso vai personalizar seu cronograma de estudos.</p>
+                    <div class="ob-goals-grid">
+                        <button class="ob-goal-btn" data-goal="Medicina na Federal 🏥" onclick="selectGoal(this)">🩺<span>Medicina</span></button>
+                        <button class="ob-goal-btn" data-goal="Direito na Federal ⚖️" onclick="selectGoal(this)">⚖️<span>Direito</span></button>
+                        <button class="ob-goal-btn" data-goal="Engenharia na Federal ⚙️" onclick="selectGoal(this)">⚙️<span>Engenharia</span></button>
+                        <button class="ob-goal-btn" data-goal="Administração na Federal 📊" onclick="selectGoal(this)">📊<span>Administração</span></button>
+                        <button class="ob-goal-btn" data-goal="Ciências da Computação 💻" onclick="selectGoal(this)">💻<span>Computação</span></button>
+                        <button class="ob-goal-btn" data-goal="outro" onclick="selectGoal(this)">🌟<span>Outro</span></button>
+                    </div>
+                    <div id="ob-outro-wrap" style="display:none; margin-top:12px;">
+                        <input type="text" id="ob-outro-input" maxlength="60" placeholder="Ex: Psicologia, Veterinária, Arquitetura…" style="width:100%; padding:12px 14px; border-radius:12px; border:2px solid var(--teal,#00b4a6); background:#1a2540; color:#fff; font-size:15px; outline:none; box-sizing:border-box;" />
+                    </div>
+                    <button class="cta-btn ob-btn" style="margin-top:24px; width:100%" onclick="onboardingNext()">Continuar →</button>
+                </div>
+
+                <!-- Step 3: Matérias fracas -->
+                <div class="ob-step" id="ob-step-3">
+                    <div class="ob-emoji">📚</div>
+                    <h2 class="ob-title">Quais áreas precisa melhorar?</h2>
+                    <p class="ob-desc">Vamos focar mais nessas disciplinas no seu cronograma diário.</p>
+                    <div class="ob-subjects-grid">
+                        <button class="ob-subj-btn" data-subj="humanas" onclick="toggleSubj(this)">
+                            <span>🌍</span><span>Humanas</span>
+                        </button>
+                        <button class="ob-subj-btn" data-subj="natureza" onclick="toggleSubj(this)">
+                            <span>🔬</span><span>Natureza</span>
+                        </button>
+                        <button class="ob-subj-btn" data-subj="linguagens" onclick="toggleSubj(this)">
+                            <span>📝</span><span>Linguagens</span>
+                        </button>
+                        <button class="ob-subj-btn" data-subj="matematica" onclick="toggleSubj(this)">
+                            <span>➗</span><span>Matemática</span>
+                        </button>
+                    </div>
+                    <button class="cta-btn ob-btn" style="margin-top:24px; width:100%" onclick="onboardingNext()">Começar a Estudar 🚀</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===================== BADGE UNLOCK TOAST ===================== -->
+        <div class="badge-toast" id="badge-toast">
+            <div class="badge-toast-inner">
+                <span class="badge-toast-icon" id="badge-toast-icon">🏅</span>
+                <div>
+                    <p class="badge-toast-title">🎉 Conquista Desbloqueada!</p>
+                    <p class="badge-toast-name" id="badge-toast-name">Início Feroz</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===================== BOTTOM NAV ===================== -->
+        <nav class="bottom-nav" id="bottom-nav">
+            <button class="nav-btn active" id="nav-home" onclick="navigate('home')">
+                <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22">
+                    <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+                </svg>
+                <span>Início</span>
+            </button>
+            <button class="nav-btn" id="nav-quiz" onclick="navigate('quiz-setup')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22">
+                    <path d="M12 20h9" />
+                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                </svg>
+                <span>Praticar</span>
+            </button>
+            <button class="nav-btn" id="nav-conteudo" onclick="navigate('conteudo')">
+                <div style="position:relative;display:inline-flex">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22">
+                        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+                    </svg>
+                    <span class="nav-premium-badge" id="nav-conteudo-badge" style="display:none">👑</span>
+                </div>
+                <span>Conteúdo</span>
+            </button>
+            <button class="nav-btn" id="nav-ranking" onclick="navigate('ranking')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22">
+                    <line x1="18" y1="20" x2="18" y2="10" />
+                    <line x1="12" y1="20" x2="12" y2="4" />
+                    <line x1="6" y1="20" x2="6" y2="14" />
+                </svg>
+                <span>Ranking</span>
+            </button>
+            <button class="nav-btn" id="nav-profile" onclick="navigate('profile')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                </svg>
+                <span>Perfil</span>
+            </button>
+        </nav>
+
+        <!-- ===================== MODAL: METAS CONFIGURÁVEIS ===================== -->
+        <div class="goals-modal-overlay" id="goals-modal-overlay" style="display:none" onclick="closeGoalsModal()">
+            <div class="goals-modal" onclick="event.stopPropagation()">
+                <div class="pause-sheet-handle" style="margin:0 auto 4px"></div>
+                <p class="goals-modal-title">🎯 Configurar Metas</p>
+                <div class="goals-modal-field">
+                    <label>QUESTÕES POR DIA</label>
+                    <input type="range" min="5" max="50" step="5" id="goal-daily-slider" value="10"
+                        oninput="document.getElementById('goal-daily-val').textContent=this.value" />
+                    <div class="goals-range-display">
+                        <span class="goals-range-unit">Meta:</span>
+                        <span class="goals-range-val" id="goal-daily-val">10</span>
+                        <span class="goals-range-unit">questões/dia</span>
+                    </div>
+                </div>
+                <div class="goals-modal-field">
+                    <label>SIMULADOS POR SEMANA</label>
+                    <input type="range" min="1" max="7" step="1" id="goal-weekly-slider" value="3"
+                        oninput="document.getElementById('goal-weekly-val').textContent=this.value" />
+                    <div class="goals-range-display">
+                        <span class="goals-range-unit">Meta:</span>
+                        <span class="goals-range-val" id="goal-weekly-val">3</span>
+                        <span class="goals-range-unit">simulados/semana</span>
+                    </div>
+                </div>
+                <button class="cta-btn" onclick="saveGoals()">Salvar Metas</button>
+                <button class="btn-outline-full" onclick="closeGoalsModal()">Cancelar</button>
+            </div>
+        </div>
+
+        <!-- ===================== MODAL: EDITAR PERFIL ===================== -->
+        <div class="goals-modal-overlay" id="avatar-edit-overlay" style="display:none" onclick="closeAvatarEditModal()">
+            <div class="goals-modal" onclick="event.stopPropagation()">
+                <div class="pause-sheet-handle" style="margin:0 auto 12px"></div>
+                <p class="goals-modal-title">✏️ Editar Perfil</p>
+
+                <!-- Preview do avatar -->
+                <div style="display:flex;justify-content:center;margin-bottom:20px;">
+                    <div class="avatar large" id="avatar-preview" style="font-size:28px;"></div>
+                </div>
+
+                <!-- Nome -->
+                <div class="goals-modal-field">
+                    <label for="avatar-edit-name">NOME DE EXIBIÇÃO</label>
+                    <input type="text" id="avatar-edit-name" maxlength="40"
+                        placeholder="Seu nome"
+                        oninput="updateAvatarPreview()"
+                        style="background:var(--bg-elevated);border:1px solid var(--border-subtle);
+                               color:var(--text-primary);border-radius:var(--radius-sm);
+                               padding:10px 12px;font-size:14px;width:100%;box-sizing:border-box;" />
+                </div>
+
+                <!-- Paleta de cores -->
+                <div class="goals-modal-field">
+                    <label>COR DO AVATAR</label>
+                    <div class="avatar-color-palette" id="avatar-color-palette">
+                        <button class="avatar-color-swatch" data-grad="linear-gradient(135deg,#00b4a6,#0077b6)" onclick="pickAvatarColor(this)"></button>
+                        <button class="avatar-color-swatch" data-grad="linear-gradient(135deg,#7c3aed,#a78bfa)" onclick="pickAvatarColor(this)"></button>
+                        <button class="avatar-color-swatch" data-grad="linear-gradient(135deg,#f97316,#f5c518)" onclick="pickAvatarColor(this)"></button>
+                        <button class="avatar-color-swatch" data-grad="linear-gradient(135deg,#e11d48,#f97316)" onclick="pickAvatarColor(this)"></button>
+                        <button class="avatar-color-swatch" data-grad="linear-gradient(135deg,#0ea5e9,#6366f1)" onclick="pickAvatarColor(this)"></button>
+                        <button class="avatar-color-swatch" data-grad="linear-gradient(135deg,#16a34a,#0ea5e9)" onclick="pickAvatarColor(this)"></button>
+                        <button class="avatar-color-swatch" data-grad="linear-gradient(135deg,#be185d,#7c3aed)" onclick="pickAvatarColor(this)"></button>
+                        <button class="avatar-color-swatch" data-grad="linear-gradient(135deg,#d97706,#16a34a)" onclick="pickAvatarColor(this)"></button>
+                    </div>
+                </div>
+
+                <button class="cta-btn" onclick="saveAvatarEdit()">Salvar</button>
+                <button class="btn-outline-full" onclick="closeAvatarEditModal()">Cancelar</button>
+            </div>
+        </div>
+
+        <!-- ===================== MODAL: COMPARTILHAR RESULTADO ===================== -->
+        <div class="share-modal-overlay" id="share-modal-overlay" style="display:none" onclick="closeShareModal()">
+            <div class="share-modal" onclick="event.stopPropagation()">
+                <div class="share-modal-handle"></div>
+                <p style="font-size:12px;font-weight:700;color:var(--text-muted);text-align:center;text-transform:uppercase;letter-spacing:0.5px">Compartilhar Resultado</p>
+                <!-- Card de preview -->
+                <div class="share-card" id="share-card-preview">
+                    <div class="share-card-logo">🎓 ENEM MASTER</div>
+                    <div class="share-card-score-row">
+                        <span class="share-card-pct" id="sc-pct">70%</span>
+                        <div class="share-card-detail">
+                            <span class="share-card-disc" id="sc-disc">Simulado</span>
+                            <span class="share-card-stats" id="sc-stats">7 de 10 acertos</span>
+                            <span class="share-card-tri" id="sc-tri"></span>
+                        </div>
+                    </div>
+                    <div class="share-card-footer">
+                        <span class="share-card-user" id="sc-user">Estudante</span>
+                        <span class="share-card-xp" id="sc-xp">+70 XP</span>
+                        <span class="share-card-url">enem.app</span>
+                    </div>
+                </div>
+                <!-- Linha 1: WhatsApp + Compartilhar -->
+                <div class="share-btns-row">
+                    <button class="share-action-btn share-btn-whats" onclick="shareViaWhatsapp()">📲 WhatsApp</button>
+                    <button class="share-action-btn" style="background:linear-gradient(135deg,rgba(99,102,241,0.2),rgba(139,92,246,0.2));border:1.5px solid rgba(99,102,241,0.4);color:#a78bfa" onclick="shareCardNative()">🔗 Compartilhar</button>
+                </div>
+                <!-- Linha 2: Download PNG + Instagram -->
+                <div class="share-btns-row">
+                    <button class="share-action-btn" style="background:rgba(0,180,166,0.15);border:1.5px solid rgba(0,180,166,0.4);color:var(--teal)" onclick="downloadShareCard()">🖼️ Salvar imagem</button>
+                    <button class="share-action-btn" style="background:linear-gradient(135deg,rgba(251,113,133,0.2),rgba(251,191,36,0.2));border:1.5px solid rgba(251,113,133,0.4);color:#fb7185" onclick="shareToInstagram()">📸 Instagram</button>
+                </div>
+                <!-- Linha 3: Copiar texto -->
+                <button class="share-action-btn share-btn-copy" style="width:100%;margin-top:4px" onclick="copyShareText()">📋 Copiar texto</button>
+                <button class="share-btn-close" onclick="closeShareModal()">Fechar</button>
+            </div>
+        </div>
+
+        <!-- ===================== MODAL: PAYWALL ===================== -->
+        <div id="paywall-modal" class="paywall-overlay" role="dialog" aria-modal="true" aria-labelledby="paywall-title">
+            <div class="paywall-card">
+                <div class="paywall-icon">👑</div>
+                <h2 class="paywall-title" id="paywall-title">Recurso Premium</h2>
+                <p class="paywall-body" id="paywall-body">Assine o Premium para desbloquear este recurso e estudar sem limites!</p>
+
+                <!-- Preço direto no modal -->
+                <div class="paywall-price-row" aria-label="Plano a partir de R$ 19,90 por mês">
+                    <span class="paywall-price-currency">R$</span>
+                    <span class="paywall-price-value">19</span>
+                    <span class="paywall-price-period">,90/mês</span>
+                </div>
+
+                <!-- 3 benefícios chave -->
+                <div class="paywall-features" aria-label="Benefícios inclusos">
+                    <div class="paywall-feature">🎯 Simulados ilimitados todos os dias</div>
+                    <div class="paywall-feature">🤖 Correção de redação por IA</div>
+                    <div class="paywall-feature">📊 Modo ENEM completo (90 questões)</div>
+                </div>
+
+                <button class="cta-btn" onclick="navigate('checkout'); closePaywall()">Assinar agora 👑</button>
+                <button class="paywall-secondary-cta" onclick="navigate('plans'); closePaywall()">Ver todos os planos →</button>
+                <button class="paywall-dismiss" onclick="closePaywall()">Agora não</button>
+            </div>
+        </div>
+
+        <!-- ===================== MODAL: AGUARDANDO PAGAMENTO ===================== -->
+        <div id="payment-waiting-modal" class="paywall-overlay">
+            <div class="paywall-card pw-card">
+                <div class="pw-spinner-wrap">
+                    <div class="pw-spinner"></div>
+                </div>
+                <h2 class="paywall-title">Verificando pagamento</h2>
+                <p class="paywall-body" id="pw-status-text">Aguardando confirmação do seu pagamento...</p>
+                <div class="pw-progress-wrap">
+                    <div class="pw-progress-bar" id="pw-progress-bar"></div>
+                </div>
+                <p class="pw-hint" id="pw-hint-text">Verificando automaticamente a cada 8 segundos</p>
+                <button class="paywall-dismiss" onclick="cancelPaymentWaiting()">✕ Cancelar</button>
+            </div>
+        </div>
+
+        <!-- ===================== MODAL: PREMIUM ATIVADO ===================== -->
+        <div id="premium-success-modal" class="paywall-overlay">
+            <div class="paywall-card ps-card">
+                <div class="ps-confetti" id="ps-confetti"></div>
+                <div class="ps-emoji">🎉</div>
+                <h2 class="ps-title">Você é Premium!</h2>
+                <p class="ps-body">Acesso ilimitado desbloqueado. Bons estudos!</p>
+                <div class="ps-features">
+                    <div class="ps-feature">✅ Questões ilimitadas por dia</div>
+                    <div class="ps-feature">✅ Quiz de até 90 questões</div>
+                    <div class="ps-feature">✅ Correção de redação por IA</div>
+                    <div class="ps-feature">✅ Gabarito comentado completo</div>
+                </div>
+                <button class="cta-btn ps-cta" onclick="closePremiumSuccess()">
+                    Começar a estudar 🚀
+                </button>
+            </div>
+        </div>
+
+        <!-- ===================== SCREEN: CHECKOUT ===================== -->
+        <section id="screen-checkout" class="screen">
+            <div class="inner-header">
+                <button class="back-btn" onclick="navigate('plans')" aria-label="Voltar para planos">←</button>
+                <h2 class="inner-title">Finalizar Assinatura</h2>
+                <div></div>
+            </div>
+            <div class="screen-scroll" style="padding:16px;display:flex;flex-direction:column;gap:14px;">
+
+                <!-- Resumo do plano selecionado -->
+                <div class="checkout-plan-summary" id="checkout-plan-summary" aria-label="Plano selecionado">
+                    <span class="cps-icon">👑</span>
+                    <div class="cps-info">
+                        <p class="cps-title" id="cps-title">Premium Mensal</p>
+                        <p class="cps-sub" id="cps-sub">Acesso ilimitado · cancele quando quiser</p>
+                    </div>
+                    <div style="text-align:right">
+                        <p class="cps-price" id="cps-price">R$ 19,90</p>
+                        <p class="cps-price-sub" id="cps-price-sub">/mês</p>
+                    </div>
+                </div>
+
+                <!-- Seletor de plano -->
+                <div class="checkout-plan-toggle" role="group" aria-label="Selecionar período">
+                    <button class="checkout-plan-btn active" id="plan-btn-mensal" onclick="selectCheckoutPlan('mensal')" aria-pressed="true">
+                        <span class="cpt-name">Mensal</span>
+                        <span class="cpt-price">R$ 19,90<span class="cpt-period">/mês</span></span>
+                    </button>
+                    <button class="checkout-plan-btn" id="plan-btn-anual" onclick="selectCheckoutPlan('anual')" aria-pressed="false">
+                        <span class="checkout-badge-eco">37% OFF</span>
+                        <span class="cpt-name">Anual</span>
+                        <span class="cpt-price">R$ 149,00<span class="cpt-period">/ano</span></span>
+                        <span class="cpt-sub">✦ R$ 12,42/mês</span>
+                    </button>
+                </div>
+
+                <!-- O que você recebe -->
+                <div class="checkout-benefits">
+                    <p class="checkout-section-label">✅ O QUE ESTÁ INCLUÍDO</p>
+                    <div class="checkout-benefit-list">
+                        <div class="checkout-benefit">👑 Questões ilimitadas todos os dias</div>
+                        <div class="checkout-benefit">🎯 Modo ENEM: 90 questões + 5h30min</div>
+                        <div class="checkout-benefit">🤖 Correção de redação por IA (5 competências)</div>
+                        <div class="checkout-benefit">📊 Gabarito comentado com IA</div>
+                        <div class="checkout-benefit">📈 Análise de desempenho com TRI</div>
+                        <div class="checkout-benefit">🏆 Ranking nacional + plano de estudos</div>
+                    </div>
+                </div>
+
+                <!-- Tabs de método de pagamento -->
+                <div>
+                    <p class="checkout-section-label">💳 FORMA DE PAGAMENTO</p>
+                    <div class="checkout-method-tabs" role="tablist">
+                        <button class="checkout-tab active" id="tab-pix" role="tab" aria-selected="true" aria-controls="method-pix" onclick="selectPaymentMethod('pix')">
+                            <span aria-hidden="true">💚</span> PIX
+                        </button>
+                        <button class="checkout-tab" id="tab-card" role="tab" aria-selected="false" aria-controls="method-card" onclick="selectPaymentMethod('card')">
+                            <span aria-hidden="true">💳</span> Cartão
+                        </button>
+                        <button class="checkout-tab" id="tab-code" role="tab" aria-selected="false" aria-controls="method-code" onclick="selectPaymentMethod('code')">
+                            <span aria-hidden="true">🔑</span> Código
+                        </button>
+                    </div>
+
+                    <!-- PIX -->
+                    <div class="checkout-method-content" id="method-pix" role="tabpanel">
+                        <div class="pix-card">
+                            <p style="text-align:center;font-size:13px;color:var(--text-secondary);margin:0 0 10px;line-height:1.6">
+                                Você será redirecionado para o checkout seguro da <strong>Cakto</strong>.<br>
+                                O QR Code PIX é gerado automaticamente — é só escanear e pagar.
+                            </p>
+                            <p id="pix-price-display" style="font-size:26px;font-weight:900;color:var(--teal);text-align:center;margin:0 0 14px" aria-live="polite">R$ 19,90</p>
+                            <button class="cta-btn" onclick="goToCaktoCheckout('pix')">
+                                💚 Pagar com PIX →
+                            </button>
+                            <button class="outline-btn" id="pix-verify-btn" onclick="verifyPayment()" style="margin-top:10px;display:none;">
+                                ✅ Já paguei — verificar acesso
+                            </button>
+                            <p class="pix-hint">Acesso liberado automaticamente após confirmação · geralmente em minutos</p>
+                        </div>
+                    </div>
+
+                    <!-- Cartão de Crédito -->
+                    <div class="checkout-method-content" id="method-card" style="display:none" role="tabpanel">
+                        <div class="card-checkout-info">
+                            <p class="card-info-text">
+                                Você será redirecionado para uma página de pagamento <strong>100% segura</strong> processada pela Cakto.
+                                Aceitamos cartão de crédito em até 12×.
+                            </p>
+                            <div class="card-logos" aria-label="Bandeiras aceitas">
+                                <span class="card-logo">VISA</span>
+                                <span class="card-logo">MASTER</span>
+                                <span class="card-logo">ELO</span>
+                                <span class="card-logo">AMEX</span>
+                            </div>
+                            <button class="cta-btn" id="card-checkout-btn" onclick="goToCaktoCheckout('card')">
+                                💳 Pagar com Cartão →
+                            </button>
+                            <button class="outline-btn" id="card-verify-btn" onclick="verifyPayment()" style="margin-top:10px;display:none;">
+                                ✅ Já paguei — verificar acesso
+                            </button>
+                            <p class="card-info-sub">🔒 Criptografia SSL · Seus dados nunca são armazenados</p>
+                        </div>
+                    </div>
+
+                    <!-- Código de Ativação -->
+                    <div class="checkout-method-content" id="method-code" style="display:none" role="tabpanel">
+                        <div class="code-card">
+                            <p class="code-label">🔑 Código de ativação</p>
+                            <p class="code-hint">Recebeu um código no WhatsApp ou e-mail após o pagamento? Digite aqui para ativar o Premium instantaneamente.</p>
+                            <div class="code-input-row">
+                                <input type="text" id="activation-code-input" class="code-input"
+                                       placeholder="ENEM-XXXX-XXXX"
+                                       maxlength="14"
+                                       aria-label="Código de ativação Premium"
+                                       autocomplete="off"
+                                       oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9-]/g,'')" />
+                            </div>
+                            <button class="cta-btn" id="activate-btn" onclick="activateWithCode()">
+                                🔑 Ativar Premium Agora
+                            </button>
+                            <p id="code-feedback" class="code-feedback" style="display:none" aria-live="polite"></p>
+                            <p class="code-hint" style="margin-top:8px">Não recebeu o código? <button class="link-inline" onclick="navigate('support')">Falar com o suporte</button></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Indicadores de confiança -->
+                <div class="checkout-trust-row" aria-label="Selos de confiança">
+                    <div class="checkout-trust-item"><span class="checkout-trust-icon">🔒</span> Pagamento seguro</div>
+                    <div class="checkout-trust-item"><span class="checkout-trust-icon">↩️</span> Cancele quando quiser</div>
+                    <div class="checkout-trust-item"><span class="checkout-trust-icon">⚡</span> Acesso imediato</div>
+                </div>
+
+                <p class="checkout-footer-note">Ao assinar, você concorda com os
+                    <button class="link-inline" onclick="navigate('terms')">Termos de Uso</button>
+                    e a <button class="link-inline" onclick="navigate('privacy')">Política de Privacidade</button>.
+                </p>
+            </div>
+        </section>
+
+        <!-- ===================== SCREEN: PLANOS / ASSINATURA ===================== -->
+        <section id="screen-plans" class="screen">
+            <div class="inner-header">
+                <button class="back-btn" onclick="navigate('settings')">←</button>
+                <h2 class="inner-title">Planos</h2>
+                <div></div>
+            </div>
+            <div class="screen-scroll" id="plans-scroll">
+                <div class="plans-hero">
+                    <div class="plans-hero-icon">👑</div>
+                    <h2 class="plans-hero-title">Suba de nota mais rápido</h2>
+                    <p class="plans-hero-sub">Desbloqueie tudo do ENEM Master e maximize sua preparação.</p>
+                </div>
+
+                <!-- Toggle Mensal / Anual -->
+                <div class="plans-period-toggle" role="group" aria-label="Selecionar período do plano">
+                    <button class="ppt-btn active" id="ppt-mensal" onclick="selectPlanPeriod('mensal')" aria-pressed="true">Mensal</button>
+                    <button class="ppt-btn" id="ppt-anual" onclick="selectPlanPeriod('anual')" aria-pressed="false">
+                        Anual
+                        <span class="ppt-savings-badge">37% OFF</span>
+                    </button>
+                </div>
+
+                <!-- Plano Grátis -->
+                <div class="plan-card" id="plan-card-free">
+                    <div class="plan-header">
+                        <div>
+                            <p class="plan-name">Grátis</p>
+                            <p class="plan-price">R$ 0<span class="plan-period">/sempre</span></p>
+                        </div>
+                        <span class="plan-badge-free" id="plan-free-badge">ATUAL</span>
+                    </div>
+                    <ul class="plan-features" aria-label="Recursos inclusos no plano grátis">
+                        <li class="plan-feat ok">✅ 10 questões por dia</li>
+                        <li class="plan-feat ok">✅ Quiz por disciplina</li>
+                        <li class="plan-feat ok">✅ XP, moedas e conquistas</li>
+                        <li class="plan-feat ok">✅ Ranking da sua escola</li>
+                        <li class="plan-feat no">❌ Simulados completos</li>
+                        <li class="plan-feat no">❌ Modo ENEM (90 questões)</li>
+                        <li class="plan-feat no">❌ Correção de redação por IA</li>
+                        <li class="plan-feat no">❌ Análise TRI detalhada</li>
+                        <li class="plan-feat no">❌ Plano de estudos automático</li>
+                    </ul>
+                </div>
+
+                <!-- Plano Premium -->
+                <div class="plan-card premium" id="plan-card-premium">
+                    <div class="plan-badge-premium">⭐ MAIS POPULAR</div>
+                    <div class="plan-header">
+                        <div>
+                            <p class="plan-name premium">Premium 👑</p>
+                            <!-- Preço dinâmico gerenciado por selectPlanPeriod() -->
+                            <p class="plan-price premium" id="plan-premium-price">
+                                R$ 19,90<span class="plan-period">/mês</span>
+                            </p>
+                            <p class="plan-price-anual-destaque" id="plan-anual-destaque">
+                                R$ 149/ano · R$ 12,42/mês
+                            </p>
+                            <p class="plan-price-mensal-sub" id="plan-mensal-sub">
+                                ou R$ 149/ano — economize 37%
+                            </p>
+                        </div>
+                        <span class="plan-icon-premium">👑</span>
+                    </div>
+                    <ul class="plan-features" aria-label="Recursos inclusos no plano Premium">
+                        <li class="plan-feat ok">✅ <strong>Questões ilimitadas</strong> todos os dias</li>
+                        <li class="plan-feat ok">✅ Modo ENEM: 90 questões + 5h30min</li>
+                        <li class="plan-feat ok">✅ Correção de redação por IA (5 competências)</li>
+                        <li class="plan-feat ok">✅ Análise de desempenho com TRI</li>
+                        <li class="plan-feat ok">✅ Gabarito comentado com IA</li>
+                        <li class="plan-feat ok">✅ Plano de estudos personalizado</li>
+                        <li class="plan-feat ok">✅ Ranking nacional</li>
+                        <li class="plan-feat ok">✅ Questões ENEM 2010–2024</li>
+                        <li class="plan-feat ok">✅ Suporte prioritário</li>
+                        <li class="plan-feat section-divider" style="list-style:none;padding:6px 0 2px;font-size:11px;font-weight:700;color:var(--teal);letter-spacing:.5px;border-top:1px solid rgba(255,255,255,.08);margin-top:4px">📚 ABA CONTEÚDO</li>
+                        <li class="plan-feat ok">✅ <strong>Flashcards</strong> — domine cada tema com repetição espaçada</li>
+                        <li class="plan-feat ok">✅ <strong>Resumos</strong> — revisão rápida de todas as disciplinas</li>
+                        <li class="plan-feat ok">✅ <strong>Tutor IA</strong> — tire dúvidas 24h sobre qualquer assunto do ENEM</li>
+                        <li class="plan-feat ok">✅ <strong>Progresso detalhado</strong> — veja sua evolução por disciplina</li>
+                    </ul>
+
+                    <button class="cta-btn plans-cta" id="plans-subscribe-btn" onclick="openCheckoutFromPlans()" style="margin-top:14px">
+                        Assinar Premium →
+                    </button>
+                    <p class="plans-guarantee">🔒 Pagamento seguro · Cancele quando quiser</p>
+                    <!-- Status premium — visibilidade controlada por renderPlans() -->
+                    <div id="plans-premium-msg" style="display:none;margin-top:12px"></div>
+                </div>
+
+                <p class="plans-footer-note">Ao assinar, você concorda com os
+                    <button class="link-inline" onclick="navigate('terms')">Termos de Uso</button>
+                    e nossa
+                    <button class="link-inline" onclick="navigate('privacy')">Política de Privacidade</button>.
+                </p>
+
+
+            </div>
+        </section>
+
+        <!-- ===================== SCREEN: REDAÇÃO ENEM ===================== -->
+        <section id="screen-redacao" class="screen">
+            <div class="inner-header">
+                <button class="back-btn" onclick="navigate('quiz-setup')">←</button>
+                <h2 class="inner-title">Redação ENEM</h2>
+                <div></div>
+            </div>
+            <div class="screen-scroll" style="padding:16px;display:flex;flex-direction:column;gap:16px;">
+
+                <!-- Abas de categoria de temas -->
+                <div class="rt-tabs">
+                    <button class="rt-tab-btn active" data-tab="enem" onclick="switchThemeTab('enem')">📚 ENEM Histórico</button>
+                    <button class="rt-tab-btn" data-tab="atual" onclick="switchThemeTab('atual')">🔥 Temas Atuais</button>
+                </div>
+
+                <!-- Tema atual -->
+                <div class="redacao-tema-card">
+                    <p class="rt-label" id="rt-label">TEMA ENEM</p>
+                    <p class="rt-year" id="rt-year">ENEM 2023</p>
+                    <p class="rt-theme" id="rt-theme">Desafios para o enfrentamento da invisibilidade do trabalho de cuidado realizado pela mulher no Brasil</p>
+                    <button class="outline-btn rt-change-btn" onclick="drawNewTheme()">🎲 Sortear outro tema</button>
+                </div>
+
+                <!-- Área de escrita -->
+                <div>
+                    <textarea id="redacao-text" class="redacao-textarea" placeholder="Escreva sua redação dissertativo-argumentativa aqui...&#10;&#10;Dica: apresente uma tese, desenvolva argumentos com exemplos e proponha uma intervenção concreta ao final."></textarea>
+                    <div class="redacao-counter">
+                        <span id="redacao-word-count">0 palavras</span>
+                        <span id="redacao-char-count">0 / 2000 caracteres</span>
+                    </div>
+                </div>
+
+                <!-- Histórico de Redações -->
+                <div id="redacao-hist-wrap">
+                    <p class="setup-label" style="margin:0">📜 HISTÓRICO DE REDAÇÕES</p>
+                    <div id="redacao-hist-list" style="display:flex;flex-direction:column;gap:10px"></div>
+                </div>
+
+                <button class="cta-btn" id="redacao-submit-btn" onclick="submitEssay()">
+                    🤖 Corrigir com IA
+                </button>
+
+                <!-- Resultado (oculto até envio) -->
+                <div id="redacao-result" style="display:none;flex-direction:column;gap:12px;">
+                    <p class="setup-label" style="margin-bottom:0">📊 AVALIAÇÃO POR COMPETÊNCIA</p>
+                    <div id="redacao-competencias" style="display:flex;flex-direction:column;gap:10px;"></div>
+
+                    <div class="redacao-total-card">
+                        <p class="redacao-total-label">NOTA TOTAL ESTIMADA</p>
+                        <p class="redacao-total-score" id="redacao-total">—</p>
+                        <p class="redacao-total-sub">de 1000 pontos</p>
+                    </div>
+
+                    <p class="setup-label" style="margin-bottom:0">💬 COMENTÁRIO GERAL</p>
+                    <div class="redacao-comment-card" id="redacao-comment"></div>
+
+                    <button class="outline-btn" onclick="document.getElementById('redacao-result').style.display='none';var _rt=document.getElementById('redacao-text');_rt.value='';_updateRedacaoCounter.call(_rt);">✍️ Nova redação</button>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ===================== SCREEN: ANÁLISE ===================== -->
+        <section id="screen-analise" class="screen">
+            <div class="inner-header">
+                <button class="back-btn" onclick="navigate('profile')">←</button>
+                <h2 class="inner-title">Minha Análise</h2>
+                <button class="icon-btn" onclick="renderAnalise()" title="Atualizar">↺</button>
+            </div>
+            <div class="screen-scroll" style="padding:16px;display:flex;flex-direction:column;gap:14px">
+                <div class="analise-stats-grid" id="analise-stats-grid"></div>
+                <div class="analise-chart-card">
+                    <p class="analise-chart-title">📈 DESEMPENHO NOS ÚLTIMOS SIMULADOS</p>
+                    <div class="analise-bars" id="analise-bars"></div>
+                </div>
+                <div class="analise-chart-card">
+                    <p class="analise-chart-title">🎯 ACERTOS POR DISCIPLINA</p>
+                    <div id="analise-disc-list"></div>
+                </div>
+                <div class="analise-chart-card">
+                    <p class="analise-chart-title">📅 MAPA DE ATIVIDADE — 5 SEMANAS</p>
+                    <div class="analise-heatmap" id="analise-heatmap"></div>
+                </div>
+                <div style="background:var(--bg-card);border-radius:var(--radius-md);padding:14px;border:1px solid var(--border-subtle)">
+                    <p style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px">🎯 FOCO RECOMENDADO</p>
+                    <div id="analise-focus-list" style="margin-top:10px;display:flex;flex-direction:column;gap:8px"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===================== SCREEN: CONTEÚDO ===================== -->
+        <section id="screen-conteudo" class="screen">
+            <!-- Tabs -->
+            <div class="conteudo-tabs">
+                <button class="conteudo-tab active" onclick="switchConteudoTab('flashcard', this)">🃏 Flashcards</button>
+                <button class="conteudo-tab" onclick="switchConteudoTab('resumos', this)">📖 Resumos</button>
+                <button class="conteudo-tab" onclick="switchConteudoTab('tutor', this)">🤖 Tutor IA</button>
+                <button class="conteudo-tab" onclick="switchConteudoTab('progresso', this)">📊 Progresso</button>
+            </div>
+
+            <!-- ── PAINEL: Flashcards ── -->
+            <div class="conteudo-panel active" id="conteudo-panel-flashcard">
+
+                <!-- BARRA ÚNICA: disciplina + separador + dificuldade (scroll horizontal) -->
+                <div class="fc-toolbar">
+                    <button class="fc-disc-btn selected" data-disc="" onclick="selectFlashcardDisc(this,'')">✨ Misto</button>
+                    <button class="fc-disc-btn" data-disc="humanas" onclick="selectFlashcardDisc(this,'humanas')">🌍 Hum.</button>
+                    <button class="fc-disc-btn" data-disc="natureza" onclick="selectFlashcardDisc(this,'natureza')">🔬 Nat.</button>
+                    <button class="fc-disc-btn" data-disc="linguagens" onclick="selectFlashcardDisc(this,'linguagens')">📝 Ling.</button>
+                    <button class="fc-disc-btn" data-disc="matematica" onclick="selectFlashcardDisc(this,'matematica')">➗ Mat.</button>
+                    <span class="fc-toolbar-sep"></span>
+                    <button class="fc-lvl-chip selected" data-lvl="0" onclick="selectFlashcardLvl(this,0)">Todos</button>
+                    <button class="fc-lvl-chip fc-easy" data-lvl="1" onclick="selectFlashcardLvl(this,1)">Fácil</button>
+                    <button class="fc-lvl-chip fc-medium" data-lvl="2" onclick="selectFlashcardLvl(this,2)">Médio</button>
+                    <button class="fc-lvl-chip fc-hard" data-lvl="3" onclick="selectFlashcardLvl(this,3)">Difícil</button>
+                </div>
+
+                <!-- Barra de progresso segmentada: verde=dominados · vermelho=confusos -->
+                <div class="fc-status-row">
+                    <div class="fc-seg-bar" id="fc-seg-bar">
+                        <div class="fc-seg-known" id="fc-seg-known"></div>
+                        <div class="fc-seg-difficult" id="fc-seg-difficult"></div>
+                    </div>
+                    <span class="fc-status-label" id="fc-counter">1 / 42</span>
+                </div>
+                <div class="fc-legend-row">
+                    <span class="fc-legend-item fc-legend-known" id="fc-known-label">0 dominados</span>
+                    <span class="fc-legend-item fc-legend-difficult" id="fc-difficult-label">0 confusos</span>
+                    <button class="fc-review-btn" id="fc-review-btn" onclick="toggleReviewDifficult()" style="display:none">🔁 Revisar confusos</button>
+                </div>
+
+                <!-- Card principal -->
+                <div class="flashcard-scene" onclick="flipFlashcard()">
+                    <div class="flashcard" id="flashcard">
+                        <div class="flashcard-face flashcard-front">
+                            <div class="fc-face-header">
+                                <span class="flashcard-area" id="fc-area">CIÊNCIAS HUMANAS</span>
+                                <span class="fc-lvl-badge" id="fc-lvl-badge">FÁCIL</span>
+                            </div>
+                            <p class="flashcard-question" id="fc-question">Carregando...</p>
+                            <span class="flashcard-hint">Toque para revelar</span>
+                        </div>
+                        <div class="flashcard-face flashcard-back">
+                            <span class="flashcard-area" id="fc-area-back"></span>
+                            <p class="flashcard-answer" id="fc-answer"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4 ações em UMA linha: ← | Confundo | Sei! | → -->
+                <div class="fc-actions-row">
+                    <button class="fc-act-nav" onclick="prevFlashcard()" title="Anterior">←</button>
+                    <button class="fc-act-no" onclick="rateFlashcard(false)">😕 Confundo</button>
+                    <button class="fc-act-yes" onclick="rateFlashcard(true)">✅ Sei!</button>
+                    <button class="fc-act-nav" onclick="nextFlashcard()" title="Próximo">→</button>
+                </div>
+
+            </div>
+
+            <!-- ── PAINEL: Resumos ── -->
+            <div class="conteudo-panel" id="conteudo-panel-resumos">
+                <!-- Barra de leitura no topo -->
+                <div class="resumo-read-bar" id="resumo-read-bar"></div>
+                <div id="resumos-list" class="resumos-list-inner"></div>
+            </div>
+
+            <!-- ── PAINEL: Tutor IA ── -->
+            <!-- IMPORTANTE: sem display:flex inline — controlado pelo JS -->
+            <div class="conteudo-panel conteudo-panel-tutor" id="conteudo-panel-tutor">
+                <!-- Cabeçalho: título + botão Nova conversa -->
+                <div class="tutor-header">
+                    <span class="tutor-header-title">🤖 Tutor IA</span>
+                    <button class="tutor-new-btn" onclick="tutorNovaConversa()" title="Limpar conversa">+ Nova conversa</button>
+                </div>
+                <!-- Grid 3x4 de sugestões rápidas (visível antes da primeira mensagem) -->
+                <div class="tutor-suggestions-grid" id="tutor-suggestions">
+                    <button class="tutor-chip" onclick="sendTutorSuggestion('Como funciona o Teorema de Pitágoras?')">📐 Pitágoras</button>
+                    <button class="tutor-chip" onclick="sendTutorSuggestion('Explique as Leis de Newton com exemplos')">🍎 Leis de Newton</button>
+                    <button class="tutor-chip" onclick="sendTutorSuggestion('Como fazer a redação ENEM nota 1000?')">✍️ Redação 1000</button>
+                    <button class="tutor-chip" onclick="sendTutorSuggestion('O que é fotossíntese e como funciona?')">🌿 Fotossíntese</button>
+                    <button class="tutor-chip" onclick="sendTutorSuggestion('Explique probabilidade com exemplos práticos')">🎲 Probabilidade</button>
+                    <button class="tutor-chip" onclick="sendTutorSuggestion('O que foi a Revolução Francesa?')">🏰 Rev. Francesa</button>
+                    <button class="tutor-chip" onclick="sendTutorSuggestion('Como calcular juros compostos? Mostre um exemplo')">💰 Juros Compostos</button>
+                    <button class="tutor-chip" onclick="sendTutorSuggestion('Explique as Leis de Mendel e herança genética')">🧬 Genética</button>
+                    <button class="tutor-chip" onclick="sendTutorSuggestion('O que é a proposta de intervenção na redação ENEM?')">📝 Proposta Interv.</button>
+                    <button class="tutor-chip" onclick="sendTutorSuggestion('Explique reações químicas orgânicas para o ENEM')">⚗️ Química Orgânica</button>
+                    <button class="tutor-chip" onclick="sendTutorSuggestion('Qual foi o impacto da Era Vargas no Brasil?')">🇧🇷 Era Vargas</button>
+                    <button class="tutor-chip" onclick="sendTutorSuggestion('Como resolver questões de geometria plana no ENEM?')">📏 Geometria</button>
+                </div>
+                <div class="tutor-messages-scroll" id="tutor-messages"></div>
+                <div class="tutor-input-row">
+                    <input class="tutor-input" id="tutor-input" type="text"
+                        placeholder="Pergunte sobre qualquer disciplina do ENEM..."
+                        onkeydown="if(event.key==='Enter')sendTutorMessage()" />
+                    <button class="tutor-send-btn" onclick="sendTutorMessage()">➤</button>
+                </div>
+            </div>
+
+            <!-- ── PAINEL: Progresso ── -->
+            <div class="conteudo-panel" id="conteudo-panel-progresso">
+                <!-- Contador de streak -->
+                <div class="prog-streak-card">
+                    <span class="prog-streak-icon">🔥</span>
+                    <div class="prog-streak-info">
+                        <span class="prog-streak-num" id="prog-streak-num">0</span>
+                        <span class="prog-streak-label">dias seguidos estudando</span>
+                    </div>
+                </div>
+
+                <!-- Gráfico de barras por matéria -->
+                <h3 class="prog-section-title">Flashcards dominados por matéria</h3>
+                <div id="prog-disc-bars" class="prog-disc-bars"></div>
+
+                <!-- Top 3 tópicos com mais erros -->
+                <h3 class="prog-section-title">3 tópicos com mais erros</h3>
+                <ol id="prog-top-errors" class="prog-top-errors"></ol>
+            </div>
+        </section>
+
+        <!-- ===================== SCREEN: POLÍTICA DE PRIVACIDADE ===================== -->
+        <section id="screen-privacy" class="screen">
+            <div class="inner-header">
+                <button class="back-btn" onclick="navigate('settings')">←</button>
+                <h2 class="inner-title">Política de Privacidade</h2>
+                <div></div>
+            </div>
+            <div class="screen-scroll">
+                <div class="legal-wrap">
+                    <p class="legal-date">Última atualização: 30 de março de 2026</p>
+
+                    <h3 class="legal-section">1. Identificação do Controlador</h3>
+                    <p class="legal-text">O <strong>ENEM Master</strong> é uma plataforma digital de preparação para o ENEM, disponível em <strong>enem.app</strong>. Para fins da Lei Geral de Proteção de Dados (Lei nº 13.709/2018 — LGPD), o responsável pelo tratamento dos seus dados pessoais é o desenvolvedor e operador da plataforma.</p>
+                    <p class="legal-text">Canal de privacidade: <strong>contato@enem.app</strong></p>
+
+                    <h3 class="legal-section">2. Quais dados coletamos</h3>
+                    <p class="legal-text">Coletamos apenas os dados estritamente necessários para o funcionamento da plataforma:</p>
+                    <ul class="legal-list">
+                        <li><strong>Dados de cadastro:</strong> nome completo e endereço de e-mail, fornecidos diretamente ou obtidos via login social (Google OAuth).</li>
+                        <li><strong>Dados de desempenho:</strong> respostas em simulados e quizzes, percentuais de acerto por área e histórico de questões respondidas.</li>
+                        <li><strong>Dados de progresso:</strong> XP acumulado, nível, sequência de estudo (streak), badges conquistados e metas pessoais.</li>
+                        <li><strong>Dados escolares (opcional):</strong> nome da instituição de ensino, usado exclusivamente para o ranking escolar.</li>
+                        <li><strong>Dados de pagamento:</strong> em caso de assinatura Premium, o processamento é feito por plataformas externas (Hotmart, Kiwify ou Mercado Pago). O ENEM Master <em>não armazena</em> dados de cartão de crédito.</li>
+                        <li><strong>Dados técnicos:</strong> eventos de uso anônimos para análise de performance do app (sem identificação pessoal).</li>
+                    </ul>
+
+                    <h3 class="legal-section">3. Finalidade e base legal do tratamento</h3>
+                    <ul class="legal-list">
+                        <li><strong>Execução de contrato (Art. 7º, V):</strong> fornecer os serviços de quiz, simulado, análise de desempenho e gamificação.</li>
+                        <li><strong>Legítimo interesse (Art. 7º, IX):</strong> personalizar recomendações de estudo com base no seu histórico.</li>
+                        <li><strong>Consentimento (Art. 7º, I):</strong> envio de lembretes e notificações de estudo — você pode revogar a qualquer momento nas configurações do app.</li>
+                        <li><strong>Cumprimento de obrigação legal:</strong> emissão de recibos e registros fiscais relacionados ao plano Premium.</li>
+                    </ul>
+                    <p class="legal-text"><strong>Nunca vendemos, alugamos ou compartilhamos seus dados pessoais com terceiros para fins comerciais.</strong></p>
+
+                    <h3 class="legal-section">4. Compartilhamento de dados</h3>
+                    <p class="legal-text">Seus dados podem ser compartilhados apenas com:</p>
+                    <ul class="legal-list">
+                        <li><strong>Supabase (infraestrutura):</strong> banco de dados e autenticação. Dados armazenados em servidores seguros com criptografia AES-256 em repouso e TLS 1.3 em trânsito.</li>
+                        <li><strong>Google (login social):</strong> caso você utilize "Entrar com Google", o Google transmite seu nome e e-mail ao app conforme os escopos autorizados por você.</li>
+                        <li><strong>Processadores de pagamento:</strong> Hotmart, Kiwify ou Mercado Pago processam cobranças do plano Premium de forma independente, com suas próprias políticas de privacidade.</li>
+                        <li><strong>Groq AI:</strong> o texto da sua redação é enviado à API da Groq para correção automática. Não são incluídos dados identificadores na requisição.</li>
+                    </ul>
+
+                    <h3 class="legal-section">5. Seus direitos como titular (LGPD)</h3>
+                    <p class="legal-text">Conforme a Lei nº 13.709/2018, você tem direito a:</p>
+                    <ul class="legal-list">
+                        <li><strong>Acesso:</strong> solicitar uma cópia de todos os seus dados pessoais armazenados.</li>
+                        <li><strong>Correção:</strong> atualizar nome, e-mail ou escola diretamente nas Configurações do app.</li>
+                        <li><strong>Exclusão:</strong> solicitar a exclusão completa da sua conta e dados associados.</li>
+                        <li><strong>Portabilidade:</strong> receber seus dados em formato estruturado (JSON).</li>
+                        <li><strong>Revogação de consentimento:</strong> desativar notificações a qualquer momento nas Configurações.</li>
+                        <li><strong>Oposição:</strong> contestar tratamentos que você considere desnecessários ou excessivos.</li>
+                    </ul>
+                    <p class="legal-text">Para exercer qualquer um destes direitos, envie um e-mail para <strong>contato@enem.app</strong> com o assunto "LGPD – [seu direito]". Atendemos em até 15 dias úteis.</p>
+
+                    <h3 class="legal-section">6. Armazenamento local no dispositivo</h3>
+                    <p class="legal-text">Utilizamos o <em>localStorage</em> e <em>sessionStorage</em> do seu dispositivo para salvar progresso localmente e permitir uso offline do app. Esses dados ficam apenas no seu dispositivo e podem ser removidos limpando os dados do navegador. Não utilizamos cookies de rastreamento ou publicidade.</p>
+
+                    <h3 class="legal-section">7. Retenção de dados</h3>
+                    <p class="legal-text">Mantemos seus dados enquanto sua conta estiver ativa. Após exclusão da conta, os dados pessoais são removidos em até 30 dias, exceto os que precisem ser retidos por obrigação legal (ex: registros fiscais, por 5 anos conforme legislação tributária).</p>
+
+                    <h3 class="legal-section">8. Segurança</h3>
+                    <p class="legal-text">Adotamos as seguintes medidas técnicas de proteção:</p>
+                    <ul class="legal-list">
+                        <li>Todas as conexões são criptografadas via HTTPS/TLS 1.3.</li>
+                        <li>Banco de dados com Row Level Security (RLS): cada usuário acessa apenas seus próprios dados.</li>
+                        <li>Senhas jamais são armazenadas em texto plano — gerenciadas pelo Supabase Auth com hashing bcrypt.</li>
+                        <li>Content Security Policy (CSP) aplicada para prevenir ataques XSS.</li>
+                    </ul>
+
+                    <h3 class="legal-section">9. Menores de idade</h3>
+                    <p class="legal-text">A plataforma é destinada a pessoas com 13 anos ou mais. Usuários com menos de 18 anos precisam da autorização de pais ou responsáveis legais para criar uma conta. Não coletamos dados de crianças com menos de 13 anos de forma consciente.</p>
+
+                    <h3 class="legal-section">10. Alterações nesta política</h3>
+                    <p class="legal-text">Esta política pode ser atualizada. Em caso de mudanças relevantes, notificaremos você por e-mail ou por notificação no próprio app com pelo menos 15 dias de antecedência. O uso continuado após a notificação implica aceite dos novos termos.</p>
+
+                    <h3 class="legal-section">11. Contato e DPO</h3>
+                    <p class="legal-text">Para dúvidas, solicitações ou reclamações relacionadas à privacidade, entre em contato:</p>
+                    <ul class="legal-list">
+                        <li>E-mail: <strong>contato@enem.app</strong></li>
+                        <li>Também é possível acionar a Autoridade Nacional de Proteção de Dados (ANPD) em <strong>gov.br/anpd</strong>.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===================== SCREEN: TERMOS DE USO ===================== -->
+        <section id="screen-terms" class="screen">
+            <div class="inner-header">
+                <button class="back-btn" onclick="navigate('settings')">←</button>
+                <h2 class="inner-title">Termos de Uso</h2>
+                <div></div>
+            </div>
+            <div class="screen-scroll">
+                <div class="legal-wrap">
+                    <p class="legal-date">Última atualização: 30 de março de 2026</p>
+
+                    <h3 class="legal-section">1. Aceitação dos Termos</h3>
+                    <p class="legal-text">Ao criar uma conta, acessar ou utilizar o <strong>ENEM Master</strong> (disponível em <strong>enem.app</strong>), você declara ter lido, compreendido e concordado com estes Termos de Uso. Se você não concordar com qualquer parte destes termos, não utilize o serviço.</p>
+
+                    <h3 class="legal-section">2. Descrição do Serviço</h3>
+                    <p class="legal-text">O ENEM Master é uma plataforma digital de preparação para o Exame Nacional do Ensino Médio (ENEM) que oferece:</p>
+                    <ul class="legal-list">
+                        <li>Quizzes e simulados com questões das provas oficiais do ENEM (domínio público).</li>
+                        <li>Análise de desempenho por área de conhecimento.</li>
+                        <li>Sistema de gamificação (XP, levels, streak, conquistas e ranking).</li>
+                        <li>Correção de redação por Inteligência Artificial (plano Premium).</li>
+                        <li>Simulado completo no formato oficial ENEM — 90 questões com cronômetro (plano Premium).</li>
+                    </ul>
+                    <p class="legal-text">O serviço é fornecido "como está". Nos reservamos o direito de modificar, suspender ou descontinuar funcionalidades com aviso prévio.</p>
+
+                    <h3 class="legal-section">3. Cadastro e Responsabilidades da Conta</h3>
+                    <ul class="legal-list">
+                        <li>Você deve fornecer informações verdadeiras, precisas e atualizadas ao se cadastrar.</li>
+                        <li>É sua responsabilidade manter a confidencialidade da sua senha e notificar-nos imediatamente em caso de uso não autorizado.</li>
+                        <li>Cada pessoa física pode ter apenas uma conta. Contas duplicadas poderão ser suspensas.</li>
+                        <li>Você é responsável por todas as atividades realizadas sob sua conta.</li>
+                        <li>Menores de 18 anos precisam da autorização de pais ou responsáveis legais.</li>
+                    </ul>
+
+                    <h3 class="legal-section">4. Planos e Assinatura Premium</h3>
+                    <p class="legal-text"><strong>Plano Gratuito:</strong> acesso limitado a até 10 questões por dia, simulados de até 10 questões. Sem custo.</p>
+                    <p class="legal-text"><strong>Plano Premium:</strong> acesso ilimitado a todas as funcionalidades mediante assinatura paga.</p>
+                    <ul class="legal-list">
+                        <li>O pagamento é processado por plataformas externas (Hotmart, Kiwify ou Mercado Pago), sujeito às condições delas.</li>
+                        <li>A assinatura é pessoal e intransferível — compartilhar acesso é proibido e pode resultar em suspensão.</li>
+                        <li>O cancelamento interrompe a renovação automática. O acesso Premium permanece ativo até o fim do período já pago.</li>
+                        <li><strong>Política de reembolso:</strong> reembolso integral disponível em até 7 (sete) dias corridos após a compra, mediante solicitação para <strong>contato@enem.app</strong>, desde que não haja uso abusivo da plataforma no período.</li>
+                        <li>Preços podem ser alterados com aviso prévio de 30 dias. Assinantes ativos mantêm o preço vigente até o próximo ciclo de renovação.</li>
+                    </ul>
+
+                    <h3 class="legal-section">5. Uso Aceitável</h3>
+                    <p class="legal-text">É expressamente proibido:</p>
+                    <ul class="legal-list">
+                        <li>Compartilhar credenciais ou acesso da conta com terceiros.</li>
+                        <li>Utilizar automação, bots ou scripts para simular uso humano ou burlar limites do plano gratuito.</li>
+                        <li>Reproduzir, distribuir ou revender conteúdo da plataforma sem autorização expressa.</li>
+                        <li>Tentar acessar dados de outros usuários ou realizar engenharia reversa do sistema.</li>
+                        <li>Usar a plataforma para qualquer finalidade ilegal ou que viole direitos de terceiros.</li>
+                        <li>Inserir conteúdo ofensivo, falso ou prejudicial em campos de texto da plataforma.</li>
+                    </ul>
+                    <p class="legal-text">O descumprimento pode resultar em suspensão ou exclusão da conta, sem direito a reembolso.</p>
+
+                    <h3 class="legal-section">6. Conteúdo e Propriedade Intelectual</h3>
+                    <p class="legal-text">As questões utilizadas nos simulados são extraídas de provas oficiais do ENEM, disponibilizadas pelo <strong>INEP/MEC</strong> como material de domínio público, exclusivamente para finalidade educacional.</p>
+                    <p class="legal-text">O design, o código-fonte, a identidade visual, os textos próprios, a gamificação e os recursos desenvolvidos pelo ENEM Master são protegidos por direitos autorais (Lei nº 9.610/1998). É proibida qualquer reprodução sem autorização.</p>
+
+                    <h3 class="legal-section">7. Correção de Redação por IA</h3>
+                    <p class="legal-text">A correção de redação é realizada por Inteligência Artificial e tem caráter <strong>orientativo</strong>. O resultado não equivale à correção oficial do INEP e não garante nota próxima à prova real. Utilize o recurso como ferramenta de estudo e feedback, não como avaliação definitiva.</p>
+
+                    <h3 class="legal-section">8. Limitação de Responsabilidade</h3>
+                    <p class="legal-text">O ENEM Master é uma ferramenta de estudo. <strong>Não garantimos aprovação no ENEM, ingresso em universidades ou qualquer resultado específico.</strong> O desempenho depende exclusivamente do esforço, dedicação e circunstâncias individuais de cada usuário.</p>
+                    <p class="legal-text">Não nos responsabilizamos por danos indiretos, perda de dados por falha do dispositivo do usuário, ou interrupções momentâneas de serviço causadas por terceiros (infraestrutura, provedores de API, etc.).</p>
+
+                    <h3 class="legal-section">9. Disponibilidade do Serviço</h3>
+                    <p class="legal-text">Buscamos disponibilidade contínua, mas não garantimos 100% de uptime. Manutenções programadas serão comunicadas com antecedência. Em caso de indisponibilidade prolongada que afete substancialmente o uso do plano Premium, o período será compensado.</p>
+
+                    <h3 class="legal-section">10. Privacidade</h3>
+                    <p class="legal-text">O tratamento dos seus dados pessoais é regido pela nossa <strong>Política de Privacidade</strong>, em conformidade com a LGPD (Lei nº 13.709/2018). Ao usar o app, você consente com esse tratamento conforme descrito na Política de Privacidade.</p>
+
+                    <h3 class="legal-section">11. Modificações nos Termos</h3>
+                    <p class="legal-text">Podemos atualizar estes Termos a qualquer momento. Mudanças relevantes serão comunicadas com pelo menos 15 dias de antecedência por e-mail ou notificação no app. O uso continuado após o prazo de aviso implica aceite dos novos termos.</p>
+
+                    <h3 class="legal-section">12. Rescisão</h3>
+                    <p class="legal-text">Você pode encerrar sua conta a qualquer momento pelo app ou via e-mail. Podemos suspender ou encerrar contas que violem estes termos, sem necessidade de aviso prévio em casos graves.</p>
+
+                    <h3 class="legal-section">13. Lei Aplicável e Foro</h3>
+                    <p class="legal-text">Estes Termos são regidos pelas leis da <strong>República Federativa do Brasil</strong>. Para dirimir quaisquer controvérsias será competente o foro do domicílio do usuário, conforme disposto no Código de Defesa do Consumidor (Lei nº 8.078/1990).</p>
+
+                    <p class="legal-contact">Dúvidas ou solicitações: <strong>contato@enem.app</strong></p>
+                </div>
+            </div>
+        </section>
+
+    </div><!-- end #app -->
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
+    <script src="api.js?v=6"></script>
+    <script src="questions.js?v=4"></script>
+    <script src="quiz.js?v=2"></script>
+    <script src="ranking.js?v=1"></script>
+    <script src="notifications-ui.js?v=2"></script>
+    <script src="settings.js?v=2"></script>
+    <script src="profile.js?v=2"></script>
+    <script src="achievements.js?v=1"></script>
+    <script src="premium.js?v=2"></script>
+    <script src="redacao.js?v=2"></script>
+    <script src="onboarding.js?v=2"></script>
+    <script src="conteudo.js?v=2"></script>
+    <script src="social.js?v=2"></script>
+    <script src="app.js?v=15"></script>
+    <script src="supabase-config.js?v=12"></script>
+    <script>
+        // Registrar Service Worker (PWA)
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js').then(reg => {
+                console.log('✅ SW registrado:', reg.scope);
+            }).catch(err => console.log('SW erro:', err));
+        }
+    </script>
+</body>
+
+</html>
