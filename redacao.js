@@ -188,19 +188,49 @@ function _getRedacaoUserId() {
     return null;
 }
 
+// Extrai msg de erro de respostas da edge function
+function _extractEdgeError(body) {
+    return body?.error || body?.message || body?.msg || null;
+}
+
+async function _ensurePremiumReadyForEssay(userId) {
+    if (!userId) {
+        throw new Error('Você precisa estar logado para corrigir redações. Faça login e tente novamente.');
+    }
+
+    if (typeof loadUserPlan === 'function') {
+        await loadUserPlan(userId).catch(() => {});
+    }
+
+    if (typeof checkPremium === 'function') {
+        const premium = await checkPremium().catch(() => ({ isPremium: false }));
+        if (!premium?.isPremium) {
+            state.user.plan = 'free';
+            saveState();
+            throw Object.assign(new Error('Sua conta não está com Premium ativo no servidor. Entre novamente ou reative o plano para corrigir redações.'), { _gate: true });
+        }
+    }
+
+    if (!planHas('redacaoIA')) {
+        throw Object.assign(new Error('Sua conta não está com Premium ativo no servidor. Entre novamente ou reative o plano para corrigir redações.'), { _gate: true });
+    }
+}
+
 async function _callCorrigirEdge(userId, theme, text, attempt) {
     attempt = attempt || 1;
     const EDGE_URL = 'https://nkuiwdolkluetsadauwb.supabase.co/functions/v1/corrigir-redacao';
+    const anonKey  = (typeof SUPABASE_ANON_KEY !== 'undefined' && SUPABASE_ANON_KEY) ? SUPABASE_ANON_KEY : '';
+
     const ctrl  = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), 35000);
+    const timer = setTimeout(() => ctrl.abort(), 38000);
     let res;
     try {
-        const anonKey = (typeof SUPABASE_ANON_KEY !== 'undefined' && SUPABASE_ANON_KEY) ? SUPABASE_ANON_KEY : '';
         res = await fetch(EDGE_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                ...(anonKey ? { apikey: anonKey } : {}),
+                // Anon key no header Authorization — satisfaz o gateway do Supabase
+                ...(anonKey ? { apikey: anonKey, Authorization: `Bearer ${anonKey}` } : {}),
             },
             body: JSON.stringify({ theme, text, userId }),
             signal: ctrl.signal,
@@ -215,47 +245,34 @@ async function _callCorrigirEdge(userId, theme, text, attempt) {
     }
     clearTimeout(timer);
 
+    const bodyParsed = await res.json().catch(() => ({}));
+
     if (res.ok) {
-        const body = await res.json().catch(() => null);
-        if (body?.c1) return body;
+        if (bodyParsed?.c1) return bodyParsed;
         throw new Error('Resposta inesperada da IA. Tente novamente.');
     }
 
-    // 401 → perfil não encontrado (userId inválido ou não logado)
-    if (res.status === 401) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body?.error || 'Sessão expirada. Saia e entre novamente na sua conta.');
-    }
+    const detail = _extractEdgeError(bodyParsed);
 
-    // 403 → paywall
+    if (res.status === 401) throw new Error(detail || 'Sessão inválida. Faça login novamente.');
+
     if (res.status === 403) {
-        const body = await res.json().catch(() => ({}));
-        const err  = new Error(body?.error || 'Recurso exclusivo do plano Premium.');
-        err._gate  = true;
-        throw err;
+        const e = new Error(detail || 'Recurso exclusivo do plano Premium.');
+        e._gate = true;
+        throw e;
     }
 
-    // 429 → rate limit
-    if (res.status === 429) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body?.error || 'Limite diário de correções atingido. Volte amanhã!');
-    }
+    if (res.status === 429) throw new Error(detail || 'Limite diário atingido. Volte amanhã!');
 
-    // 5xx → retenta uma vez
     if (res.status >= 500 && attempt < 2) {
         await new Promise(r => setTimeout(r, 1500));
         return _callCorrigirEdge(userId, theme, text, 2);
     }
 
-    const body = await res.json().catch(() => ({}));
-    throw new Error(body?.error || `Erro ${res.status}. Tente novamente.`);
+    throw new Error(detail || `Erro ${res.status}. Tente novamente.`);
 }
 
 async function submitEssay() {
-    if (!planHas('redacaoIA')) {
-        showFeaturePaywall('redacaoIA');
-        return;
-    }
     const text  = (document.getElementById('redacao-text').value || '').trim();
     const theme = currentThemeCategory === 'enem'
         ? ENEM_THEMES[currentThemeIdx].theme
@@ -273,9 +290,7 @@ async function submitEssay() {
     try {
         // Obtém userId do state ou localStorage (funciona mesmo com JWT expirado no mobile)
         const userId = _getRedacaoUserId();
-        if (!userId) {
-            throw new Error('Você precisa estar logado para corrigir redações. Faça login e tente novamente.');
-        }
+        await _ensurePremiumReadyForEssay(userId);
 
         const result = await _callCorrigirEdge(userId, theme, text);
 

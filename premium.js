@@ -135,6 +135,7 @@ function selectPaymentMethod(method) {
 
 function goToCaktoCheckout(method) {
     const url = CAKTO_CHECKOUT_URLS[_checkoutPlan] || CAKTO_CHECKOUT_URLS.mensal;
+    if (typeof _trackEvent !== 'undefined') _trackEvent('checkout_started', { plan: _checkoutPlan, method });
     window.open(url, '_blank', 'noopener,noreferrer');
     try { sessionStorage.setItem('_pendingPayment', _checkoutPlan); } catch { /* noop */ }
     const verifyBtn = document.getElementById(`${method}-verify-btn`);
@@ -450,6 +451,7 @@ function showPaywall(title, body) {
     document.getElementById('paywall-title').textContent = title || 'Limite atingido 🔒';
     document.getElementById('paywall-body').textContent  = body  || 'Assine o Premium para estudar sem limites.';
     el.classList.add('active');
+    if (typeof _updatePaywallUrgency !== 'undefined') _updatePaywallUrgency();
 }
 
 function closePaywall() {
@@ -492,7 +494,7 @@ async function changePassword() {
         const sb = window.supabase;
         if (!sb) throw new Error('Serviço indisponível.');
         const { error } = await sb.auth.resetPasswordForEmail(email, {
-            redirectTo: window.location.origin + window.location.pathname,
+            redirectTo: window.location.origin + '/app',
         });
         if (error) throw error;
         if (msgEl) { msgEl.textContent = `✅ E-mail enviado para ${email}. Verifique sua caixa de entrada.`; msgEl.style.color = 'var(--teal, #00b4a6)'; }

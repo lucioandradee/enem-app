@@ -1,6 +1,7 @@
 -- =====================================================
--- ENEM MASTER — Criação de Tabelas
+-- ENEM MASTER — Setup Completo (idempotente)
 -- Cole este arquivo inteiro no SQL Editor do Supabase
+-- Seguro para rodar múltiplas vezes — não duplica nada
 -- https://supabase.com/dashboard/project/nkuiwdolkluetsadauwb/sql/new
 -- =====================================================
 
@@ -15,24 +16,21 @@ CREATE TABLE IF NOT EXISTS users (
   streak INTEGER DEFAULT 0,
   goal TEXT,
   plan TEXT DEFAULT 'free',
-  plan_expires_at TIMESTAMP,          -- NULL = free / data = expiração do premium
+  plan_expires_at TIMESTAMP,
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW()
 );
 
--- Se a tabela já existir, adicione a coluna manualmente:
--- ALTER TABLE users ADD COLUMN IF NOT EXISTS plan_expires_at TIMESTAMP;
-
+ALTER TABLE users ADD COLUMN IF NOT EXISTS plan_expires_at TIMESTAMP;
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Users can read own data" ON users
-  FOR SELECT USING (auth.uid() = id);
+DROP POLICY IF EXISTS "Users can read own data"   ON users;
+DROP POLICY IF EXISTS "Users can insert own data" ON users;
+DROP POLICY IF EXISTS "Users can update own data" ON users;
 
-CREATE POLICY "Users can insert own data" ON users
-  FOR INSERT WITH CHECK (auth.uid() = id);
-
-CREATE POLICY "Users can update own data" ON users
-  FOR UPDATE USING (auth.uid() = id);
+CREATE POLICY "Users can read own data"   ON users FOR SELECT USING (auth.uid() = id);
+CREATE POLICY "Users can insert own data" ON users FOR INSERT WITH CHECK (auth.uid() = id);
+CREATE POLICY "Users can update own data" ON users FOR UPDATE USING (auth.uid() = id);
 
 -- ─── Tabela: progress ────────────────────────────────
 CREATE TABLE IF NOT EXISTS progress (
@@ -45,15 +43,17 @@ CREATE TABLE IF NOT EXISTS progress (
   created_at TIMESTAMP DEFAULT NOW()
 );
 
+ALTER TABLE progress ADD COLUMN IF NOT EXISTS xp_gained INTEGER DEFAULT 0;
+ALTER TABLE progress ADD COLUMN IF NOT EXISTS max_combo INTEGER DEFAULT 0;
 ALTER TABLE progress ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Users can read own progress" ON progress
-  FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can read own progress"   ON progress;
+DROP POLICY IF EXISTS "Users can insert own progress" ON progress;
 
-CREATE POLICY "Users can insert own progress" ON progress
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can read own progress"   ON progress FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert own progress" ON progress FOR INSERT WITH CHECK (auth.uid() = user_id);
 
--- ─── Tabela: user_achievements (conquistas/badges persistidos) ───────────────
+-- ─── Tabela: user_achievements ───────────────────────
 CREATE TABLE IF NOT EXISTS user_achievements (
   id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id     UUID REFERENCES users(id) ON DELETE CASCADE,
@@ -66,15 +66,11 @@ CREATE TABLE IF NOT EXISTS user_achievements (
 
 ALTER TABLE user_achievements ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Users can read own achievements" ON user_achievements
-  FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can read own achievements"   ON user_achievements;
+DROP POLICY IF EXISTS "Users can insert own achievements" ON user_achievements;
 
-CREATE POLICY "Users can insert own achievements" ON user_achievements
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
-
--- ─── Migração: colunas extras em progress ─────────────────────────────────────
-ALTER TABLE progress ADD COLUMN IF NOT EXISTS xp_gained  INTEGER DEFAULT 0;
-ALTER TABLE progress ADD COLUMN IF NOT EXISTS max_combo  INTEGER DEFAULT 0;
+CREATE POLICY "Users can read own achievements"   ON user_achievements FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert own achievements" ON user_achievements FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 -- ─── Tabela: badges ──────────────────────────────────
 CREATE TABLE IF NOT EXISTS badges (
@@ -86,13 +82,13 @@ CREATE TABLE IF NOT EXISTS badges (
 
 ALTER TABLE badges ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Users can read own badges" ON badges
-  FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can read own badges"   ON badges;
+DROP POLICY IF EXISTS "Users can insert own badges" ON badges;
 
-CREATE POLICY "Users can insert own badges" ON badges
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can read own badges"   ON badges FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert own badges" ON badges FOR INSERT WITH CHECK (auth.uid() = user_id);
 
--- ─── Tabela: activation_codes ──────────────────────────────
+-- ─── Tabela: activation_codes ────────────────────────
 CREATE TABLE IF NOT EXISTS activation_codes (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   code TEXT UNIQUE NOT NULL,
@@ -106,39 +102,32 @@ CREATE TABLE IF NOT EXISTS activation_codes (
 
 ALTER TABLE activation_codes ENABLE ROW LEVEL SECURITY;
 
--- Qualquer usuário autenticado pode consultar se um código é válido
-CREATE POLICY "Authenticated can read codes" ON activation_codes
-  FOR SELECT TO authenticated USING (true);
+DROP POLICY IF EXISTS "Authenticated can read codes"           ON activation_codes;
+DROP POLICY IF EXISTS "Authenticated can update own redemption" ON activation_codes;
 
--- Usuário autenticado pode atualizar o próprio uso (marcar como usado)
-CREATE POLICY "Authenticated can update own redemption" ON activation_codes
-  FOR UPDATE TO authenticated USING (used = false);
+CREATE POLICY "Authenticated can read codes"            ON activation_codes FOR SELECT TO authenticated USING (true);
+CREATE POLICY "Authenticated can update own redemption" ON activation_codes FOR UPDATE TO authenticated USING (used = false);
 
--- ─── Tabela: analytics_events ──────────────────────────────
+-- ─── Tabela: analytics_events ────────────────────────
 CREATE TABLE IF NOT EXISTS analytics_events (
   id          BIGSERIAL PRIMARY KEY,
-  event_name  TEXT        NOT NULL,
-  user_id     UUID        REFERENCES users(id) ON DELETE SET NULL,
+  event_name  TEXT      NOT NULL,
+  user_id     UUID      REFERENCES users(id) ON DELETE SET NULL,
   properties  JSONB,
-  created_at  TIMESTAMP   DEFAULT NOW()
+  created_at  TIMESTAMP DEFAULT NOW()
 );
 
 ALTER TABLE analytics_events ENABLE ROW LEVEL SECURITY;
 
--- Qualquer usuário autenticado pode inserir seus próprios eventos
-CREATE POLICY "Users can insert own analytics" ON analytics_events
-  FOR INSERT WITH CHECK (auth.uid() = user_id OR user_id IS NULL);
+DROP POLICY IF EXISTS "Users can insert own analytics" ON analytics_events;
+DROP POLICY IF EXISTS "Users can read own analytics"   ON analytics_events;
 
--- Apenas o próprio usuário pode ler seus eventos
-CREATE POLICY "Users can read own analytics" ON analytics_events
-  FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert own analytics" ON analytics_events FOR INSERT WITH CHECK (auth.uid() = user_id OR user_id IS NULL);
+CREATE POLICY "Users can read own analytics"   ON analytics_events FOR SELECT  USING (auth.uid() = user_id);
 
 -- ═══════════════════════════════════════════════════════════════
 -- TRIGGER: criar perfil em public.users ao registrar no Auth
--- Rode este bloco no SQL Editor do Supabase
 -- ═══════════════════════════════════════════════════════════════
-
--- Função chamada automaticamente quando um novo usuário se registra
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -157,7 +146,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Trigger disparado a cada novo cadastro no Auth
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
@@ -165,12 +153,11 @@ CREATE TRIGGER on_auth_user_created
 
 -- ═══════════════════════════════════════════════════════════════
 -- MIGRAÇÃO: criar registros para usuários Auth já existentes
--- (rode uma única vez após adicionar o trigger acima)
 -- ═══════════════════════════════════════════════════════════════
 INSERT INTO public.users (id, name, email, school, plan, created_at, updated_at)
 SELECT
   id,
-  COALESCE(raw_user_meta_data->>'full_name', split_part(email, '@', 1)) AS name,
+  COALESCE(raw_user_meta_data->>'full_name', split_part(email, '@', 1)),
   email,
   NULL,
   'free',
@@ -178,3 +165,27 @@ SELECT
   NOW()
 FROM auth.users
 ON CONFLICT (id) DO NOTHING;
+
+-- ═══════════════════════════════════════════════════════════════
+-- FUNÇÃO RPC: auto_deactivate_expired_premium
+-- Reverte para 'free' usuários com plano Premium expirado.
+-- ═══════════════════════════════════════════════════════════════
+CREATE OR REPLACE FUNCTION public.auto_deactivate_expired_premium()
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  UPDATE public.users
+  SET
+    plan            = 'free',
+    plan_expires_at = NULL,
+    updated_at      = NOW()
+  WHERE
+    plan = 'premium'
+    AND plan_expires_at IS NOT NULL
+    AND plan_expires_at < NOW();
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.auto_deactivate_expired_premium() TO authenticated;

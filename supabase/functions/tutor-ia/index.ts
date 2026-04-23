@@ -20,7 +20,7 @@ const SUPABASE_URL  = Deno.env.get('SUPABASE_URL') ?? '';
 const SERVICE_ROLE  = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 
 const MAX_HISTORY   = 20;   // máximo de mensagens no contexto
-const MAX_MSG_LEN   = 1000; // caracteres por mensagem do usuário
+const MAX_MSG_LEN   = 2000; // caracteres por mensagem do usuário
 
 const CORS = {
     'Access-Control-Allow-Origin': '*',
@@ -163,16 +163,20 @@ INGLÊS/ESPANHOL (nível ENEM):
 6. **Ciências:** inclua equações/reações quando relevante, explique o "porquê" dos fenômenos
 7. **Humanas:** contextualize historicamente, relacione causas e consequências, cite personagens relevantes
 8. **Redação:** seja específico sobre estrutura e critérios da banca INEP
-9. **Tamanho:** seja completo mas objetivo — prefira respostas bem estruturadas a longas demais
-10. **Tom:** professor didático, motivador, paciente — nunca condescendente
+9. **Tamanho:** seja completo e jamais corte uma explicação no meio — uma resposta longa e bem organizada é sempre melhor que uma curta e incompleta. Se o conteúdo exigir, use quantos parágrafos forem necessários
+10. **Tom:** especialista acadêmico direto e preciso — sem rodeios, sem frases motivacionais desnecessárias. Seja claro como um bom professor particular: vá ao ponto, use rigor técnico. Use no máximo 1 emoji por resposta; em explicações técnicas de matemática e ciências, use zero emojis
 11. **Contexto anterior:** SEMPRE leve em conta o histórico da conversa para dar continuidade natural
 12. **Se não souber algo específico:** admita e sugira como o aluno pode pesquisar
+13. **Referências ENEM:** quando o conteúdo for relevante para a prova, mencione isso — ex: "Este tema é recorrente no ENEM", "O ENEM costuma cobrar este conceito em situações do cotidiano". Não invente anos específicos se não tiver certeza
+14. **Nunca interrompa uma explicação:** se estiver desenvolvendo um raciocínio, vá até o fim — não deixe o aluno sem a resposta completa
+15. **Situações-problema:** o ENEM raramente cobra definições puras — apresenta o conteúdo embutido em um contexto real (saúde, tecnologia, ambiente, cotidiano). Ao explicar um tema, sempre mostre como ele aparece em situações práticas, pois isso é o que a banca avalia
 
 ## REGRAS IMPORTANTES:
 - Responda SOMENTE sobre conteúdos do ENEM e assuntos educacionais relacionados
 - Se alguém perguntar fora do escopo (lazer, política pessoal, relacionamentos), redirecione gentilmente para o estudo
 - Nunca invente dados, datas ou fatos — se não tiver certeza, sinalize
-- Não dê respostas prontas para questões que pareçam ser de avaliações em andamento (dê orientação, não a resposta direta)`;
+- Não dê respostas prontas para questões que pareçam ser de avaliações em andamento (dê orientação, não a resposta direta)
+- Ao citar fórmulas matemáticas ou químicas, escreva-as completas e sem ambiguidade (ex: use × para multiplicação, não *)`;
 
 function json(data: unknown, status = 200) {
     return new Response(JSON.stringify(data), {
@@ -233,11 +237,11 @@ Deno.serve(async (req: Request) => {
     const safeHistory = history
         .slice(-MAX_HISTORY)
         .filter(m => m.role === 'user' || m.role === 'assistant')
-        .map(m => ({ role: m.role, content: String(m.content).slice(0, 2000) }));
+        .map(m => ({ role: m.role, content: String(m.content).slice(0, 3000) }));
 
-    // ── 3. Chamar Groq ───────────────────────────────────────────────────────
+    // ── 4. Chamar Groq ───────────────────────────────────────────────────────
     const ctrl  = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), 28000);
+    const timer = setTimeout(() => ctrl.abort(), 45000);
 
     try {
         const groqRes = await fetch(GROQ_URL, {
@@ -253,15 +257,17 @@ Deno.serve(async (req: Request) => {
                     ...safeHistory,
                     { role: 'user', content: msgTrimmed },
                 ],
-                temperature: 0.45,
-                max_tokens: 1200,
+                temperature: 0.3,
+                max_tokens: 4000,
+                top_p: 0.9,
+                frequency_penalty: 0.1,
             }),
             signal: ctrl.signal,
         });
         clearTimeout(timer);
 
         if (!groqRes.ok) {
-            const err = await groqRes.json().catch(() => ({}));
+            void groqRes.json().catch(() => {}); // consome o body para liberar conexão
             if (groqRes.status === 401) return json({ error: 'Chave de IA inválida. Contate o suporte.' }, 503);
             if (groqRes.status === 429) return json({ error: 'Serviço de IA sobrecarregado. Tente em 1 minuto.' }, 429);
             return json({ error: `Erro na IA (${groqRes.status}).` }, 502);

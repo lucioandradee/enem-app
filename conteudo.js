@@ -1651,7 +1651,7 @@ function _renderTutorMessages() {
 function tutorNovaConversa() {
     _tutorMessages = [{
         role: 'ai',
-        text: 'Olá! Sou o **Tutor IA** do ENEM Master 🎓\n\nPosso te explicar qualquer assunto do ENEM: *Matemática, Física, Química, Biologia, Humanas, Linguagens e Redação*.\n\nUse as sugestões acima ou faça sua pergunta! 👆',
+        text: 'Sou o **Tutor IA** do ENEM Master — especializado exclusivamente no ENEM.\n\nCubro as 5 áreas da prova:\n\n• **Matemática:** funções, geometria, trigonometria, probabilidade, estatística, PA/PG, juros\n• **Física:** mecânica, termodinâmica, óptica, eletricidade, ondas, física moderna\n• **Química:** tabela periódica, ligações, reações, orgânica, eletroquímica\n• **Biologia:** genética, ecologia, fisiologia humana, evolução, biotecnologia\n• **Humanas:** história do Brasil e geral, geografia, filosofia, sociologia\n• **Linguagens:** redação ENEM, literatura, gramática, interpretação de texto\n\nFaça sua pergunta — explico com detalhe e exemplos práticos.',
     }];
     try { sessionStorage.removeItem('tutor_history'); } catch {}
     _renderTutorMessages();
@@ -1743,7 +1743,7 @@ async function _processTutorText(text) {
     if (!response) response = _looseTutorMatch(text);
 
     // ── 4. Fallback genérico (não deve acontecer com Edge Function ativa) ───
-    if (!response) response = '**Pode reformular a pergunta?** 😊\n\nSou especialista em todas as disciplinas do ENEM! Exemplos:\n\n- *"O que é fotossíntese?"*\n- *"Como calcular área de um triângulo?"*\n- *"O que foi a Revolução Francesa?"*\n- *"Como escrever a proposta de intervenção?"*';
+    if (!response) response = '**Não consegui identificar sua pergunta com precisão.**\n\nReformule com mais detalhes, por exemplo:\n\n- *"Como resolver equações de 2° grau pelo Bhaskara?"*\n- *"Qual a diferença entre mitose e meiose?"*\n- *"O que foi o Estado Novo no Brasil?"*\n- *"Como estruturar a proposta de intervenção da redação?"*\n- *"O que é estequiometria?"*\n\nCubro qualquer conteúdo das áreas de **Matemática, Física, Química, Biologia, Humanas e Linguagens**.';
 
     _tutorMessages = _tutorMessages.filter(m => m.role !== 'typing');
     _tutorMessages.push({ role:'ai', text: response });

@@ -188,11 +188,11 @@ async function onboardingNext() {
         _pendingPassword = password;
         goToObStep(2);
     } else if (obStep === 2) {
-        if (!obGoal) { obGoal = 'Rumo à Federal 🚀'; }
+        if (!obGoal) { obGoal = 'Rumo à Federal 🎯'; }
         if (obGoal === 'outro') {
             const customInput = document.getElementById('ob-outro-input');
             const customVal = customInput ? customInput.value.trim() : '';
-            obGoal = customVal ? customVal : 'Rumo à Federal 🚀';
+            obGoal = customVal ? customVal : 'Rumo à Federal 🎯';
         }
         state.user.goal = obGoal;
         goToObStep(3);
@@ -270,7 +270,7 @@ async function handleGoogleLogin() {
         const { data, error } = await sb.auth.signInWithOAuth({
             provider: 'google',
             options: {
-                redirectTo: window.location.origin,
+                redirectTo: window.location.origin + '/app',
                 queryParams: { prompt: 'select_account' },
             },
         });

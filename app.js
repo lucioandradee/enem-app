@@ -158,6 +158,37 @@ function planHas(feature) {
 function showFeaturePaywall(feature) {
     const msg = PAYWALL_MESSAGES[feature] || PAYWALL_MESSAGES.dailyLimit;
     showPaywall(msg.title, msg.body);
+    _trackEvent('paywall_shown', { feature });
+}
+
+/** Retorna o número de dias até o ENEM 2026 (2ª semana de novembro) */
+function _daysToENEM() {
+    const enem = new Date('2026-11-03T08:00:00-03:00');
+    const now  = new Date();
+    const diff = Math.ceil((enem - now) / (1000 * 60 * 60 * 24));
+    return diff > 0 ? diff : 0;
+}
+
+/** Mostra o modal de oferta pós-onboarding (somente para não-premium) */
+function showWelcomeOffer() {
+    if (isPremium()) return;
+    const modal = document.getElementById('welcome-offer-modal');
+    if (modal) modal.classList.add('active');
+    _trackEvent('welcome_offer_shown', {});
+}
+
+/** Fecha o modal de oferta pós-onboarding */
+function closeWelcomeOffer() {
+    const modal = document.getElementById('welcome-offer-modal');
+    if (modal) modal.classList.remove('active');
+}
+
+/** Atualiza urgência do paywall com contagem regressiva do ENEM */
+function _updatePaywallUrgency() {
+    const el = document.getElementById('paywall-urgency');
+    if (!el) return;
+    const days = _daysToENEM();
+    el.textContent = days > 0 ? `⏰ ENEM 2026 em ${days} dias — cada dia conta!` : '';
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -727,7 +758,16 @@ function updateNavActive(screenName) {
 function renderScreen(screenName) {
     try {
         switch (screenName) {
-            case 'home': renderDashboard(); break;
+            case 'home':
+                renderDashboard();
+                // Buscar XP real do Supabase em background e re-renderizar se mudou
+                if (typeof loadUserData !== 'undefined' && state.user && state.user.id && navigator.onLine) {
+                    const _xpBefore = state.user.xp;
+                    loadUserData(state.user.id).then(() => {
+                        if (state.user.xp !== _xpBefore) renderDashboard();
+                    }).catch(() => {});
+                }
+                break;
             case 'ranking': renderRanking(); break;
             case 'notifications': renderNotifications(); break;
             case 'profile': renderProfile(); break;
@@ -770,7 +810,11 @@ function renderDashboard() {
     }
 
     const goalEl = document.querySelector('.goal-text');
-    if (goalEl) goalEl.textContent = s.goal;
+    if (goalEl) {
+        // Normalizar emoji de meta: substituir rocket antigo por alvo
+        const goalText = (s.goal || 'Rumo à Federal 🎯').replace(/🚀/g, '🎯');
+        goalEl.textContent = goalText;
+    }
 
     document.getElementById('dash-level').textContent = s.level;
     document.getElementById('dash-xp').textContent = s.xp.toLocaleString('pt-BR');
@@ -1412,7 +1456,10 @@ async function finishOnboarding() {
 
     if (obBtn) { obBtn.disabled = false; obBtn.textContent = 'Começar a Estudar 🚀'; }
     saveState();
+    _trackEvent('onboarding_completed', { goal: state.user.goal || '' });
     navigate('home');
+    // Oferta de boas-vindas após 1.5s (quando o home já carregou)
+    setTimeout(showWelcomeOffer, 1500);
 }
 
 // =====================================================

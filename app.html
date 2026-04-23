@@ -1485,6 +1485,9 @@
                 <h2 class="paywall-title" id="paywall-title">Recurso Premium</h2>
                 <p class="paywall-body" id="paywall-body">Assine o Premium para desbloquear este recurso e estudar sem limites!</p>
 
+                <!-- Prova social -->
+                <p class="paywall-social-proof">✅ Mais de 50.000 alunos já estudam com Premium</p>
+
                 <!-- Preço direto no modal -->
                 <div class="paywall-price-row" aria-label="Plano a partir de R$ 19,90 por mês">
                     <span class="paywall-price-currency">R$</span>
@@ -1492,16 +1495,50 @@
                     <span class="paywall-price-period">,90/mês</span>
                 </div>
 
-                <!-- 3 benefícios chave -->
+                <!-- 4 benefícios chave -->
                 <div class="paywall-features" aria-label="Benefícios inclusos">
                     <div class="paywall-feature">🎯 Simulados ilimitados todos os dias</div>
-                    <div class="paywall-feature">🤖 Correção de redação por IA</div>
+                    <div class="paywall-feature">🤖 Tutor IA — tire dúvidas 24h sobre o ENEM</div>
+                    <div class="paywall-feature">✍️ Correção de redação por IA (5 competências)</div>
                     <div class="paywall-feature">📊 Modo ENEM completo (90 questões)</div>
                 </div>
+
+                <!-- Urgência: contador ENEM -->
+                <div class="paywall-urgency" id="paywall-urgency"></div>
 
                 <button class="cta-btn" onclick="navigate('checkout'); closePaywall()">Assinar agora 👑</button>
                 <button class="paywall-secondary-cta" onclick="navigate('plans'); closePaywall()">Ver todos os planos →</button>
                 <button class="paywall-dismiss" onclick="closePaywall()">Agora não</button>
+            </div>
+        </div>
+
+        <!-- ===================== MODAL: OFERTA PÓS-ONBOARDING ===================== -->
+        <div id="welcome-offer-modal" class="paywall-overlay" role="dialog" aria-modal="true" aria-labelledby="wo-title">
+            <div class="paywall-card wo-card">
+                <button class="paywall-dismiss wo-close-x" onclick="closeWelcomeOffer()" aria-label="Fechar" style="position:absolute;top:12px;right:12px;background:none;border:none;color:var(--text-muted);font-size:18px;cursor:pointer">✕</button>
+                <div style="font-size:42px;margin-bottom:8px">🎁</div>
+                <h2 class="paywall-title" id="wo-title" style="font-size:20px">Oferta especial de boas-vindas!</h2>
+                <p style="color:var(--text-secondary);font-size:13px;margin:6px 0 14px;text-align:center;line-height:1.5">
+                    Você acabou de criar sua conta. Por tempo limitado, garanta o Premium com <strong style="color:var(--teal)">37% OFF</strong> e comece a estudar do jeito certo.
+                </p>
+                <div class="paywall-price-row" style="margin-bottom:6px">
+                    <span style="font-size:13px;color:var(--text-muted);text-decoration:line-through;margin-right:8px">R$ 19,90/mês</span>
+                </div>
+                <div class="paywall-price-row">
+                    <span class="paywall-price-currency">R$</span>
+                    <span class="paywall-price-value">12</span>
+                    <span class="paywall-price-period">,42/mês no plano anual</span>
+                </div>
+                <div class="paywall-features" style="margin-top:10px">
+                    <div class="paywall-feature">✅ Questões ilimitadas todos os dias</div>
+                    <div class="paywall-feature">🤖 Tutor IA — professor particular 24h</div>
+                    <div class="paywall-feature">✍️ Correção de redação com nota por IA</div>
+                    <div class="paywall-feature">📊 Modo ENEM completo (90 questões)</div>
+                </div>
+                <button class="cta-btn" style="margin-top:14px" onclick="selectCheckoutPlan && selectCheckoutPlan('anual'); navigate('checkout'); closeWelcomeOffer()">
+                    🎁 Quero o desconto de boas-vindas →
+                </button>
+                <button class="paywall-dismiss" onclick="closeWelcomeOffer()" style="margin-top:8px">Continuar no plano gratuito</button>
             </div>
         </div>
 
@@ -2220,7 +2257,7 @@
     <script src="conteudo.js?v=2"></script>
     <script src="social.js?v=2"></script>
     <script src="app.js?v=15"></script>
-    <script src="supabase-config.js?v=12"></script>
+    <script src="supabase-config.js?v=13"></script>
     <script>
         // Registrar Service Worker (PWA)
         if ('serviceWorker' in navigator) {

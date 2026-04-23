@@ -50,6 +50,21 @@
 }
 .paywall-secondary-cta:hover { border-color: var(--teal); color: var(--teal); }
 
+/* Paywall — urgência e prova social */
+.paywall-social-proof {
+  font-size: 12px; font-weight: 700; color: var(--teal);
+  margin: -12px 0 14px; text-align: center;
+}
+.paywall-urgency {
+  font-size: 12px; font-weight: 700; color: var(--gold);
+  text-align: center; margin-bottom: 12px;
+  background: rgba(245,197,24,0.1); border-radius: 8px; padding: 6px 10px;
+}
+.paywall-urgency:empty { display: none; }
+
+/* Modal boas-vindas pós-onboarding */
+.wo-card { border-color: var(--teal); box-shadow: 0 8px 40px rgba(0,180,166,0.2); position: relative; }
+
 /* =====================================================
    MODAL: AGUARDANDO PAGAMENTO
    ===================================================== */

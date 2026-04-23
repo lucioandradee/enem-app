@@ -552,14 +552,6 @@
       font-size: 12px; color: var(--text-3); text-align: center; transition: opacity .2s;
     }
 
-    /* Garantia no card premium */
-    .plano-garantia {
-      font-size: 12px; font-weight: 600; color: var(--green);
-      background: rgba(34,197,94,.08); border: 1px solid rgba(34,197,94,.2);
-      border-radius: 10px; padding: 9px 14px; margin-bottom: 18px; text-align: center;
-      line-height: 1.5;
-    }
-
     /* ==========================================
        FOOTER
     ========================================== */
@@ -850,17 +842,110 @@
     @media (prefers-reduced-motion: reduce) {
       .reveal, .reveal-left, .reveal-right { opacity: 1; transform: none; }
     }
+
+    /* ==========================================
+       ENEM COUNTDOWN
+    ========================================== */
+    .hero-trust { margin-bottom: 20px !important; }
+    .enem-countdown {
+      display: inline-flex; align-items: center; gap: 16px; flex-wrap: wrap; justify-content: center;
+      background: rgba(0,201,184,.08); border: 1px solid rgba(0,201,184,.22);
+      border-radius: var(--r-md); padding: 12px 24px;
+      margin-bottom: 44px; animation: fade-up .7s .42s both;
+    }
+    .cd-label { font-size: 11px; font-weight: 700; color: var(--text-2); text-transform: uppercase; letter-spacing: 1.2px; white-space: nowrap; }
+    .cd-blocks { display: flex; align-items: center; gap: 6px; }
+    .cd-block  { text-align: center; min-width: 44px; background: rgba(0,201,184,.12); border-radius: 8px; padding: 5px 10px; }
+    .cd-block strong { display: block; font-size: 22px; font-weight: 900; color: var(--teal); line-height: 1.1; }
+    .cd-block small  { font-size: 9px; font-weight: 700; color: var(--text-3); letter-spacing: .6px; text-transform: uppercase; }
+    .cd-sep { font-size: 18px; font-weight: 800; color: var(--teal); opacity: .4; padding-bottom: 12px; }
+
+    /* ==========================================
+       URGENCY BOX (CTA FINAL)
+    ========================================== */
+    .cta-urgency-box {
+      display: inline-block;
+      background: rgba(245,197,24,.08); border: 1px solid rgba(245,197,24,.3);
+      color: #f5c518; font-size: 13px; font-weight: 600;
+      border-radius: var(--r-md); padding: 10px 22px; margin-bottom: 24px;
+      animation: premium-pulse 4s ease-in-out infinite;
+    }
+    .cta-urgency-box strong { font-weight: 800; color: #fff; }
+
+    /* CTA pulse ring */
+    @keyframes cta-ring-pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(0,201,184,.0), 0 8px 32px rgba(0,201,184,.35); }
+      50% { box-shadow: 0 0 0 10px rgba(0,201,184,.0), 0 8px 40px rgba(0,201,184,.55); }
+    }
+    .btn-primary-lg { animation: cta-ring-pulse 3s ease-in-out infinite; }
+
+    /* Stagger cascade on cards */
+    .benef-card:nth-child(1) { transition-delay: .05s; }
+    .benef-card:nth-child(2) { transition-delay: .12s; }
+    .benef-card:nth-child(3) { transition-delay: .19s; }
+    .benef-card:nth-child(4) { transition-delay: .26s; }
+    .benef-card:nth-child(5) { transition-delay: .33s; }
+    .benef-card:nth-child(6) { transition-delay: .40s; }
+    .problema-card:nth-child(1) { transition-delay: .05s; }
+    .problema-card:nth-child(2) { transition-delay: .13s; }
+    .problema-card:nth-child(3) { transition-delay: .21s; }
+
+    @media (max-width: 600px) {
+      .enem-countdown { gap: 10px; padding: 10px 14px; }
+      .cd-block strong { font-size: 18px; }
+      .cd-label { font-size: 10px; }
+    }
   </style>
 </head>
 <body>
 
-<!-- Acessibilidade: pular para conteúdo principal -->
+<script>
+/* ── Auth Guard: intercepta OAuth callback e sessão ativa → redireciona para o app ── */
+(function () {
+    var s = window.location.search;
+    var h = window.location.hash;
+
+    // 1. Fluxo PKCE (padrão Supabase v2): callback retorna com ?code=
+    //    Acontece quando o Supabase redireciona para a raiz em vez de /app.
+    if (s && s.indexOf('code=') !== -1) {
+        window.location.replace('/app' + s + h);
+        return;
+    }
+
+    // 2. Fluxo implícito: tokens chegam no hash (#access_token=...)
+    //    Também captura erros de OAuth (#error_description=...).
+    if (h && (h.indexOf('access_token') !== -1 || h.indexOf('error_description') !== -1)) {
+        window.location.replace('/app' + h);
+        return;
+    }
+
+    // 3. Sessão ativa no localStorage → usuário já está logado, vai direto para o app.
+    try {
+        var sbKey = 'sb-nkuiwdolkluetsadauwb-auth-token';
+        var raw = localStorage.getItem(sbKey);
+        if (raw) {
+            var parsed = JSON.parse(raw);
+            // Supabase pode guardar como { access_token, expires_at } ou { session: {...} }
+            var token = (parsed && parsed.access_token) ? parsed
+                      : (parsed && parsed.session)       ? parsed.session
+                      : null;
+            if (token && token.access_token && token.expires_at &&
+                token.expires_at > (Date.now() / 1000 + 60)) {
+                window.location.replace('/app');
+                return;
+            }
+        }
+    } catch (e) {}
+})();
+</script>
+
+
 <a class="skip-link" href="#main">Pular para o conteúdo</a>
 
 <!-- ============================== ANNOUNCEMENT BAR ============================== -->
 <div class="annc-bar" id="anncBar" role="banner" aria-label="Novidade">
-  🎉 <strong>Novo:</strong> Correção de redação por IA com análise das 5 competências do ENEM
-  <a href="/app?ref=annc">→ Experimente grátis</a>
+  ⏰ <strong>ENEM 2026:</strong> Faltam <strong id="annc-days">207</strong> dias — cada dia de atraso é uma vantagem para quem já treina.
+  <a href="/app?ref=annc">→ Comece agora, é grátis</a>
   <button class="annc-close" onclick="document.getElementById('anncBar').style.display='none'" aria-label="Fechar aviso">✕</button>
 </div>
 
@@ -897,28 +982,40 @@
 
       <div class="hero-badge" role="text">
         <span class="hero-badge-dot" aria-hidden="true"></span>
-        🔥 +12.847 estudantes já estão estudando agora
+        🔥 +12.847 alunos já treinam aqui — junte-se a eles
       </div>
 
       <h1 class="h1 hero-title" id="hero-h1">
         Pare de estudar no escuro.<br>
-        <span class="text-gradient">Conquiste sua nota no ENEM.</span>
+        <span class="text-gradient">Passe no ENEM. Garanta sua vaga.</span>
       </h1>
 
       <p class="lead hero-sub">
-        Simulados com questões reais, correção de redação por IA, gamificação e ranking escolar.
-        <strong style="color:var(--text)">Tudo que você precisa</strong> para entrar na faculdade dos seus sonhos.
+        Questões reais do ENEM, Tutor IA 24h e correção de redação com IA.
+        <strong style="color:var(--text)">87% dos alunos melhoram a nota em 30 dias.</strong> Grátis para começar.
       </p>
 
       <div class="hero-cta-group">
-        <a href="/app?ref=hero" class="btn-primary btn-primary-lg">✦ Começar Gratuitamente</a>
+        <a href="/app?ref=hero" class="btn-primary btn-primary-lg">⚡ Quero Aumentar Minha Nota — É Grátis</a>
         <a href="#como-funciona" class="btn-outline">Como funciona ↓</a>
       </div>
 
       <div class="hero-trust" aria-label="Garantias">
         <span>✓ Grátis para sempre</span>
-        <span>✓ Sem cartão de crédito</span>
+        <span>✓ 87% melhoram a nota em 30 dias</span>
         <span>✓ Acesso em 30 segundos</span>
+      </div>
+
+      <!-- Contagem regressiva ENEM 2026 -->
+      <div class="enem-countdown" role="timer" aria-label="Contagem regressiva para o ENEM 2026" aria-live="off">
+        <span class="cd-label">ENEM 2026 em</span>
+        <div class="cd-blocks">
+          <div class="cd-block"><strong id="cd-days">207</strong><small>dias</small></div>
+          <span class="cd-sep" aria-hidden="true">:</span>
+          <div class="cd-block"><strong id="cd-hrs">00</strong><small>horas</small></div>
+          <span class="cd-sep" aria-hidden="true">:</span>
+          <div class="cd-block"><strong id="cd-min">00</strong><small>min</small></div>
+        </div>
       </div>
 
       <div class="hero-social-proof" aria-label="Estatísticas da plataforma">
@@ -1362,6 +1459,10 @@
           <div class="faq-body">Você envia sua redação e nossa IA analisa o texto com base nos 5 critérios oficiais do ENEM: domínio da língua, compreensão da proposta, organização das informações, coesão textual e proposta de intervenção. Você recebe nota por competência, pontos fortes, erros recorrentes e sugestões detalhadas de melhoria.</div>
         </details>
         <details class="faq-item reveal">
+          <summary>O que é o Tutor IA?</summary>
+          <div class="faq-body">O Tutor IA é um professor virtual disponível 24h para tirar qualquer dúvida sobre o ENEM. Pergunte sobre Matemática, Física, Química, Biologia, Humanas, Linguagens ou Redação — ele responde com linguagem clara, fórmulas, exemplos práticos e foco total na prova. É exclusivo do plano Premium.</div>
+        </details>
+        <details class="faq-item reveal">
           <summary>O app funciona no celular sem precisar instalar nada?</summary>
           <div class="faq-body">Sim! O ENEM Master é um PWA (Progressive Web App). Funciona diretamente no navegador do seu celular sem precisar da Play Store ou App Store. Você pode adicioná-lo à tela inicial com um toque para ter a experiência de um app nativo, inclusive com acesso offline ao conteúdo já carregado.</div>
         </details>
@@ -1373,6 +1474,10 @@
           <summary>O ranking escolar funciona com qualquer escola?</summary>
           <div class="faq-body">Sim. Durante o cadastro você informa sua escola e turma. O sistema cria automaticamente um ranking com todos os alunos da mesma escola — uma competição saudável que aumenta o engajamento e motiva o estudo diário.</div>
         </details>
+        <details class="faq-item reveal">
+          <summary>Como funciona o pagamento?</summary>
+          <div class="faq-body">Aceitamos PIX e cartão de crédito via Cakto (100% seguro, criptografia SSL). O acesso Premium é ativado automaticamente após confirmação — em minutos para PIX. Sem mensalidades ocultas. Cancele quando quiser, sem multa.</div>
+        </details>
       </div>
     </div>
   </section>
@@ -1382,19 +1487,22 @@
     <div class="container">
       <div class="cta-final">
         <div class="cta-final-inner">
-          <span class="eyebrow">🔥 Sem desculpas. Sem mais tarde.</span>
-          <h2 class="h2" id="cta-h2">O ENEM não espera.<br><span class="text-gradient">Comece agora.</span></h2>
+          <span class="eyebrow">⏰ Cada dia que passa é uma vantagem para quem já treina.</span>
+          <h2 class="h2" id="cta-h2">+12.000 alunos já estão à sua frente.<br><span class="text-gradient">E você, vai ficar pra trás?</span></h2>
           <p class="lead">
-            Cada dia sem estudar é um dia a favor dos seus concorrentes.<br>
-            É grátis. Está esperando. <strong style="color:#fff">Você já demorou demais.</strong>
+            Faltam <strong id="cta-days" style="color:#fff">207</strong> dias para o ENEM 2026.<br>
+            Quem começa hoje chega preparado. <strong style="color:#fff">Quem espera, se arrepende na hora da prova.</strong>
           </p>
+          <div class="cta-urgency-box" aria-label="Oferta de lançamento">
+            🔥 Preço de lançamento: <strong>Premium por R$19,90/mês</strong> — sobe quando atingirmos 50.000 usuários
+          </div>
           <div style="margin-bottom:16px">
-            <a href="/app?ref=cta-final" class="btn-primary btn-primary-lg">✦ Criar Conta Grátis Agora</a>
+            <a href="/app?ref=cta-final" class="btn-primary btn-primary-lg">⚡ Criar Minha Conta Agora — É Grátis</a>
           </div>
           <div class="cta-final-trust">
             <span>✓ Sem cartão de crédito</span>
             <span>✓ Acesso em 30 segundos</span>
-            <span>✓ Grátis para sempre</span>
+            <span>✓ Cancele quando quiser</span>
           </div>
           <div class="cta-final-stats" aria-label="Números da plataforma">
             <div>
@@ -1409,8 +1517,59 @@
               <strong>87%</strong>
               <span>melhoram a nota em 30 dias</span>
             </div>
+            <div>
+              <strong id="cta-days-stat">207</strong>
+              <span>dias para o ENEM 2026</span>
+            </div>
           </div>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================== FAQ ============================== -->
+  <section class="section section-faq" aria-labelledby="faq-landing-h2" style="display:none" aria-hidden="true">
+    <div class="container">
+      <p class="eyebrow text-center">FAQ</p>
+      <h2 class="h2 text-center" id="faq-landing-h2">Perguntas Frequentes</h2>
+      <p class="lead text-center" style="max-width:480px;margin:0 auto 32px">Tudo que você precisa saber antes de começar.</p>
+      <div class="faq-list">
+
+        <details class="faq-item">
+          <summary>O que está incluído no plano Gratuito?</summary>
+          <div class="faq-body">No plano Gratuito você tem acesso a 10 questões por dia, quiz por disciplina, XP e conquistas, além do ranking da sua escola. É o suficiente para começar — e você pode fazer upgrade a qualquer momento.</div>
+        </details>
+
+        <details class="faq-item">
+          <summary>O que é o Tutor IA?</summary>
+          <div class="faq-body">O Tutor IA é um professor particular alimentado por Inteligência Artificial disponível 24h. Você pode perguntar sobre qualquer assunto do ENEM: Matemática, Física, Química, Biologia, Humanas, Linguagens e Redação. Ele responde com linguagem clara, exemplos práticos e foco na prova.</div>
+        </details>
+
+        <details class="faq-item">
+          <summary>Como funciona a correção de redação por IA?</summary>
+          <div class="faq-body">Você escreve sua redação no app e a IA avalia nas 5 competências do ENEM (proposta temática, coesão, argumentação, proposta de intervenção e respeito à língua). Você recebe uma nota estimada e comentários detalhados para melhorar em cada competência.</div>
+        </details>
+
+        <details class="faq-item">
+          <summary>Posso cancelar quando quiser?</summary>
+          <div class="faq-body">Sim! Não há fidelidade. Cancele a qualquer momento diretamente pelo app — o acesso Premium continua válido até o fim do período já pago. Não cobramos nada depois do cancelamento.</div>
+        </details>
+
+        <details class="faq-item">
+          <summary>O app funciona sem internet?</summary>
+          <div class="faq-body">O banco de questões local funciona offline. Recursos que dependem de IA (Tutor, correção de redação) precisam de conexão. Você pode instalar o app na tela inicial do celular como um PWA para acesso mais rápido.</div>
+        </details>
+
+        <details class="faq-item">
+          <summary>As questões são do ENEM real?</summary>
+          <div class="faq-body">Sim. Usamos questões das provas oficiais do ENEM (2010–2024), disponibilizadas pelo INEP/MEC como material de domínio público, exclusivamente para fins educacionais. O banco tem mais de 3.000 questões catalogadas por disciplina e tópico.</div>
+        </details>
+
+        <details class="faq-item">
+          <summary>Como funciona o pagamento?</summary>
+          <div class="faq-body">Aceitamos PIX e cartão de crédito, processados pela plataforma Cakto (100% segura, criptografia SSL). O acesso Premium é liberado automaticamente após a confirmação do pagamento — geralmente em minutos para PIX.</div>
+        </details>
+
       </div>
     </div>
   </section>
@@ -1562,6 +1721,32 @@
       });
     }, { threshold: 0.1 });
     revEls.forEach(function (el) { rObs.observe(el); });
+  })();
+</script>
+
+<script>
+  /* ---------- ENEM 2026 Countdown ---------- */
+  (function () {
+    // ENEM 2026 — estimado 8 de novembro de 2026 (domingo)
+    var enem = new Date('2026-11-08T08:00:00-03:00').getTime();
+    function pad(n) { return String(n).padStart(2, '0'); }
+    function tick() {
+      var diff = Math.max(0, enem - Date.now());
+      var d = Math.floor(diff / 86400000);
+      var h = Math.floor((diff % 86400000) / 3600000);
+      var m = Math.floor((diff % 3600000) / 60000);
+      var ids = ['cd-days', 'annc-days', 'cta-days', 'cta-days-stat'];
+      ids.forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) el.textContent = d;
+      });
+      var cdHrs = document.getElementById('cd-hrs');
+      var cdMin = document.getElementById('cd-min');
+      if (cdHrs) cdHrs.textContent = pad(h);
+      if (cdMin) cdMin.textContent = pad(m);
+    }
+    tick();
+    setInterval(tick, 30000);
   })();
 </script>
 
