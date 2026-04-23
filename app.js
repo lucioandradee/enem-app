@@ -1482,8 +1482,11 @@ window.onerror = (msg, src, line, col, err) => {
 };
 
 function init() {
-    // Garantir que apenas uma tela fique ativa
+    // Garantir que apenas uma tela fique ativa (nenhuma fica visível durante verificação de sessão)
     document.querySelectorAll('.screen.active').forEach(s => s.classList.remove('active'));
+    // Ocultar nav durante verificação: evita flash de tela errada antes do auth ser resolvido
+    const _initNav = document.getElementById('bottom-nav');
+    if (_initNav) _initNav.style.display = 'none';
 
     // Migrar state antigo se necessário
     if (!state.quizHistory) state.quizHistory = [];
@@ -1560,7 +1563,9 @@ function init() {
                     _resumePendingPayment();
                 });
             } else {
-                // Sem sessão: entrada pelo funil OU usuário novo → onboarding
+                // Sem sessão ativa.
+                // Onboarding: usuário novo SEM dados locais, vindo de qualquer CTA
+                // (exceto quando explicitamente quer fazer login com ?ref=login).
                 if (!_forceLogin && (_forceFunnel || (!state.onboardingDone && !isReturningUser))) {
                     document.getElementById('screen-onboarding').classList.add('active');
                     nav.style.display = 'none';
@@ -1582,6 +1587,8 @@ function init() {
                     // Iniciar polling para detectar ativação automática via webhook
                     _startPlanPolling('login', false);
                 } else {
+                    // Login: usuário existente (tem dados locais), novo dispositivo,
+                    // ou acesso via ?ref=login (botão "Entrar" na landing page)
                     if (isReturningUser && !state.onboardingDone) state.onboardingDone = true;
                     document.getElementById('screen-login').classList.add('active');
                     nav.style.display = 'none';
