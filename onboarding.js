@@ -276,7 +276,7 @@ async function handleGoogleLogin() {
         });
 
         if (error) { _showError(error.message); return; }
-        // Fallback manual: se o SDK não redirecionou automaticamente
+        // Fallback: se o SDK retornou URL mas não redirecionou
         if (data && data.url) {
             window.location.href = data.url;
         }

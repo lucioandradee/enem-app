@@ -905,17 +905,17 @@
     var s = window.location.search;
     var h = window.location.hash;
 
-    // 1. Fluxo PKCE (padrão Supabase v2): callback retorna com ?code=
+    // 1. Fluxo PKCE (padrão Supabase v2 + Google): callback retorna com ?code=
     //    Acontece quando o Supabase redireciona para a raiz em vez de /app.
+    //    Preserva query string + hash completos para que o SDK troque o code.
     if (s && s.indexOf('code=') !== -1) {
-        window.location.replace('/app' + s + h);
+        window.location.replace('https://enemmaster.com.br/app' + s + h);
         return;
     }
 
-    // 2. Fluxo implícito: tokens chegam no hash (#access_token=...)
-    //    Também captura erros de OAuth (#error_description=...).
+    // 2. Fluxo implícito (fallback): tokens chegam no hash (#access_token=...).
     if (h && (h.indexOf('access_token') !== -1 || h.indexOf('error_description') !== -1)) {
-        window.location.replace('/app' + h);
+        window.location.replace('https://enemmaster.com.br/app' + h);
         return;
     }
 
