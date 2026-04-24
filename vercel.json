@@ -3,7 +3,26 @@
   "trailingSlash": false,
   "rewrites": [
     { "source": "/app", "destination": "/app.html" },
-    { "source": "/app/(.*)", "destination": "/app.html" }
+    { "source": "/app/(.*)", "destination": "/app.html" },
+    { "source": "/admin", "destination": "/admin.html" }
+  ],
+  "routes": [
+    {
+      "src": "/app",
+      "dest": "/app.html"
+    },
+    {
+      "src": "/admin",
+      "dest": "/admin.html"
+    },
+    {
+      "src": "/(.*)\\.(.+)$",
+      "dest": "/$1.$2"
+    },
+    {
+      "src": "/",
+      "dest": "/index.html"
+    }
   ],
   "headers": [
     {
