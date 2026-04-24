@@ -66,24 +66,6 @@ async function loginUser(email, password) {
     }
 }
 
-// Login com Google OAuth
-async function loginWithGoogle() {
-    try {
-        const { data, error } = await supabase.auth.signInWithOAuth({
-            provider: 'google',
-            options: {
-                redirectTo: 'https://www.enemmaster.com.br/app',
-                queryParams: { prompt: 'select_account' },
-            },
-        });
-        if (error) throw error;
-        return { success: true };
-    } catch (error) {
-        console.error('❌ Erro ao fazer login com Google:', error.message);
-        return { success: false, error: error.message };
-    }
-}
-
 // Logout
 async function logoutUser() {
     try {

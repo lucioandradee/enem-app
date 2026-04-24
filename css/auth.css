@@ -146,17 +146,6 @@
   content: ''; flex: 1; height: 1px; background: rgba(255,255,255,.08);
 }
 
-.google-login-btn {
-  display: flex; align-items: center; justify-content: center; gap: 10px;
-  width: 100%; padding: 13px;
-  background: rgba(255,255,255,.06); color: var(--text-primary);
-  border: 1.5px solid rgba(255,255,255,.12); border-radius: 14px;
-  font-size: 14px; font-weight: 600; cursor: pointer; transition: background .2s, border-color .2s;
-  font-family: inherit;
-}
-.google-login-btn:hover { background: rgba(255,255,255,.1); border-color: rgba(255,255,255,.2); }
-.google-login-btn:disabled { opacity: .6; cursor: not-allowed; }
-
 /* Rodapé */
 .login-footer {
   padding: 16px 16px 24px;
@@ -375,8 +364,6 @@
 .ob-skip:hover { color: var(--text-secondary); }
 
 /* Google btn no onboarding */
-.onboarding-wrap .google-login-btn { margin-top: 4px; width: 100%; }
-
 /* Premium teaser no onboarding */
 .ob-premium-teaser {
   background: linear-gradient(135deg, #0f2a3f 0%, rgba(0,180,166,.08) 100%);
