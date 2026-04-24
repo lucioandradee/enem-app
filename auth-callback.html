@@ -1,80 +1,23 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Autenticando... — ENEM Master</title>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      background: #060d1a;
-      color: #eaf4f9;
-      font-family: Inter, -apple-system, BlinkMacSystemFont, sans-serif;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      flex-direction: column;
-      gap: 20px;
-    }
-    .logo { font-size: 36px; }
-    .msg  { font-size: 15px; color: #7a9ab5; }
-    .spinner {
-      width: 44px; height: 44px;
-      border: 3px solid rgba(0,201,184,.25);
-      border-top-color: #00c9b8;
-      border-radius: 50%;
-      animation: spin .8s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-  </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-  <div class="logo">🎓</div>
-  <div class="spinner"></div>
-  <p class="msg">Autenticando com Google...</p>
+<script>
+const supabase = window.supabase.createClient(
+  "https://nkuiwdolkluetsadauwb.supabase.co",
+  "SUA_ANON_KEY"
+);
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script>
-    (function () {
-      var SUPABASE_URL      = 'https://nkuiwdolkluetsadauwb.supabase.co';
-      var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5rdWl3ZG9sa2x1ZXRzYWRhdXdiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyMjQ0OTgsImV4cCI6MjA4OTgwMDQ5OH0.xIkowv91_aL-v03HIPtg9Ni6M_rROs7VcZS2qa3PbV4';
-
-      var client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-        auth: {
-          persistSession:     true,
-          autoRefreshToken:   true,
-          detectSessionInUrl: true,  // processa ?code= automaticamente (PKCE)
-          storageKey: 'sb-nkuiwdolkluetsadauwb-auth-token',
-          flowType: 'pkce',
-        }
-      });
-
-      var handled = false;
-      function goApp()  { if (!handled) { handled = true; window.location.replace('/app'); } }
-      function goHome() { if (!handled) { handled = true; window.location.replace('/'); } }
-
-      // Captura tanto SIGNED_IN quanto INITIAL_SESSION com sessão:
-      // - INITIAL_SESSION c/ sessão: troca do ?code= concluída antes do evento
-      // - SIGNED_IN: troca concluída durante/após o evento
-      client.auth.onAuthStateChange(function (event, session) {
-        if (session && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION')) {
-          goApp();
-          return;
-        }
-        // Sem sessão após INITIAL_SESSION = URL inválida ou erro do Supabase
-        if (event === 'INITIAL_SESSION' && !session) {
-          // Tenta getSession diretamente como fallback (pode estar em localStorage)
-          client.auth.getSession().then(function (res) {
-            if (res.data && res.data.session) { goApp(); }
-            else { goHome(); }
-          }).catch(function () { goHome(); });
-        }
-      });
-
-      // Timeout de segurança: 15s sem resposta → landing
-      setTimeout(function () { if (!handled) goHome(); }, 15000);
-    })();
-  </script>
+supabase.auth.exchangeCodeForSession(window.location.href)
+  .then(({ data, error }) => {
+    if (data.session) {
+      window.location.href = "/app";
+    } else {
+      window.location.href = "/";
+    }
+  });
+</script>
 </body>
 </html>
