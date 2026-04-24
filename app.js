@@ -1492,20 +1492,19 @@ function init() {
     if (_initNav) _initNav.style.display = 'none';
 
     // ── OAuth callback: ?code= na URL → SDK está trocando o código por tokens agora ──
-    // Não chama getCurrentUser() (retornaria null antes da troca terminar).
-    // O handler SIGNED_IN em supabase-config.js chama navigate('home') quando pronto.
+    // NÃO remove o ?code= da URL aqui. O SDK lê o ?code= de forma assíncrona DEPOIS
+    // que init() roda. Se removermos agora (replaceState), o SDK não encontra o código
+    // e a troca PKCE nunca acontece. A limpeza da URL acontece no handler SIGNED_IN.
     if (window.location.search.indexOf('code=') !== -1) {
-        // Limpa o ?code= da barra de endereço sem recarregar
-        window.history.replaceState({}, document.title, window.location.pathname);
-        // Timeout de segurança: se SIGNED_IN não disparar em 15s, mostra login
+        // Timeout de segurança: se SIGNED_IN não disparar em 20s, mostra login
         setTimeout(function () {
             if (!state.user.id) {
                 document.getElementById('screen-login').classList.add('active');
-                _initNav.style.display = 'none';
+                if (_initNav) _initNav.style.display = 'none';
                 state.currentScreen = 'login';
             }
-        }, 15000);
-        return; // aguarda onAuthStateChange
+        }, 20000);
+        return; // aguarda onAuthStateChange → SIGNED_IN → navigate('home')
     }
 
     // Migrar state antigo se necessário

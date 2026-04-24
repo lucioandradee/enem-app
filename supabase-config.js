@@ -380,6 +380,10 @@ function initializeSupabaseListeners() {
             // (SIGNED_IN pode disparar antes de DOMContentLoaded quando há #access_token na URL)
             const _doNavigateHome = () => {
                 if (typeof navigate === 'undefined') return; // app.js ainda não carregou
+                // Limpa o ?code= da URL agora que o SDK já processou (não antes!)
+                if (window.location.search.indexOf('code=') !== -1) {
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }
                 const _authScreens = ['login', 'onboarding'];
                 const _homeEl = document.getElementById('screen-home');
                 const _homeActive = _homeEl && _homeEl.classList.contains('active');
