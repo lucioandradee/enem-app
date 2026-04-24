@@ -31,18 +31,21 @@
 <body>
 
 <script>
-/* ── Session Guard: redireciona para landing se não há sessão no localStorage ──
-   Executa antes de carregar qualquer script pesado. Lê apenas o localStorage
-   (sem rede), por isso é instantâneo. O Supabase SDK depois faz a validação
-   completa — aqui só evitamos carregar 20 scripts desnecessariamente.        */
+/* ── Session Guard: evita carregar ~20 scripts se o usuário não está logado ──
+   Roda de forma síncrona antes de qualquer script pesado.
+   SÓ redireciona se tiver CERTEZA de que não há sessão (token ausente ou inválido).
+   Qualquer dúvida → deixa o SDK do Supabase decidir.                         */
 (function () {
-  // Se a URL tem ?code= é um callback OAuth ainda não processado → deixa passar
+  // Callback OAuth: ?code= na URL → deixa passar (auth-callback processa)
   if (window.location.search.indexOf('code=') !== -1) return;
   try {
     var sbKey = 'sb-nkuiwdolkluetsadauwb-auth-token';
     var raw = localStorage.getItem(sbKey);
+
+    // Sem nenhum token armazenado → redireciona imediatamente
     if (!raw) { window.location.replace('/'); return; }
-    // Suporte a sessão fragmentada (chunked storage)
+
+    // Suporte a sessão fragmentada (chunked storage do SDK v2)
     var maybeCount = parseInt(raw, 10);
     var sessionStr = raw;
     if (!isNaN(maybeCount) && maybeCount > 0 && String(maybeCount) === raw.trim()) {
@@ -54,15 +57,17 @@
       }
       sessionStr = parts.join('');
     }
+
     var parsed = JSON.parse(sessionStr);
-    var token = (parsed && parsed.access_token) ? parsed
-              : (parsed && parsed.session)       ? parsed.session
-              : null;
-    // Exige pelo menos um refresh_token (sessão renovável)
-    if (!token || !token.refresh_token) {
-      window.location.replace('/');
-    }
-  } catch (e) { /* falha silenciosa: deixa o app decidir */ }
+    // Aceita sessão com access_token OU refresh_token — se um expirou o SDK renova
+    var hasAnyToken = parsed && (
+      parsed.access_token   || parsed.refresh_token ||
+      (parsed.session && (parsed.session.access_token || parsed.session.refresh_token))
+    );
+    if (!hasAnyToken) { window.location.replace('/'); }
+  } catch (e) {
+    // JSON inválido ou outro erro → deixa o SDK decidir (não redireciona)
+  }
 })();
 </script>
 

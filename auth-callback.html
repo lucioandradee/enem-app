@@ -1,50 +1,114 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
 <head>
   <meta charset="utf-8">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ENEM Master — Entrando...</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100vh; background: #060d1a;
+      color: #eaf4f9; font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    .box { text-align: center; padding: 32px 24px; max-width: 340px; width: 100%; }
+    .spinner {
+      width: 48px; height: 48px;
+      border: 4px solid rgba(0,201,184,.15);
+      border-top-color: #00c9b8;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 20px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .title { font-size: 18px; font-weight: 600; margin-bottom: 6px; }
+    .sub   { font-size: 13px; color: #7a9ab5; }
+    #errmsg {
+      margin-top: 16px; padding: 12px 14px;
+      background: rgba(248,113,113,.12); border: 1px solid rgba(248,113,113,.3);
+      border-radius: 10px; color: #f87171; font-size: 13px;
+      display: none; word-break: break-word; text-align: left;
+    }
+  </style>
 </head>
 <body>
-<script>
-  /*
-   * auth-callback.html
-   * Recebe o ?code= do Google OAuth (PKCE) e troca pelos tokens de sessão.
-   *
-   * IMPORTANTE: detectSessionInUrl: false — sem isso o SDK tenta trocar o
-   * código automaticamente na inicialização E depois o exchangeCodeForSession
-   * manual também tentaria, causando falha (código PKCE é de uso único).
-   */
-  var client = window.supabase.createClient(
-    'https://nkuiwdolkluetsadauwb.supabase.co',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5rdWl3ZG9sa2x1ZXRzYWRhdXdiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyMjQ0OTgsImV4cCI6MjA4OTgwMDQ5OH0.xIkowv91_aL-v03HIPtg9Ni6M_rROs7VcZS2qa3PbV4',
-    {
-      auth: {
-        flowType: 'pkce',
-        persistSession: true,
-        detectSessionInUrl: false,  // ← CRÍTICO: desativa troca automática do SDK
-        storageKey: 'sb-nkuiwdolkluetsadauwb-auth-token'  // mesmo key do app principal
-      }
-    }
-  );
+  <div class="box">
+    <div class="spinner" id="spinner"></div>
+    <div class="title">Concluindo login com Google...</div>
+    <div class="sub" id="sub">Aguarde um momento</div>
+    <div id="errmsg"></div>
+  </div>
 
-  // Troca manual: única chamada → sem conflito
-  client.auth.exchangeCodeForSession(window.location.href)
-    .then(function (res) {
-      if (res.error) {
-        console.error('auth-callback error:', res.error.message);
-        window.location.replace('/');
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+  (function () {
+    var handled = false;
+
+    function goApp() {
+      if (handled) return;
+      handled = true;
+      // URL absoluta evita qualquer ambiguidade de domínio
+      window.location.replace('https://www.enemmaster.com.br/app');
+    }
+
+    function goHome(errorText) {
+      if (handled) return;
+      handled = true;
+      document.getElementById('spinner').style.display = 'none';
+      document.getElementById('sub').textContent = 'Redirecionando em 4 segundos...';
+      if (errorText) {
+        var el = document.getElementById('errmsg');
+        el.style.display = 'block';
+        el.textContent = 'Erro: ' + errorText;
+        // Salva erro no localStorage para diagnóstico
+        try { localStorage.setItem('auth_cb_last_error', errorText); } catch(e){}
+      }
+      setTimeout(function () {
+        window.location.replace('https://www.enemmaster.com.br/');
+      }, 4000);
+    }
+
+    // Se não há ?code= na URL, não há o que fazer
+    if (window.location.search.indexOf('code=') === -1) {
+      goHome('Código de autorização não encontrado na URL (' + window.location.search + ')');
+      return;
+    }
+
+    var client = window.supabase.createClient(
+      'https://nkuiwdolkluetsadauwb.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5rdWl3ZG9sa2x1ZXRzYWRhdXdiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyMjQ0OTgsImV4cCI6MjA4OTgwMDQ5OH0.xIkowv91_aL-v03HIPtg9Ni6M_rROs7VcZS2qa3PbV4',
+      {
+        auth: {
+          flowType: 'pkce',
+          persistSession: true,
+          // detectSessionInUrl: true → SDK troca o ?code= automaticamente
+          // É a abordagem oficial do Supabase para páginas de callback
+          detectSessionInUrl: true,
+          storageKey: 'sb-nkuiwdolkluetsadauwb-auth-token'
+        }
+      }
+    );
+
+    // onAuthStateChange captura o resultado da troca automática do SDK
+    client.auth.onAuthStateChange(function (event, session) {
+      console.log('[auth-callback] event=' + event + ' session=' + !!session);
+      if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session) {
+        goApp();
         return;
       }
-      if (res.data && res.data.session) {
-        window.location.replace('/app');
-      } else {
-        window.location.replace('/');
+      if (event === 'INITIAL_SESSION' && !session) {
+        // Troca falhou — aguarda 3s para SIGNED_IN chegar (em alguns browsers)
+        setTimeout(function () {
+          if (!handled) goHome('Sessão não retornada após troca de código PKCE.');
+        }, 3000);
       }
-    })
-    .catch(function (err) {
-      console.error('auth-callback exception:', err);
-      window.location.replace('/');
     });
-</script>
+
+    // Timeout de segurança: 20s sem resposta → mostra erro
+    setTimeout(function () {
+      if (!handled) goHome('Tempo limite de 20s esgotado sem resposta do servidor.');
+    }, 20000);
+  })();
+  </script>
 </body>
 </html>
