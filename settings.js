@@ -125,7 +125,6 @@ async function handleLogin() {
             state.user.id = result.user.id;
             state.user.email = email;
             state.onboardingDone = true;
-            state.currentScreen = 'login'; // garante que navigate('home') não seja bloqueado
             saveState();
             // Persistir/atualizar registro do usuário no banco ao logar
             if (typeof saveUserData !== 'undefined') await saveUserData(result.user.id).catch(() => {});
@@ -134,7 +133,17 @@ async function handleLogin() {
             _requestPushPermission();
             // Rastrear login
             _trackEvent('login', { method: 'email' });
-            navigate('home');
+            // Navegar para home.
+            // O handler onAuthStateChange(SIGNED_IN) já fez isso, mas navigate() tem
+            // guarda interna (currentId === nextId → return), então chamar aqui é seguro
+            // como fallback caso o evento tenha disparado antes do DOM estar pronto.
+            if (typeof navigate !== 'undefined') {
+                if (state.currentScreen !== 'home') {
+                    navigate('home');
+                } else {
+                    if (typeof renderDashboard !== 'undefined') renderDashboard();
+                }
+            }
         } else {
             const msg = result.error || '';
             if (msg.includes('Invalid login') || msg.includes('invalid_credentials')) {
@@ -148,7 +157,7 @@ async function handleLogin() {
     } catch (e) {
         errorEl.textContent = 'Sem conexão. Verifique sua internet.';
     } finally {
-        btn.textContent = 'Entrar →';
+        btn.textContent = 'Entrar na conta';
         btn.disabled = false;
     }
 }

@@ -189,3 +189,217 @@ END;
 $$;
 
 GRANT EXECUTE ON FUNCTION public.auto_deactivate_expired_premium() TO authenticated;
+
+-- ═══════════════════════════════════════════════════════════════
+-- TABELA: webhook_events
+-- Audit log de todos os webhooks recebidos + idempotência
+-- Evita que o mesmo pagamento ative o premium duas vezes
+-- ═══════════════════════════════════════════════════════════════
+CREATE TABLE IF NOT EXISTS webhook_events (
+  id             BIGSERIAL PRIMARY KEY,
+  gateway        TEXT      NOT NULL,
+  event_type     TEXT,
+  transaction_id TEXT,
+  buyer_email    TEXT,
+  plan_action    TEXT,
+  duration_days  INTEGER,
+  payload        JSONB,
+  result         TEXT      DEFAULT 'pending',
+  error_msg      TEXT,
+  created_at     TIMESTAMP DEFAULT NOW()
+);
+
+-- Índice único: mesmo gateway + mesmo transaction_id = mesmo pagamento (idempotência)
+CREATE UNIQUE INDEX IF NOT EXISTS webhook_events_idempotency_idx
+  ON webhook_events (gateway, transaction_id)
+  WHERE transaction_id IS NOT NULL;
+
+-- Índice de busca por email (para auditoria de um cliente específico)
+CREATE INDEX IF NOT EXISTS webhook_events_email_idx
+  ON webhook_events (buyer_email);
+
+ALTER TABLE webhook_events ENABLE ROW LEVEL SECURITY;
+-- Sem políticas de usuário: apenas service_role (Edge Function) pode acessar
+
+-- ═══════════════════════════════════════════════════════════════
+-- FUNÇÃO RPC: activate_premium_by_email
+-- Ativa ou renova premium empilhando dias sobre expiração atual.
+-- Lida com todos os cenários:
+--   1. Perfil existe → atualiza
+--   2. Auth user existe mas sem perfil → cria perfil com ID correto
+--   3. Nenhuma conta existe → cria perfil (inviteUserByEmail é chamado antes pelo webhook)
+-- ═══════════════════════════════════════════════════════════════
+CREATE OR REPLACE FUNCTION public.activate_premium_by_email(
+  p_email         TEXT,
+  p_name          TEXT,
+  p_duration_days INTEGER
+)
+RETURNS TEXT
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+DECLARE
+  v_user_id    UUID;
+  v_base_date  TIMESTAMP WITH TIME ZONE;
+  v_expires_at TIMESTAMP WITH TIME ZONE;
+BEGIN
+  -- Busca perfil e expiração atuais
+  SELECT id, plan_expires_at INTO v_user_id, v_base_date
+  FROM public.users
+  WHERE email = p_email;
+
+  -- Empilha dias: soma a partir da expiração futura (se existir) ou de agora
+  -- Isso garante que renovações não percam dias restantes
+  v_expires_at := GREATEST(COALESCE(v_base_date, NOW()), NOW())
+                + (p_duration_days || ' days')::INTERVAL;
+
+  IF v_user_id IS NOT NULL THEN
+    -- Perfil existe: apenas atualizar plano e expiração
+    UPDATE public.users
+    SET plan            = 'premium',
+        plan_expires_at = v_expires_at,
+        updated_at      = NOW()
+    WHERE id = v_user_id;
+    RETURN 'updated';
+  END IF;
+
+  -- Perfil não existe: verificar se há auth user com este email
+  SELECT id INTO v_user_id FROM auth.users WHERE email = p_email;
+
+  IF v_user_id IS NOT NULL THEN
+    -- Auth user existe mas sem perfil → criar com o UUID correto
+    INSERT INTO public.users (id, email, name, plan, plan_expires_at, created_at, updated_at)
+    VALUES (v_user_id, p_email, p_name, 'premium', v_expires_at, NOW(), NOW())
+    ON CONFLICT (email) DO UPDATE
+      SET plan            = 'premium',
+          plan_expires_at = EXCLUDED.plan_expires_at,
+          updated_at      = NOW();
+    RETURN 'auth_linked';
+  END IF;
+
+  -- Nenhuma conta: inviteUserByEmail falhou ou ainda não processou o trigger.
+  -- Cria perfil com UUID temporário. O trigger handle_new_user vai corrigir
+  -- o ID quando o usuário ativar a conta pelo link de convite.
+  INSERT INTO public.users (id, email, name, plan, plan_expires_at, created_at, updated_at)
+  VALUES (gen_random_uuid(), p_email, p_name, 'premium', v_expires_at, NOW(), NOW())
+  ON CONFLICT (email) DO UPDATE
+    SET plan            = 'premium',
+        plan_expires_at = EXCLUDED.plan_expires_at,
+        updated_at      = NOW();
+  RETURN 'created_pending';
+END;
+$$;
+
+-- ═══════════════════════════════════════════════════════════════
+-- FUNÇÃO RPC: deactivate_premium_by_email
+-- Remove acesso premium de um usuário por email
+-- ═══════════════════════════════════════════════════════════════
+CREATE OR REPLACE FUNCTION public.deactivate_premium_by_email(
+  p_email TEXT
+)
+RETURNS TEXT
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+BEGIN
+  UPDATE public.users
+  SET plan            = 'free',
+      plan_expires_at = NULL,
+      updated_at      = NOW()
+  WHERE email = p_email;
+
+  IF NOT FOUND THEN
+    RETURN 'not_found';
+  END IF;
+
+  RETURN 'deactivated';
+END;
+$$;
+
+-- ═══════════════════════════════════════════════════════════════
+-- TRIGGER: handle_new_user (versão melhorada)
+-- Cria perfil ao registrar no Auth.
+-- Também corrige o UUID quando um perfil foi pré-criado pelo webhook
+-- (comprador que não tinha conta antes de comprar).
+-- ═══════════════════════════════════════════════════════════════
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+  -- Se já existe um perfil com este email (pré-criado pelo webhook para premium),
+  -- atualiza o UUID para o correto e preserva o plano premium.
+  UPDATE public.users
+  SET id         = NEW.id,
+      name       = COALESCE(NEW.raw_user_meta_data->>'full_name', name),
+      updated_at = NOW()
+  WHERE email = NEW.email
+    AND id != NEW.id;
+
+  -- Se nenhuma linha foi atualizada (caso normal), cria perfil do zero
+  IF NOT FOUND THEN
+    INSERT INTO public.users (id, name, email, school, plan, created_at, updated_at)
+    VALUES (
+      NEW.id,
+      COALESCE(NEW.raw_user_meta_data->>'full_name', split_part(NEW.email, '@', 1)),
+      NEW.email,
+      NULL,
+      'free',
+      NOW(),
+      NOW()
+    )
+    ON CONFLICT (id) DO NOTHING;
+  END IF;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
+
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- ═══════════════════════════════════════════════════════════════
+-- POLÍTICAS RLS: acesso de administrador
+-- O admin é identificado por app_metadata.role = 'admin'
+-- (definido via Supabase Dashboard → Authentication → Users → Edit
+--  ou via: supabase auth admin update-user <user_id> --app-metadata '{"role":"admin"}')
+-- ═══════════════════════════════════════════════════════════════
+
+-- Admin pode ler TODOS os usuários (o painel admin usa isso)
+DROP POLICY IF EXISTS "Admin can read all users" ON public.users;
+CREATE POLICY "Admin can read all users" ON public.users
+  FOR SELECT USING (
+    (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
+  );
+
+-- Admin pode atualizar qualquer usuário (ativar/remover premium manual)
+DROP POLICY IF EXISTS "Admin can update all users" ON public.users;
+CREATE POLICY "Admin can update all users" ON public.users
+  FOR UPDATE USING (
+    (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
+  );
+
+-- Admin pode ler todos os webhook_events (logs do painel)
+DROP POLICY IF EXISTS "Admin can read webhook_events" ON public.webhook_events;
+CREATE POLICY "Admin can read webhook_events" ON public.webhook_events
+  FOR SELECT USING (
+    (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
+  );
+
+-- Admin pode inserir em webhook_events (caso precise registrar manualmente)
+DROP POLICY IF EXISTS "Admin can insert webhook_events" ON public.webhook_events;
+CREATE POLICY "Admin can insert webhook_events" ON public.webhook_events
+  FOR INSERT WITH CHECK (
+    (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
+  );
+
+-- ═══════════════════════════════════════════════════════════════
+-- GRANTS: permite que usuários autenticados chamem as RPCs admin
+-- As funções são SECURITY DEFINER, portanto executam com
+-- permissões do owner independente de quem chamou.
+-- ═══════════════════════════════════════════════════════════════
+GRANT EXECUTE ON FUNCTION public.activate_premium_by_email(TEXT, TEXT, INTEGER) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.deactivate_premium_by_email(TEXT)              TO authenticated;
+GRANT EXECUTE ON FUNCTION public.auto_deactivate_expired_premium()              TO authenticated;

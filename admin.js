@@ -1,34 +1,42 @@
 /* =====================================================
-   ENEM MASTER — admin.js
-   Dashboard de administração: usuários, premium, webhooks
+   ENEM MASTER ??" admin.js v2
    Depende de: supabase-config.js (supabase client global)
    ===================================================== */
-
 'use strict';
 
-// ── Constantes ────────────────────────────────────────────────────────────────
+// ?"??"? Config ?"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"?
 const ADMIN_SESSION_KEY = 'enem_admin_session';
+const PRICE_MENSAL      = 19.90;
+const AUTO_REFRESH_MS   = 30_000; // 30 segundos
 
-// ── Estado ────────────────────────────────────────────────────────────────────
-let adminUser = null;
+// ?"??"? State ?"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"?
+let adminUser         = null;
+let _autoRefreshTimer = null;
+let _realtimeCh       = null;
+let _userFilter       = 'all';
+let _allUsersCache    = [];
 
-// ── Utils ─────────────────────────────────────────────────────────────────────
+// ?.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.?
+// UTILS
+// ?.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.?
+
 function showToast(message, type = 'info') {
     const container = document.getElementById('toast-container');
+    if (!container) return;
     const toast = document.createElement('div');
     toast.className = `toast toast-${type}`;
-    toast.innerHTML = `<span class="toast-dot"></span>${message}`;
+    toast.innerHTML = `<span class="toast-dot"></span><span>${message}</span>`;
     container.appendChild(toast);
     setTimeout(() => {
         toast.style.transition = 'opacity .3s, transform .3s';
-        toast.style.opacity = '0';
-        toast.style.transform = 'translateX(20px)';
+        toast.style.opacity    = '0';
+        toast.style.transform  = 'translateX(20px)';
         setTimeout(() => toast.remove(), 300);
-    }, 3500);
+    }, 4000);
 }
 
 function formatDate(dateStr) {
-    if (!dateStr) return '—';
+    if (!dateStr) return '-';
     try {
         return new Date(dateStr).toLocaleString('pt-BR', {
             day: '2-digit', month: '2-digit', year: 'numeric',
@@ -37,45 +45,26 @@ function formatDate(dateStr) {
     } catch { return dateStr; }
 }
 
+function formatRelative(dateStr) {
+    if (!dateStr) return '-';
+    try {
+        const diffMs  = Date.now() - new Date(dateStr).getTime();
+        const diffMin = Math.floor(diffMs / 60_000);
+        if (diffMin < 1)  return 'agora';
+        if (diffMin < 60) return `${diffMin}min atras`;
+        const diffH = Math.floor(diffMin / 60);
+        if (diffH < 24)   return `${diffH}h atras`;
+        const d = new Date(dateStr);
+        return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+    } catch { return dateStr; }
+}
+
 function escapedHtml(str) {
     if (!str) return '';
     return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;')
         .replace(/'/g, '&#x27;');
-}
-
-function setPlanBadge(plan) {
-    if (plan === 'premium') {
-        return '<span class="badge badge-premium">👑 Premium</span>';
-    }
-    return '<span class="badge badge-free">Free</span>';
-}
-
-function setStatusBadge(status) {
-    const map = {
-        ok:      '<span class="badge badge-success">✓ ok</span>',
-        success: '<span class="badge badge-success">✓ success</span>',
-        error:   '<span class="badge badge-error">✗ error</span>',
-        pending: '<span class="badge badge-pending">⏳ pending</span>',
-        ignored: '<span class="badge badge-free">— ignored</span>',
-    };
-    const key = String(status || '').toLowerCase();
-    return map[key] || `<span class="badge badge-info">${escapedHtml(status)}</span>`;
-}
-
-function setProviderBadge(provider) {
-    const colors = {
-        hotmart:    'color:#ff6b35;background:rgba(255,107,53,.12);border-color:rgba(255,107,53,.25)',
-        kiwify:     'color:#a78bfa;background:rgba(167,139,250,.12);border-color:rgba(167,139,250,.25)',
-        cakto:      'color:#34d399;background:rgba(52,211,153,.12);border-color:rgba(52,211,153,.25)',
-        mercadopago:'color:#60a5fa;background:rgba(96,165,250,.12);border-color:rgba(96,165,250,.25)',
-    };
-    const key = String(provider || '').toLowerCase();
-    const style = colors[key] || '';
-    return `<span class="badge" style="${style}">${escapedHtml(provider || 'unknown')}</span>`;
 }
 
 function isExpired(dateStr) {
@@ -83,7 +72,86 @@ function isExpired(dateStr) {
     return new Date(dateStr) < new Date();
 }
 
-// ── Auth ──────────────────────────────────────────────────────────────────────
+function planBadge(plan, expiresAt) {
+    if (plan === 'premium') {
+        if (isExpired(expiresAt)) return '<span class="badge badge-error">⚠ Expirado</span>';
+        return '<span class="badge badge-premium">👑 Premium</span>';
+    }
+    return '<span class="badge badge-free">Free</span>';
+}
+
+function resultBadge(result) {
+    const map = {
+        success: '<span class="badge badge-success">✓ sucesso</span>',
+        pending: '<span class="badge badge-pending">⏳ pendente</span>',
+        error:   '<span class="badge badge-error">✗ erro</span>',
+    };
+    return map[String(result || '').toLowerCase()]
+        || `<span class="badge badge-info">${escapedHtml(result)}</span>`;
+}
+
+function actionBadge(action) {
+    if (action === 'activate')   return '<span class="badge badge-success" style="font-size:10px">↑ ativar</span>';
+    if (action === 'deactivate') return '<span class="badge badge-error"   style="font-size:10px">↓ cancelar</span>';
+    return '<span class="badge badge-free" style="font-size:10px">- skip</span>';
+}
+
+function gatewayBadge(gw) {
+    const styles = {
+        cakto:       'color:#34d399;background:rgba(52,211,153,.12);border-color:rgba(52,211,153,.25)',
+        hotmart:     'color:#ff6b35;background:rgba(255,107,53,.12);border-color:rgba(255,107,53,.25)',
+        kiwify:      'color:#a78bfa;background:rgba(167,139,250,.12);border-color:rgba(167,139,250,.25)',
+        mercadopago: 'color:#60a5fa;background:rgba(96,165,250,.12);border-color:rgba(96,165,250,.25)',
+    };
+    const key = String(gw || '').toLowerCase();
+    return `<span class="badge" style="${styles[key] || 'color:var(--text-3);background:var(--surface-2);border-color:var(--border-2)'}">${escapedHtml(gw || '?')}</span>`;
+}
+
+function _setText(id, val) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = val;
+}
+
+function _brl(value) {
+    return 'R$\u00a0' + value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+// ?"??"? Last-updated chip ?"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"?
+function setLastUpdatedNow() {
+    const el = document.getElementById('last-updated-chip');
+    if (!el) return;
+    el.setAttribute('data-ts', new Date().toISOString());
+    _refreshLastUpdatedText();
+    el.style.color = 'var(--green)';
+    setTimeout(() => { el.style.color = ''; }, 2500);
+}
+
+function _refreshLastUpdatedText() {
+    const el = document.getElementById('last-updated-chip');
+    if (!el) return;
+    const ts = el.getAttribute('data-ts');
+    if (!ts) return;
+    el.textContent = 'atualizado ' + formatRelative(ts);
+}
+
+setInterval(_refreshLastUpdatedText, 15_000);
+
+// ?"??"? Barra de progresso do pr�ximo refresh ?"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"?
+let _countdownStart = Date.now();
+
+function _tickCountdown() {
+    const bar = document.getElementById('refresh-bar');
+    if (!bar) return;
+    const pct = Math.min(100, ((Date.now() - _countdownStart) / AUTO_REFRESH_MS) * 100);
+    bar.style.width = pct + '%';
+}
+
+setInterval(_tickCountdown, 500);
+
+// ?.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.?
+// AUTH
+// ?.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.?
+
 async function adminLogin() {
     const email    = document.getElementById('gate-email').value.trim();
     const password = document.getElementById('gate-pass').value;
@@ -94,33 +162,54 @@ async function adminLogin() {
     errEl.style.display = 'none';
 
     if (!email || !password) {
-        errEl.textContent = 'Preencha e-mail e senha.';
+        errEl.textContent   = 'Preencha e-mail e senha.';
         errEl.style.display = 'block';
         return;
     }
 
-    btn.disabled = true;
+    btn.disabled     = true;
     btnTxt.innerHTML = '<span class="spinner" style="width:14px;height:14px;border-width:2px"></span> Entrando…';
 
     try {
         const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-
         adminUser = data.user;
-        sessionStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify({ email: data.user.email }));
         bootApp();
     } catch (err) {
-        errEl.textContent = err.message || 'E-mail ou senha incorretos.';
+        errEl.textContent   = err.message || 'E-mail ou senha incorretos.';
         errEl.style.display = 'block';
     } finally {
-        btn.disabled = false;
-        btnTxt.textContent = 'Entrar';
+        btn.disabled       = false;
+        btnTxt.textContent = 'Entrar no painel';
+    }
+}
+
+async function adminLoginGoogle() {
+    const errEl = document.getElementById('gate-error');
+    errEl.style.display = 'none';
+    const btn = document.getElementById('gate-google-btn');
+    if (btn) { btn.disabled = true; btn.style.opacity = '.6'; }
+
+    try {
+        const { error } = await supabase.auth.signInWithOAuth({
+            provider: 'google',
+            options: {
+                redirectTo: window.location.origin + '/admin',
+            },
+        });
+        if (error) throw error;
+        // O navegador vai redirecionar ??" n�o precisa fazer mais nada
+    } catch (err) {
+        errEl.textContent   = err.message || 'Erro ao iniciar login com Google.';
+        errEl.style.display = 'block';
+        if (btn) { btn.disabled = false; btn.style.opacity = ''; }
     }
 }
 
 async function adminLogout() {
+    stopAutoRefresh();
+    teardownRealtime();
     await supabase.auth.signOut();
-    sessionStorage.removeItem(ADMIN_SESSION_KEY);
     adminUser = null;
     document.getElementById('app').style.display  = 'none';
     document.getElementById('gate').style.display = 'flex';
@@ -128,7 +217,6 @@ async function adminLogout() {
     document.getElementById('gate-pass').value    = '';
 }
 
-// Enter key on gate inputs
 document.addEventListener('DOMContentLoaded', () => {
     ['gate-email', 'gate-pass'].forEach(id => {
         document.getElementById(id)?.addEventListener('keydown', e => {
@@ -136,7 +224,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Restore session if still valid
     supabase.auth.getSession().then(({ data }) => {
         if (data?.session?.user) {
             adminUser = data.session.user;
@@ -145,53 +232,131 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// ── Boot ──────────────────────────────────────────────────────────────────────
+// ?"??"? Boot ?"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"?
 async function bootApp() {
-    // Verifica role no servidor (app_metadata não pode ser alterado pelo usuário)
     const { data: { user: verifiedUser }, error: verifyErr } = await supabase.auth.getUser();
+
     if (verifyErr || verifiedUser?.app_metadata?.role !== 'admin') {
         await supabase.auth.signOut();
-        sessionStorage.removeItem(ADMIN_SESSION_KEY);
         adminUser = null;
         const errEl = document.getElementById('gate-error');
         if (errEl) {
-            errEl.textContent = 'Acesso negado: conta sem privilégios de administrador.';
+            errEl.textContent   = 'Acesso negado: conta sem privilegios de administrador.';
             errEl.style.display = 'block';
         }
         const btn    = document.getElementById('gate-btn');
         const btnTxt = document.getElementById('gate-btn-text');
-        if (btn)    btn.disabled = false;
-        if (btnTxt) btnTxt.textContent = 'Entrar';
+        if (btn)    btn.disabled       = false;
+        if (btnTxt) btnTxt.textContent = 'Entrar no painel';
         return;
     }
+
     adminUser = verifiedUser;
-    document.getElementById('gate').style.display = 'none';
-    const appEl = document.getElementById('app');
-    appEl.style.display = 'flex';
-    document.getElementById('topbar-email').textContent = adminUser?.email ?? '—';
-    loadAll();
+    document.getElementById('gate').style.display           = 'none';
+    document.getElementById('app').style.display            = 'flex';
+    document.getElementById('topbar-email').textContent     = adminUser?.email ?? '-';
+
+    await loadAll();
+    startAutoRefresh();
+    setupRealtime();
 }
+
+// ?.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.?
+// AUTO-REFRESH + REALTIME
+// ?.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.?
 
 async function loadAll() {
-    loadStats();
-    loadUsers();
-    loadWebhookLogs();
-    loadSubscriptionMetrics();
+    await Promise.all([
+        loadStats(),
+        loadUsers(),
+        loadWebhookLogs(),
+        loadSubscriptionMetrics(),
+    ]);
+    setLastUpdatedNow();
 }
 
-// ── Stats / KPIs ──────────────────────────────────────────────────────────────
-const PRICE_MENSAL = 19.90;
+function startAutoRefresh() {
+    stopAutoRefresh();
+    _countdownStart   = Date.now();
+    _autoRefreshTimer = setInterval(async () => {
+        _countdownStart = Date.now();
+        await loadAll();
+    }, AUTO_REFRESH_MS);
+}
+
+function stopAutoRefresh() {
+    if (_autoRefreshTimer) {
+        clearInterval(_autoRefreshTimer);
+        _autoRefreshTimer = null;
+    }
+}
+
+function setupRealtime() {
+    teardownRealtime();
+
+    _realtimeCh = supabase
+        .channel('admin-realtime')
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'webhook_events' }, (payload) => {
+            const ev      = payload.new ?? {};
+            const liveDot = document.getElementById('live-dot');
+            if (liveDot) {
+                liveDot.classList.add('live-pulse');
+                setTimeout(() => liveDot.classList.remove('live-pulse'), 1000);
+            }
+            if (ev.plan_action === 'activate' && ev.result === 'success') {
+                showToast(`🎉 Nova ativacao: ${escapedHtml(ev.buyer_email)} via ${escapedHtml(ev.gateway)}`, 'success');
+            } else if (ev.plan_action === 'deactivate' && ev.result === 'success') {
+                showToast(`Cancelamento: ${escapedHtml(ev.buyer_email)}`, 'info');
+            } else if (ev.result === 'error') {
+                showToast(`⚠️ Webhook com erro: ${escapedHtml(ev.buyer_email || ev.gateway)}`, 'error');
+            }
+            loadWebhookLogs();
+            loadStats();
+        })
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'webhook_events' }, () => {
+            loadWebhookLogs();
+            loadStats();
+        })
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'users' }, () => {
+            loadUsers();
+            loadStats();
+        })
+        .subscribe((status) => {
+            const liveDot = document.getElementById('live-dot');
+            if (!liveDot) return;
+            if (status === 'SUBSCRIBED') {
+                liveDot.title            = 'Realtime ativo';
+                liveDot.style.background = 'var(--green)';
+                liveDot.style.boxShadow  = '0 0 6px var(--green)';
+            } else {
+                liveDot.title            = 'Reconectando...';
+                liveDot.style.background = 'var(--amber)';
+                liveDot.style.boxShadow  = '0 0 6px var(--amber)';
+            }
+        });
+}
+
+function teardownRealtime() {
+    if (_realtimeCh) {
+        supabase.removeChannel(_realtimeCh);
+        _realtimeCh = null;
+    }
+}
+
+// ?.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.?
+// STATS / KPIs
+// ?.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.?
 
 async function loadStats() {
     const nowIso       = new Date().toISOString();
     const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
-    const startOfToday = new Date(new Date().setHours(0,0,0,0)).toISOString();
+    const startOfToday = new Date(new Date().setHours(0, 0, 0, 0)).toISOString();
 
-    // ── Usuários ────────────────────────────────────────────────────────────
+    // ?"??"? Usu�rios ?"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"?
     try {
         const [
-            { count: total },
-            { count: active },
+            { count: total   },
+            { count: active  },
             { count: newToday },
         ] = await Promise.all([
             supabase.from('users').select('*', { count: 'exact', head: true }),
@@ -202,440 +367,358 @@ async function loadStats() {
                 .gte('created_at', startOfToday),
         ]);
 
-        document.getElementById('stat-total').textContent  = total  ?? '—';
-        document.getElementById('stat-active').textContent = active ?? '—';
+        const tot = total  ?? 0;
+        const act = active ?? 0;
 
-        const pct = total > 0 ? Math.round((active / total) * 100) : 0;
-        const activeSub = document.getElementById('stat-active-sub');
-        if (activeSub) activeSub.textContent = `${pct}% do total`;
+        _setText('stat-total',  tot);
+        _setText('stat-active', act);
+        _setText('stat-active-sub',    `${tot > 0 ? Math.round((act / tot) * 100) : 0}% do total`);
+        _setText('stat-new-today-sub', (newToday ?? 0) > 0 ? `+${newToday} hoje` : '');
 
-        const todaySub = document.getElementById('stat-new-today-sub');
-        if (todaySub && newToday > 0) todaySub.textContent = `+${newToday} hoje`;
-
-        // MRR e ARR estimados (base conservadora: todos mensal)
-        const mrr = (active ?? 0) * PRICE_MENSAL;
-        const arr = mrr * 12;
-        document.getElementById('stat-mrr').textContent = mrr > 0
-            ? 'R$ ' + mrr.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-            : 'R$ 0,00';
-        document.getElementById('stat-arr').textContent = arr > 0
-            ? 'R$ ' + arr.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-            : 'R$ 0,00';
+        const mrr = act * PRICE_MENSAL;
+        _setText('stat-mrr', _brl(mrr));
+        _setText('stat-arr', _brl(mrr * 12));
 
     } catch (err) {
-        console.warn('loadStats (users) error:', err.message);
+        console.warn('loadStats/users:', err.message);
     }
 
-    // ── Webhooks: novas e canceladas no mês ─────────────────────────────────
+    // ?"??"? Webhook events ?"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"?
     try {
-        const EVENTS_NEW    = ['PURCHASE_APPROVED','PURCHASE.APPROVED','SUBSCRIPTION_CREATED','SUBSCRIPTION.CREATED','SUBSCRIPTION_APPROVED','SUBSCRIPTION.APPROVED'];
-        const EVENTS_CANCEL = ['SUBSCRIPTION_CANCELLED','SUBSCRIPTION.CANCELLED','PURCHASE_REFUNDED','PURCHASE.REFUNDED','SUBSCRIPTION_REJECTED','SUBSCRIPTION.REJECTED','SUBSCRIPTION_RENEWAL_FAILED','SUBSCRIPTION.RENEWAL_FAILED'];
-
-        const [{ data: logsNew }, { data: logsCancel }, { count: whTotal }] = await Promise.all([
-            supabase.from('webhook_logs')
-                .select('event_type')
-                .gte('created_at', startOfMonth)
-                .in('event_type', EVENTS_NEW),
-            supabase.from('webhook_logs')
-                .select('event_type')
-                .gte('created_at', startOfMonth)
-                .in('event_type', EVENTS_CANCEL),
-            supabase.from('webhook_logs').select('*', { count: 'exact', head: true }),
+        const [
+            { count: newMonth    },
+            { count: cancelMonth },
+            { count: whTotal     },
+        ] = await Promise.all([
+            supabase.from('webhook_events').select('*', { count: 'exact', head: true })
+                .eq('plan_action', 'activate').eq('result', 'success')
+                .gte('created_at', startOfMonth),
+            supabase.from('webhook_events').select('*', { count: 'exact', head: true })
+                .eq('plan_action', 'deactivate').eq('result', 'success')
+                .gte('created_at', startOfMonth),
+            supabase.from('webhook_events').select('*', { count: 'exact', head: true }),
         ]);
 
-        const newMonth      = logsNew?.length    ?? 0;
-        const cancelMonth   = logsCancel?.length ?? 0;
-        const activeCnt     = parseInt(document.getElementById('stat-active').textContent) || 0;
-        const churnRate     = activeCnt > 0 ? ((cancelMonth / activeCnt) * 100).toFixed(1) + '%' : '0%';
+        const actCnt = parseInt(document.getElementById('stat-active')?.textContent) || 0;
+        const cancel = cancelMonth ?? 0;
 
-        document.getElementById('stat-new-month').textContent      = newMonth;
-        document.getElementById('stat-cancelled-month').textContent = cancelMonth;
-        document.getElementById('stat-churn').textContent           = churnRate;
-        document.getElementById('stat-webhooks').textContent        = whTotal ?? '—';
-
-        const mLabel = new Date().toLocaleString('pt-BR', { month: 'long' });
-        const sub = document.getElementById('stat-new-month-sub');
-        if (sub) sub.textContent = mLabel;
+        _setText('stat-new-month',       newMonth ?? 0);
+        _setText('stat-cancelled-month', cancel);
+        _setText('stat-churn',           actCnt > 0 ? ((cancel / actCnt) * 100).toFixed(1) + '%' : '0%');
+        _setText('stat-webhooks',        whTotal ?? 0);
+        _setText('stat-new-month-sub',   new Date().toLocaleString('pt-BR', { month: 'long' }));
 
     } catch (err) {
-        // tabela webhook_logs pode não existir ainda
-        document.getElementById('stat-new-month').textContent      = 'N/A';
-        document.getElementById('stat-cancelled-month').textContent = 'N/A';
-        document.getElementById('stat-churn').textContent           = 'N/A';
-        document.getElementById('stat-webhooks').textContent        = 'N/A';
+        console.warn('loadStats/webhooks:', err.message);
+        ['stat-new-month', 'stat-cancelled-month', 'stat-churn', 'stat-webhooks'].forEach(id => _setText(id, '-'));
     }
 }
 
-// ── Subscription Metrics (bar chart mensal) ───────────────────────────────────
+// ?.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.?
+// M??TRICAS MENSAIS
+// ?.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.?
+
 async function loadSubscriptionMetrics() {
     const wrap = document.getElementById('mrr-bars-wrap');
+    const btn  = document.getElementById('btn-refresh-metrics');
     if (!wrap) return;
 
-    const EVENTS_NEW    = ['PURCHASE_APPROVED','PURCHASE.APPROVED','SUBSCRIPTION_CREATED','SUBSCRIPTION.CREATED','SUBSCRIPTION_APPROVED','SUBSCRIPTION.APPROVED'];
-    const EVENTS_CANCEL = ['SUBSCRIPTION_CANCELLED','SUBSCRIPTION.CANCELLED','PURCHASE_REFUNDED','PURCHASE.REFUNDED','SUBSCRIPTION_REJECTED','SUBSCRIPTION.REJECTED','SUBSCRIPTION_RENEWAL_FAILED','SUBSCRIPTION.RENEWAL_FAILED'];
+    if (btn) { btn.disabled = true; btn.classList.add('spinning'); }
 
-    // Últimos 6 meses
     const months = [];
     for (let i = 5; i >= 0; i--) {
-        const d   = new Date();
+        const d = new Date();
         d.setDate(1);
         d.setMonth(d.getMonth() - i);
         months.push({
-            label : d.toLocaleString('pt-BR', { month: 'short', year: '2-digit' }),
-            start : new Date(d.getFullYear(), d.getMonth(), 1).toISOString(),
-            end   : new Date(d.getFullYear(), d.getMonth() + 1, 1).toISOString(),
+            label: d.toLocaleString('pt-BR', { month: 'short', year: '2-digit' }),
+            start: new Date(d.getFullYear(), d.getMonth(), 1).toISOString(),
+            end:   new Date(d.getFullYear(), d.getMonth() + 1, 1).toISOString(),
         });
     }
 
     try {
-        const { data: logsAll, error } = await supabase
-            .from('webhook_logs')
-            .select('event_type, created_at')
-            .gte('created_at', months[0].start);
+        const { data: logs, error } = await supabase
+            .from('webhook_events')
+            .select('plan_action, result, created_at')
+            .gte('created_at', months[0].start)
+            .eq('result', 'success');
 
         if (error) {
-            if (error.code === '42P01') { wrap.innerHTML = '<p style="color:var(--text-3);font-size:13px">Nenhum dado de webhook ainda.</p>'; return; }
+            if (error.code === '42P01') {
+                wrap.innerHTML = '<p style="color:var(--text-3);font-size:13px;padding:20px 24px">Tabela <code>webhook_events</code> ainda nao existe - execute o SQL de setup.</p>';
+                return;
+            }
             throw error;
         }
 
         const rows = months.map(m => {
-            const newCnt    = (logsAll || []).filter(l => l.created_at >= m.start && l.created_at < m.end && EVENTS_NEW.includes(l.event_type)).length;
-            const cancelCnt = (logsAll || []).filter(l => l.created_at >= m.start && l.created_at < m.end && EVENTS_CANCEL.includes(l.event_type)).length;
-            const mrr       = newCnt * PRICE_MENSAL;
-            return { ...m, newCnt, cancelCnt, mrr };
+            const inRange   = (logs || []).filter(l => l.created_at >= m.start && l.created_at < m.end);
+            const newCnt    = inRange.filter(l => l.plan_action === 'activate').length;
+            const cancelCnt = inRange.filter(l => l.plan_action === 'deactivate').length;
+            return { ...m, newCnt, cancelCnt, mrr: newCnt * PRICE_MENSAL };
         });
 
         const maxNew = Math.max(1, ...rows.map(r => r.newCnt));
 
         wrap.innerHTML = `
-        <table class="mrr-table">
-          <thead><tr>
-            <th style="width:80px">Mês</th>
-            <th>Novas</th>
-            <th>Canceladas</th>
-            <th style="text-align:right">MRR est.</th>
-          </tr></thead>
-          <tbody>
-            ${rows.map(r => `
-            <tr>
-              <td class="mono" style="color:var(--text-2);font-size:12px">${escapedHtml(r.label)}</td>
-              <td>
-                <div class="mrr-bar-row">
-                  <div class="mrr-bar-wrap"><div class="mrr-bar-fill mrr-bar-new" style="width:${Math.round((r.newCnt/maxNew)*100)}%"></div></div>
-                  <span class="mrr-bar-header">${r.newCnt}</span>
-                </div>
-              </td>
-              <td style="color:var(--red);font-size:13px;font-weight:600">${r.cancelCnt}</td>
-              <td style="text-align:right;font-size:13px;color:var(--teal)">
-                ${r.mrr > 0 ? 'R$ ' + r.mrr.toLocaleString('pt-BR', { minimumFractionDigits:2, maximumFractionDigits:2 }) : '—'}
-              </td>
-            </tr>`).join('')}
-          </tbody>
-        </table>`;
+          <div class="mrr-bar-header">
+            <span>Mes</span><span></span>
+            <span>Novas</span><span>Canceladas</span><span>MRR est.</span>
+          </div>
+          ${rows.map((r, i) => `
+            <div class="mrr-bar-row" style="${i === rows.length - 1 ? '' : 'opacity:.65'}">
+              <span class="bar-month" style="${i === rows.length - 1 ? 'color:var(--text);font-weight:700' : ''}">${escapedHtml(r.label)}</span>
+              <div class="mrr-bar-wrap">
+                <div class="mrr-bar-fill mrr-bar-new" style="width:${Math.round((r.newCnt / maxNew) * 100)}%"></div>
+              </div>
+              <span class="bar-novas">${r.newCnt}</span>
+              <span class="bar-cancel">${r.cancelCnt > 0 ? r.cancelCnt : '-'}</span>
+              <span class="bar-mrr-val">${r.mrr > 0 ? _brl(r.mrr) : '-'}</span>
+            </div>`).join('')}`;
 
     } catch (err) {
-        wrap.innerHTML = `<p style="color:var(--red);font-size:13px">Erro: ${escapedHtml(err.message)}</p>`;
+        wrap.innerHTML = `<p style="color:var(--red);font-size:13px;padding:20px 24px">Erro: ${escapedHtml(err.message)}</p>`;
+    } finally {
+        if (btn) { btn.disabled = false; btn.classList.remove('spinning'); }
     }
 }
 
-// ── User search & filter ──────────────────────────────────────────────────────
-let _userFilter = 'all';
+// ?.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.?
+// USU�RIOS
+// ?.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.?
 
 function setUserFilter(filter, el) {
     _userFilter = filter;
     document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
     if (el) el.classList.add('active');
-    filterUsers();
+    _renderUsers();
 }
 
-function filterUsers() {
-    const q     = (document.getElementById('user-search')?.value || '').toLowerCase().trim();
-    const rows  = document.querySelectorAll('#users-tbody tr');
-    const nowMs = Date.now();
+function filterUsers() { _renderUsers(); }
 
-    rows.forEach(row => {
-        if (row.classList.contains('loading-row')) return;
+function _renderUsers() {
+    const q       = (document.getElementById('user-search')?.value || '').toLowerCase().trim();
+    const tbody   = document.getElementById('users-tbody');
+    const emptyEl = document.getElementById('users-empty');
 
-        const email    = row.cells[0]?.textContent?.toLowerCase() || '';
-        const name     = row.cells[1]?.textContent?.toLowerCase() || '';
-        const planText = (row.cells[2]?.textContent || '').toLowerCase();
-        const expiryEl = row.cells[3];
-        const expiryText = expiryEl?.textContent?.trim() || '';
+    const filtered = _allUsersCache.filter(u => {
+        const email   = (u.email || '').toLowerCase();
+        const name    = (u.name  || '').toLowerCase();
+        const isPrem  = u.plan === 'premium';
+        const expired = isExpired(u.plan_expires_at);
 
-        // plan filter
         let planOk = true;
-        if (_userFilter === 'premium')  planOk = planText.includes('premium');
-        if (_userFilter === 'free')     planOk = planText.includes('free');
-        if (_userFilter === 'expired')  planOk = expiryText.startsWith('⚠');
+        if (_userFilter === 'premium') planOk = isPrem && !expired;
+        if (_userFilter === 'free')    planOk = !isPrem;
+        if (_userFilter === 'expired') planOk = isPrem && expired;
 
-        // text filter
-        const textOk = !q || email.includes(q) || name.includes(q);
-
-        row.style.display = planOk && textOk ? '' : 'none';
+        return planOk && (!q || email.includes(q) || name.includes(q));
     });
+
+    if (filtered.length === 0) {
+        tbody.innerHTML       = '';
+        emptyEl.style.display = 'block';
+        return;
+    }
+
+    emptyEl.style.display = 'none';
+    tbody.innerHTML = filtered.map(u => {
+        const expired = isExpired(u.plan_expires_at);
+        const isPrem  = u.plan === 'premium';
+        const expHtml = u.plan_expires_at
+            ? `<span style="color:${expired ? 'var(--red)' : 'var(--text-2)'};font-size:12px">${expired ? '⚠ ' : ''}${formatDate(u.plan_expires_at)}</span>`
+            : '<span style="color:var(--text-3)">-</span>';
+
+        return `<tr>
+          <td style="font-size:12px">${escapedHtml(u.email)}</td>
+          <td style="color:var(--text-2)">${escapedHtml(u.name || '-')}</td>
+          <td>${planBadge(u.plan, u.plan_expires_at)}</td>
+          <td class="mono">${expHtml}</td>
+          <td>
+            <div class="td-actions">
+              <button class="btn btn-success btn-sm"
+                onclick="activateUser('${escapedHtml(u.email)}', 30)"
+                title="${isPrem ? 'Renovar +30 dias' : 'Ativar 30 dias'}">
+                ${isPrem ? '↺ Renovar' : '✓ Ativar'}
+              </button>
+              ${isPrem ? `<button class="btn btn-danger btn-sm" onclick="removeUser('${escapedHtml(u.email)}')" title="Remover premium">?o.</button>` : ''}
+            </div>
+          </td>
+        </tr>`;
+    }).join('');
 }
 
-// ── Users ─────────────────────────────────────────────────────────────────────
 async function loadUsers() {
     const tbody   = document.getElementById('users-tbody');
     const emptyEl = document.getElementById('users-empty');
     const btn     = document.getElementById('btn-refresh-users');
 
-    tbody.innerHTML   = '<tr class="loading-row"><td colspan="5"><span class="spinner"></span></td></tr>';
+    if (!_allUsersCache.length) {
+        tbody.innerHTML = '<tr class="loading-row"><td colspan="5"><span class="spinner"></span></td></tr>';
+    }
     emptyEl.style.display = 'none';
-    btn.disabled      = true;
-    btn.classList.add('spinning');
+    if (btn) { btn.disabled = true; btn.classList.add('spinning'); }
 
     try {
         const { data, error } = await supabase
             .from('users')
-            .select('id, email, name, plan, plan_expires_at')
-            .order('plan', { ascending: false })
+            .select('id, email, name, plan, plan_expires_at, created_at')
+            .order('plan',            { ascending: false })
             .order('plan_expires_at', { ascending: false, nullsFirst: false });
 
         if (error) throw error;
 
-        if (!data || data.length === 0) {
-            tbody.innerHTML = '';
-            emptyEl.style.display = 'block';
-            return;
-        }
-
-        tbody.innerHTML = data.map(u => {
-            const expired   = isExpired(u.plan_expires_at);
-            const isPrem    = u.plan === 'premium';
-            const expiresHtml = u.plan_expires_at
-                ? `<span style="color:${expired ? 'var(--red)' : 'var(--text-2)'}">
-                     ${expired ? '⚠ ' : ''}${formatDate(u.plan_expires_at)}
-                   </span>`
-                : '<span style="color:var(--text-3)">—</span>';
-
-            return `
-            <tr data-userid="${escapedHtml(u.id)}" data-email="${escapedHtml(u.email)}">
-              <td>${escapedHtml(u.email)}</td>
-              <td style="color:var(--text-2)">${escapedHtml(u.name || '—')}</td>
-              <td>${setPlanBadge(u.plan)}</td>
-              <td class="mono">${expiresHtml}</td>
-              <td>
-                <div class="td-actions">
-                  ${!isPrem ? `
-                    <button class="btn btn-success btn-sm"
-                      onclick="activateUser('${escapedHtml(u.email)}', 30)"
-                      title="Ativar 30 dias">
-                      ✓ Ativar
-                    </button>
-                  ` : `
-                    <button class="btn btn-success btn-sm"
-                      onclick="activateUser('${escapedHtml(u.email)}', 30)"
-                      title="Renovar 30 dias">
-                      ↺ Renovar
-                    </button>
-                  `}
-                  ${isPrem ? `
-                    <button class="btn btn-danger btn-sm"
-                      onclick="removeUser('${escapedHtml(u.email)}')"
-                      title="Remover premium">
-                      ✕ Remover
-                    </button>
-                  ` : ''}
-                </div>
-              </td>
-            </tr>`;
-        }).join('');
+        _allUsersCache = data || [];
+        _renderUsers();
 
     } catch (err) {
-        tbody.innerHTML = `<tr><td colspan="5" style="color:var(--red);text-align:center;padding:24px">
-          Erro ao carregar: ${escapedHtml(err.message)}
-        </td></tr>`;
-        showToast('Erro ao carregar usuários: ' + err.message, 'error');
+        tbody.innerHTML = `<tr><td colspan="5" style="color:var(--red);text-align:center;padding:24px">Erro: ${escapedHtml(err.message)}</td></tr>`;
+        showToast('Erro ao carregar usuarios: ' + err.message, 'error');
     } finally {
-        btn.disabled = false;
-        btn.classList.remove('spinning');
-        filterUsers();
+        if (btn) { btn.disabled = false; btn.classList.remove('spinning'); }
     }
 }
 
-// ── Webhook Logs ──────────────────────────────────────────────────────────────
+// ?.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.?
+// WEBHOOK LOGS
+// ?.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.?
+
 async function loadWebhookLogs() {
     const tbody   = document.getElementById('logs-tbody');
     const emptyEl = document.getElementById('logs-empty');
     const btn     = document.getElementById('btn-refresh-logs');
 
-    tbody.innerHTML   = '<tr class="loading-row"><td colspan="5"><span class="spinner"></span></td></tr>';
-    emptyEl.style.display = 'none';
-    btn.disabled      = true;
-    btn.classList.add('spinning');
+    if (btn) { btn.disabled = true; btn.classList.add('spinning'); }
 
     try {
         const { data, error } = await supabase
-            .from('webhook_logs')
-            .select('id, provider, event_type, status, buyer_email, created_at')
+            .from('webhook_events')
+            .select('id, gateway, event_type, plan_action, result, buyer_email, error_msg, created_at')
             .order('created_at', { ascending: false })
             .limit(50);
 
         if (error) {
-            // Table might not exist yet
             if (error.code === '42P01' || error.message?.includes('does not exist')) {
-                tbody.innerHTML = '';
+                tbody.innerHTML       = '';
                 emptyEl.style.display = 'block';
-                document.getElementById('stat-webhooks').textContent = 'N/A';
+                _setText('stat-webhooks', '-');
                 return;
             }
             throw error;
         }
 
         if (!data || data.length === 0) {
-            tbody.innerHTML = '';
+            tbody.innerHTML       = '';
             emptyEl.style.display = 'block';
             return;
         }
 
-        tbody.innerHTML = data.map(log => `
-            <tr>
-              <td>${setProviderBadge(log.provider)}</td>
-              <td class="mono">${escapedHtml(log.event_type || '—')}</td>
-              <td>${setStatusBadge(log.status)}</td>
-              <td style="color:var(--text-2);font-size:12px">${escapedHtml(log.buyer_email || '—')}</td>
-              <td class="mono" style="white-space:nowrap">${formatDate(log.created_at)}</td>
-            </tr>`).join('');
+        emptyEl.style.display = 'none';
+        tbody.innerHTML = data.map(log => {
+            const isErr    = log.result === 'error';
+            const errTitle = log.error_msg ? ` title="${escapedHtml(log.error_msg)}"` : '';
+            return `<tr ${isErr ? 'style="background:rgba(255,77,106,.04)"' : ''}>
+              <td>${gatewayBadge(log.gateway)}</td>
+              <td>
+                <span class="mono" style="font-size:11px">${escapedHtml(log.event_type || '-')}</span>
+                <div style="margin-top:2px">${actionBadge(log.plan_action)}</div>
+              </td>
+              <td${errTitle}>${resultBadge(log.result)}${isErr && log.error_msg ? `<div style="font-size:10px;color:var(--red);margin-top:2px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapedHtml(log.error_msg)}</div>` : ''}</td>
+              <td style="color:var(--text-2);font-size:12px">${escapedHtml(log.buyer_email || '-')}</td>
+              <td class="mono" style="font-size:11px;color:var(--text-3);white-space:nowrap" title="${formatDate(log.created_at)}">${formatRelative(log.created_at)}</td>
+            </tr>`;
+        }).join('');
 
-        document.getElementById('stat-webhooks').textContent = data.length >= 50
-            ? '50+' : data.length;
+        _setText('stat-webhooks', data.length >= 50 ? '50+' : String(data.length));
 
     } catch (err) {
-        tbody.innerHTML = `<tr><td colspan="5" style="color:var(--red);text-align:center;padding:24px">
-          Erro ao carregar: ${escapedHtml(err.message)}
-        </td></tr>`;
-        showToast('Erro ao carregar webhook logs: ' + err.message, 'error');
+        tbody.innerHTML = `<tr><td colspan="5" style="color:var(--red);text-align:center;padding:24px">Erro: ${escapedHtml(err.message)}</td></tr>`;
+        showToast('Erro ao carregar logs: ' + err.message, 'error');
     } finally {
-        btn.disabled = false;
-        btn.classList.remove('spinning');
+        if (btn) { btn.disabled = false; btn.classList.remove('spinning'); }
     }
 }
 
-// ── Premium Actions ───────────────────────────────────────────────────────────
+// ?.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.?
+// PREMIUM ACTIONS
+// ?.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.?
 
-/**
- * Tenta chamar a RPC admin_set_premium; se não existir, faz UPDATE direto.
- * O UPDATE direto só vai funcionar se o usuário autenticado tiver permissão
- * (exige política RLS de admin ou service_role).
- */
-async function setPremium(email, days) {
-    // Tenta via RPC primeiro (função SECURITY DEFINER no Supabase)
-    const { data: rpcData, error: rpcError } = await supabase.rpc('admin_set_premium', {
-        p_email: email,
-        p_days:  days,
-    });
-
-    if (!rpcError) return { success: true, data: rpcData };
-
-    // RPC não existe (42883) → fallback: UPDATE direto
-    if (rpcError.code === '42883' || rpcError.message?.includes('does not exist')) {
-        const expiresAt = new Date(Date.now() + days * 86_400_000).toISOString();
-        const { error: upErr } = await supabase
-            .from('users')
-            .update({ plan: 'premium', plan_expires_at: expiresAt })
-            .eq('email', email);
-
-        if (upErr) return { success: false, error: upErr.message };
-        return { success: true };
-    }
-
-    return { success: false, error: rpcError.message };
-}
-
-/**
- * Tenta chamar a RPC admin_remove_premium; se não existir, faz UPDATE direto.
- */
-async function removePremium(email) {
-    const { data: rpcData, error: rpcError } = await supabase.rpc('admin_remove_premium', {
-        p_email: email,
-    });
-
-    if (!rpcError) return { success: true, data: rpcData };
-
-    if (rpcError.code === '42883' || rpcError.message?.includes('does not exist')) {
-        const { error: upErr } = await supabase
-            .from('users')
-            .update({ plan: 'free', plan_expires_at: null })
-            .eq('email', email);
-
-        if (upErr) return { success: false, error: upErr.message };
-        return { success: true };
-    }
-
-    return { success: false, error: rpcError.message };
-}
-
-// ── Button handlers ───────────────────────────────────────────────────────────
 async function activateUser(email, days) {
     if (!email) return;
     if (!confirm(`Ativar premium por ${days} dias para:\n${email}`)) return;
 
-    showToast(`Ativando premium para ${email}…`, 'info');
-    const result = await setPremium(email, days);
+    showToast(`Ativando premium para ${email}...`, 'info');
+    const { error } = await supabase.rpc('activate_premium_by_email', {
+        p_email:         email,
+        p_name:          email.split('@')[0],
+        p_duration_days: days,
+    });
 
-    if (result.success) {
+    if (error) {
+        showToast(`Erro: ${error.message}`, 'error');
+    } else {
         showToast(`✓ Premium ativado para ${email}`, 'success');
         loadUsers();
         loadStats();
-    } else {
-        showToast(`Erro: ${result.error}`, 'error');
     }
 }
 
 async function removeUser(email) {
     if (!email) return;
-    if (!confirm(`Remover premium de:\n${email}\n\nO usuário voltará para o plano Free.`)) return;
+    if (!confirm(`Remover premium de:\n${email}\n\nO usuario voltara para o plano Free.`)) return;
 
-    showToast(`Removendo premium de ${email}…`, 'info');
-    const result = await removePremium(email);
+    showToast(`Removendo premium de ${email}...`, 'info');
+    const { error } = await supabase.rpc('deactivate_premium_by_email', { p_email: email });
 
-    if (result.success) {
+    if (error) {
+        showToast(`Erro: ${error.message}`, 'error');
+    } else {
         showToast(`✓ Premium removido de ${email}`, 'success');
         loadUsers();
         loadStats();
-    } else {
-        showToast(`Erro: ${result.error}`, 'error');
     }
 }
 
 async function manualActivate() {
-    const email  = document.getElementById('manual-email').value.trim();
-    const daysRaw = parseInt(document.getElementById('manual-days').value, 10);
-    const btn    = document.getElementById('btn-activate');
-    const btnTxt = document.getElementById('btn-activate-txt');
+    const emailInput = document.getElementById('manual-email');
+    const daysInput  = document.getElementById('manual-days');
+    const btn        = document.getElementById('btn-activate');
+    const btnTxt     = document.getElementById('btn-activate-txt');
 
-    if (!email) {
-        showToast('Informe o e-mail do usuário.', 'error');
-        document.getElementById('manual-email').focus();
+    const email   = emailInput.value.trim();
+    const daysRaw = parseInt(daysInput.value, 10);
+
+    if (!email || !email.includes('@')) {
+        showToast('E-mail invalido.', 'error');
+        emailInput.focus();
         return;
     }
 
-    if (!email.includes('@') || !email.includes('.')) {
-        showToast('E-mail inválido.', 'error');
-        return;
-    }
-
-    const days = isNaN(daysRaw) || daysRaw < 1 ? 30 : Math.min(daysRaw, 3650);
-
-    btn.disabled = true;
-    btnTxt.innerHTML = '<span class="spinner" style="width:13px;height:13px;border-width:2px"></span> Ativando…';
+    const days       = isNaN(daysRaw) || daysRaw < 1 ? 30 : Math.min(daysRaw, 3650);
+    btn.disabled     = true;
+    btnTxt.innerHTML = '<span class="spinner" style="width:13px;height:13px;border-width:2px"></span> Ativando...';
 
     try {
-        const result = await setPremium(email, days);
+        const { error } = await supabase.rpc('activate_premium_by_email', {
+            p_email:         email,
+            p_name:          email.split('@')[0],
+            p_duration_days: days,
+        });
 
-        if (result.success) {
-            showToast(`✓ Premium ativado por ${days} dias para ${email}`, 'success');
-            document.getElementById('manual-email').value = '';
-            document.getElementById('manual-days').value  = '30';
-            loadUsers();
-            loadStats();
-        } else {
-            showToast(`Erro: ${result.error}`, 'error');
-        }
+        if (error) throw error;
+
+        showToast(`✓ Premium ativado por ${days} dias para ${email}`, 'success');
+        emailInput.value = '';
+        daysInput.value  = '30';
+        loadUsers();
+        loadStats();
+
+    } catch (err) {
+        showToast(`Erro: ${err.message}`, 'error');
     } finally {
-        btn.disabled = false;
+        btn.disabled       = false;
         btnTxt.textContent = '✓ Ativar Premium';
     }
 }
+

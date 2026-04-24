@@ -1,300 +1,347 @@
 // @ts-nocheck
 // =====================================================
-// ENEM MASTER — Edge Function: payment-webhook
-// Recebe webhooks de gateways de pagamento e ativa Premium
-//
+// ENEM MASTER — Edge Function: payment-webhook v3
+// =====================================================
 // Gateways suportados:
+//   - Cakto        (body.secret)                  ← autenticação no body
 //   - Hotmart      (header: x-hotmart-hottok)
-//   - Kiwify       (header: x-kiwify-signature + token no body)
+//   - Kiwify       (header: x-kiwify-signature + body.token)
 //   - Mercado Pago (header: x-signature)
-//   - Cakto        (header: x-cakto-token)
+//
+// Funcionalidades:
+//   • Idempotência via tabela webhook_events (evita duplo-processamento)
+//   • Renovação empilhada (preserva dias restantes ao renovar)
+//   • Criação automática de conta para novos compradores (invite)
+//   • Logs detalhados para diagnóstico no Supabase Dashboard
 //
 // Deploy:
 //   supabase functions deploy payment-webhook --no-verify-jwt
 //
-// Setar segredos:
+// Secrets necessários:
+//   supabase secrets set CAKTO_TOKEN=SEU_TOKEN
 //   supabase secrets set HOTMART_TOKEN=SEU_TOKEN
 //   supabase secrets set KIWIFY_TOKEN=SEU_TOKEN
-//   supabase secrets set MP_WEBHOOK_SECRET=SEU_SECRET
-//   supabase secrets set CAKTO_TOKEN=SEU_TOKEN
-//   supabase secrets set SUPABASE_SERVICE_ROLE_KEY=sua_service_key
+//   supabase secrets set APP_URL=https://enemmaster.com.br
 // =====================================================
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
+// ── Variáveis de ambiente ─────────────────────────────────────────────────────
+const SUPABASE_URL  = Deno.env.get('SUPABASE_URL')!;
 const SERVICE_ROLE  = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-
 const HOTMART_TOKEN = Deno.env.get('HOTMART_TOKEN') ?? '';
 const KIWIFY_TOKEN  = Deno.env.get('KIWIFY_TOKEN')  ?? '';
 const CAKTO_TOKEN   = Deno.env.get('CAKTO_TOKEN')   ?? '';
+const APP_URL       = Deno.env.get('APP_URL')        ?? 'https://enemmaster.com.br';
 
-// Plano: quantos dias conceder
-const PLAN_DURATION: Record<string, number> = {
-    mensal: 30,
-    anual:  365,
-};
+// ── Tipos ─────────────────────────────────────────────────────────────────────
+type Action = 'activate' | 'deactivate' | 'skip';
 
+interface ParsedEvent {
+    gateway:       string;
+    action:        Action;
+    buyerEmail:    string | null;
+    buyerName:     string;
+    durationDays:  number;
+    transactionId: string | null;
+    eventType:     string;
+}
+
+// ── Helper: cast seguro para string ──────────────────────────────────────────
+const s = (v: unknown): string => String(v ?? '').trim();
+
+// ── Parser: Cakto ─────────────────────────────────────────────────────────────
+// A Cakto envia o token no campo body.secret (não em header)
+function parseCakto(body: any): ParsedEvent | null {
+    if (body?.secret === undefined) return null; // não é Cakto
+
+    if (!CAKTO_TOKEN) throw new Error('CAKTO_TOKEN_NOT_CONFIGURED');
+    if (body.secret !== CAKTO_TOKEN) throw new Error('INVALID_TOKEN');
+
+    // Normaliza: MAIÚSCULO + pontos → underscores ('purchase.approved' → 'PURCHASE_APPROVED')
+    const eventType = s(body?.event ?? body?.type).toUpperCase().replace(/\./g, '_');
+
+    const ACTIVATE_EVENTS = new Set([
+        'PURCHASE_APPROVED',            'ORDER_APPROVED',
+        'ORDER_PAID',                   'SALE_APPROVED',
+        'SUBSCRIPTION_CREATED',         'SUBSCRIPTION_APPROVED',
+        'SUBSCRIPTION_ACTIVE',          'SUBSCRIPTION_ACTIVATED',
+        'SUBSCRIPTION_CHARGED',         'SUBSCRIPTION_RENEWED',
+        'SUBSCRIPTION_RENEWAL_APPROVED','SUBSCRIPTION_RENEWAL_SUCCESS',
+        'RECURRENCE_CHARGED',           'RECURRENCE_APPROVED',
+    ]);
+
+    const DEACTIVATE_EVENTS = new Set([
+        'SUBSCRIPTION_CANCELLED',        'SUBSCRIPTION_CANCELED',
+        'SUBSCRIPTION_REJECTED',         'SUBSCRIPTION_DECLINED',
+        'SUBSCRIPTION_EXPIRED',          'SUBSCRIPTION_CHARGEBACK',
+        'PURCHASE_REFUNDED',             'ORDER_REFUNDED',
+        'SUBSCRIPTION_RENEWAL_FAILED',   'SUBSCRIPTION_RENEWAL_DECLINED',
+        'SUBSCRIPTION_RENEWAL_REJECTED', 'RECURRENCE_FAILED',
+        'RECURRENCE_DECLINED',
+    ]);
+
+    let action: Action = 'skip';
+    if (ACTIVATE_EVENTS.has(eventType))   action = 'activate';
+    if (DEACTIVATE_EVENTS.has(eventType)) action = 'deactivate';
+
+    const d          = body?.data ?? {};
+    const buyerEmail = d?.buyer?.email ?? d?.customer?.email ?? d?.email
+                    ?? body?.buyer?.email ?? body?.customer?.email ?? null;
+    const buyerName  = s(d?.buyer?.name  ?? d?.customer?.name ?? d?.buyer?.full_name
+                    ??  body?.buyer?.name ?? body?.customer?.name);
+    const planName     = s(d?.purchase?.offer?.code ?? d?.plan?.name ?? body?.plan?.name);
+    const durationDays = planName.toLowerCase().includes('anual') ? 365 : 30;
+    const transactionId = s(d?.purchase?.id ?? d?.id ?? d?.order?.id) || null;
+
+    return { gateway: 'cakto', action, buyerEmail, buyerName, durationDays, transactionId, eventType };
+}
+
+// ── Parser: Hotmart ───────────────────────────────────────────────────────────
+function parseHotmart(headers: Record<string, string>, body: any): ParsedEvent | null {
+    if (!headers['x-hotmart-hottok'] || !HOTMART_TOKEN) return null;
+    if (headers['x-hotmart-hottok'] !== HOTMART_TOKEN) throw new Error('INVALID_TOKEN');
+
+    const status = s(body?.data?.purchase?.status).toUpperCase();
+    let action: Action = 'skip';
+    if (['APPROVED', 'COMPLETE'].includes(status))                action = 'activate';
+    if (['REFUNDED', 'CANCELLED', 'CHARGEBACK'].includes(status)) action = 'deactivate';
+
+    const offer        = s(body?.data?.purchase?.offer?.code).toLowerCase();
+    const durationDays = offer.includes('anual') ? 365 : 30;
+
+    return {
+        gateway: 'hotmart', action,
+        buyerEmail:    body?.data?.buyer?.email ?? null,
+        buyerName:     s(body?.data?.buyer?.name),
+        durationDays,
+        transactionId: s(body?.data?.purchase?.transaction) || null,
+        eventType:     status,
+    };
+}
+
+// ── Parser: Kiwify ────────────────────────────────────────────────────────────
+function parseKiwify(headers: Record<string, string>, body: any): ParsedEvent | null {
+    if (!headers['x-kiwify-signature']) return null;
+    if (!KIWIFY_TOKEN || body?.token !== KIWIFY_TOKEN) throw new Error('INVALID_TOKEN');
+
+    const event        = s(body?.order_status).toLowerCase();
+    let action: Action = 'skip';
+    if (['paid', 'authorized'].includes(event))                   action = 'activate';
+    if (['refunded', 'cancelled', 'chargedback'].includes(event)) action = 'deactivate';
+
+    const freq         = s(body?.Product?.description).toLowerCase();
+    const durationDays = freq.includes('anual') ? 365 : 30;
+
+    return {
+        gateway: 'kiwify', action,
+        buyerEmail:    body?.Customer?.email ?? null,
+        buyerName:     s(body?.Customer?.full_name ?? body?.Customer?.name),
+        durationDays,
+        transactionId: s(body?.order_id) || null,
+        eventType:     event,
+    };
+}
+
+// ── Parser: Mercado Pago ──────────────────────────────────────────────────────
+// Usa 'x-signature' como identificador — não faz match por body.type para evitar
+// falsos positivos com outros gateways
+function parseMercadoPago(headers: Record<string, string>, body: any): ParsedEvent | null {
+    if (!headers['x-signature'] && !headers['x-request-id']) return null;
+
+    const status       = s(body?.data?.status ?? body?.status).toLowerCase();
+    let action: Action = 'skip';
+    if (['approved', 'authorized'].includes(status))               action = 'activate';
+    if (['refunded', 'cancelled', 'charged_back'].includes(status)) action = 'deactivate';
+
+    const durationDays = body?.metadata?.plan === 'anual' ? 365 : 30;
+    const name = [s(body?.payer?.first_name), s(body?.payer?.last_name)].filter(Boolean).join(' ');
+
+    return {
+        gateway: 'mercadopago', action,
+        buyerEmail:    body?.payer?.email ?? null,
+        buyerName:     name,
+        durationDays,
+        transactionId: s(body?.data?.id ?? body?.id) || null,
+        eventType:     status,
+    };
+}
+
+// ── Handler principal ─────────────────────────────────────────────────────────
 Deno.serve(async (req: Request) => {
+    // Health check — gateways fazem GET ao cadastrar a URL
+    if (req.method === 'GET') {
+        return new Response(JSON.stringify({ ok: true, service: 'payment-webhook', version: '3' }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+        });
+    }
+
     if (req.method !== 'POST') {
         return new Response('Method not allowed', { status: 405 });
     }
 
-    let body: Record<string, unknown>;
+    // ── Parse do body ─────────────────────────────────────────────
+    let body: any;
     try {
         body = await req.json();
     } catch {
+        console.error('❌ Body inválido: não é JSON');
         return new Response('Invalid JSON', { status: 400 });
     }
 
-    // ─── Detectar gateway e extrair dados ──────────────────────
-    let buyerEmail: string | null = null;
-    let buyerName: string = '';
-    let durationDays = 30;
-    let planAction: 'activate' | 'deactivate' = 'activate';
-    let gateway = 'unknown';
-    let caktoEvent = '';
-
     const headers = Object.fromEntries(req.headers.entries());
 
-    // --- Hotmart ---
-    if (headers['x-hotmart-hottok'] === HOTMART_TOKEN) {
-        gateway = 'hotmart';
-        const purchase = (body as any)?.data?.purchase;
-        const buyer    = (body as any)?.data?.buyer;
-        const status   = purchase?.status;
+    console.log('📥 Webhook recebido', JSON.stringify({
+        has_cakto_secret: body?.secret   ? '[sim]' : '[não]',
+        has_hotmart:  headers['x-hotmart-hottok']   ? '[sim]' : '[não]',
+        has_kiwify:   headers['x-kiwify-signature'] ? '[sim]' : '[não]',
+        has_mp:       headers['x-signature']        ? '[sim]' : '[não]',
+        event:        s(body?.event ?? body?.type ?? body?.data?.purchase?.status) || '[?]',
+        root_keys:    Object.keys(body).join(','),
+    }));
 
-        if (['APPROVED', 'COMPLETE'].includes(status ?? '')) {
-            planAction = 'activate';
-        } else if (['REFUNDED', 'CANCELLED', 'CHARGEBACK'].includes(status ?? '')) {
-            planAction = 'deactivate';
-        } else {
-            return new Response(JSON.stringify({ ok: true, skipped: true }), { status: 200 });
-        }
+    // ── Detectar gateway ──────────────────────────────────────────
+    // Cakto verificado PRIMEIRO (autenticação no body, não em header)
+    let parsed: ParsedEvent | null = null;
+    let authError: string | null   = null;
 
-        buyerEmail   = buyer?.email ?? null;
-        buyerName    = buyer?.name  ?? '';
-        const offer  = purchase?.offer?.code ?? '';
-        durationDays = offer.toLowerCase().includes('anual') ? 365 : 30;
+    try {
+        parsed = parseCakto(body)
+              ?? parseHotmart(headers, body)
+              ?? parseKiwify(headers, body)
+              ?? parseMercadoPago(headers, body);
+    } catch (e: any) {
+        authError = e.message;
     }
 
-    // --- Kiwify ---
-    else if (headers['x-kiwify-signature'] && body?.token === KIWIFY_TOKEN) {
-        gateway = 'kiwify';
-        const event = (body as any)?.order_status;
-
-        if (['paid', 'authorized'].includes(event ?? '')) {
-            planAction = 'activate';
-        } else if (['refunded', 'cancelled', 'chargedback'].includes(event ?? '')) {
-            planAction = 'deactivate';
-        } else {
-            return new Response(JSON.stringify({ ok: true, skipped: true }), { status: 200 });
-        }
-
-        buyerEmail   = (body as any)?.Customer?.email ?? null;
-        buyerName    = (body as any)?.Customer?.full_name ?? (body as any)?.Customer?.name ?? '';
-        const freq   = (body as any)?.Product?.description ?? '';
-        durationDays = freq.toLowerCase().includes('anual') ? 365 : 30;
+    if (authError === 'CAKTO_TOKEN_NOT_CONFIGURED') {
+        console.error('❌ CAKTO_TOKEN não está configurado. Execute: supabase secrets set CAKTO_TOKEN=SEU_TOKEN');
+        return new Response(JSON.stringify({ ok: false, error: 'cakto_token_not_configured' }), { status: 500 });
+    }
+    if (authError === 'INVALID_TOKEN') {
+        console.error('❌ Token de autenticação inválido recebido');
+        return new Response(JSON.stringify({ ok: false, error: 'invalid_token' }), { status: 401 });
     }
 
-    // --- Mercado Pago ---
-    else if (headers['x-signature'] || (body as any)?.type === 'payment') {
-        gateway = 'mercadopago';
-        const status = (body as any)?.data?.status ?? (body as any)?.status;
-
-        if (['approved', 'authorized'].includes(status ?? '')) {
-            planAction = 'activate';
-        } else if (['refunded', 'cancelled', 'charged_back'].includes(status ?? '')) {
-            planAction = 'deactivate';
-        } else {
-            return new Response(JSON.stringify({ ok: true, skipped: true }), { status: 200 });
-        }
-
-        buyerEmail   = (body as any)?.payer?.email ?? null;
-        buyerName    = (body as any)?.payer?.first_name
-                    ? `${(body as any)?.payer?.first_name} ${(body as any)?.payer?.last_name ?? ''}`.trim()
-                    : '';
-        durationDays = (body as any)?.metadata?.plan === 'anual' ? 365 : 30;
+    if (!parsed) {
+        console.warn('⚠️ Nenhum gateway reconhecido. Root keys:', Object.keys(body).join(', '));
+        // Retorna 200 para não gerar retentativas infinitas do gateway
+        return new Response(JSON.stringify({ ok: false, error: 'gateway_not_recognized' }), { status: 200 });
     }
 
-    // --- Cakto ---
-    else if (headers['x-cakto-token'] === CAKTO_TOKEN && CAKTO_TOKEN !== '') {
-        gateway     = 'cakto';
-        caktoEvent  = ((body as any)?.event ?? '').toUpperCase();
+    const { gateway, action, buyerEmail, buyerName, durationDays, transactionId, eventType } = parsed;
 
-        // ── E-mail e nome do comprador ──────────────────────────
-        buyerEmail = (body as any)?.data?.buyer?.email
-                  ?? (body as any)?.data?.customer?.email
-                  ?? null;
-        buyerName  = (body as any)?.data?.buyer?.name
-                  ?? (body as any)?.data?.customer?.name
-                  ?? '';
+    console.log(`📌 ${gateway.toUpperCase()} | evento: ${eventType} | ação: ${action} | email: ${buyerEmail ?? '[sem email]'} | tx: ${transactionId ?? 'n/a'} | dias: ${durationDays}`);
 
-        // ── Duração baseada no plano ────────────────────────────
-        const planName = (body as any)?.data?.purchase?.offer?.code
-                      ?? (body as any)?.data?.plan?.name
-                      ?? '';
-        durationDays = planName.toLowerCase().includes('anual') ? 365 : 30;
-
-        // ── Roteamento por evento ───────────────────────────────
-        switch (caktoEvent) {
-            // Compra única aprovada → ativar Premium
-            case 'PURCHASE_APPROVED':
-            case 'PURCHASE.APPROVED':
-                planAction = 'activate';
-                break;
-
-            // Assinatura criada (primeiro pagamento pendente) → ativar Premium
-            case 'SUBSCRIPTION_CREATED':
-            case 'SUBSCRIPTION.CREATED':
-                planAction = 'activate';
-                break;
-
-            // Assinatura aprovada (primeiro pagamento confirmado) → ativar Premium
-            case 'SUBSCRIPTION_APPROVED':
-            case 'SUBSCRIPTION.APPROVED':
-                planAction = 'activate';
-                break;
-
-            // Renovação cobrada com sucesso → renovar Premium
-            case 'SUBSCRIPTION_CHARGED':
-            case 'SUBSCRIPTION.CHARGED':
-            case 'SUBSCRIPTION_RENEWAL_APPROVED':
-            case 'SUBSCRIPTION.RENEWAL_APPROVED':
-                planAction = 'activate';
-                break;
-
-            // Assinatura recusada (primeiro pagamento falhou) → rebaixar para free
-            case 'SUBSCRIPTION_REJECTED':
-            case 'SUBSCRIPTION.REJECTED':
-            case 'SUBSCRIPTION_DECLINED':
-            case 'SUBSCRIPTION.DECLINED':
-                planAction = 'deactivate';
-                break;
-
-            // Renovação de assinatura recusada → rebaixar para free
-            case 'SUBSCRIPTION_RENEWAL_FAILED':
-            case 'SUBSCRIPTION.RENEWAL_FAILED':
-            case 'SUBSCRIPTION_RENEWAL_DECLINED':
-            case 'SUBSCRIPTION.RENEWAL_DECLINED':
-                planAction = 'deactivate';
-                break;
-
-            default:
-                console.log(`ℹ️ Cakto evento ignorado: ${caktoEvent}`);
-                return new Response(JSON.stringify({ ok: true, skipped: true, event: caktoEvent }), { status: 200 });
-        }
-    }
-
-    // --- Gateway não reconhecido ---
-    else {
-        console.warn('⚠️ Gateway não reconhecido. Headers:', JSON.stringify(headers));
-        return new Response(JSON.stringify({ ok: false, error: 'gateway_not_recognized' }), { status: 400 });
+    if (action === 'skip') {
+        console.log(`⏭️ Evento não mapeado, ignorando: "${eventType}"`);
+        return new Response(JSON.stringify({ ok: true, skipped: true, event: eventType }), { status: 200 });
     }
 
     if (!buyerEmail) {
-        console.error('❌ E-mail do comprador não encontrado no payload', JSON.stringify(body));
+        console.error('❌ E-mail do comprador ausente no payload:', JSON.stringify(body).slice(0, 500));
         return new Response(JSON.stringify({ ok: false, error: 'buyer_email_missing' }), { status: 422 });
     }
 
-    // ─── Atualizar / criar conta no Supabase ──────────────────
-    const APP_URL = Deno.env.get('APP_URL') || 'https://enemmaster.com.br';
-    const admin   = createClient(SUPABASE_URL, SERVICE_ROLE);
-    const now     = new Date().toISOString();
+    const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
 
-    if (planAction === 'deactivate') {
-        // Remover acesso Premium imediatamente
-        const { error } = await admin
-            .from('users')
-            .update({ plan: 'free', plan_expires_at: null, updated_at: now })
-            .eq('email', buyerEmail);
+    // ── Idempotência: evita processar o mesmo pagamento duas vezes ─
+    if (transactionId) {
+        const { data: alreadyDone } = await admin
+            .from('webhook_events')
+            .select('id')
+            .eq('gateway', gateway)
+            .eq('transaction_id', transactionId)
+            .eq('result', 'success')
+            .maybeSingle();
 
-        if (error) {
-            console.error('❌ Erro ao remover plano:', error.message, '| Email:', buyerEmail);
-            return new Response(JSON.stringify({ ok: false, error: error.message }), { status: 500 });
+        if (alreadyDone) {
+            console.log(`⏭️ Pagamento já processado (idempotente): ${gateway}/${transactionId}`);
+            return new Response(JSON.stringify({ ok: true, already_processed: true }), { status: 200 });
         }
-        console.log(`🔒 Premium removido | ${buyerEmail} | gateway: ${gateway} | evento: ${caktoEvent}`);
-        return new Response(JSON.stringify({ ok: true, email: buyerEmail, planAction, durationDays: 0, gateway }), {
-            status: 200, headers: { 'Content-Type': 'application/json' },
-        });
     }
 
-    // ── Ativação: verificar se o usuário já tem conta ─────────
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + durationDays);
-    const premiumPayload = {
-        plan: 'premium',
-        plan_expires_at: expiresAt.toISOString(),
-        updated_at: now,
-    };
-
-    const { data: existingUser } = await admin
-        .from('users')
+    // ── Registrar no audit log (resultado = 'pending' até o final) ─
+    const { data: logRow } = await admin
+        .from('webhook_events')
+        .insert({
+            gateway,
+            event_type:     eventType,
+            transaction_id: transactionId,
+            buyer_email:    buyerEmail,
+            plan_action:    action,
+            duration_days:  durationDays,
+            payload:        body,
+            result:         'pending',
+        })
         .select('id')
-        .eq('email', buyerEmail)
-        .maybeSingle();
+        .single();
 
-    if (existingUser) {
-        // Conta já existe: apenas ativar Premium
-        const { error } = await admin
-            .from('users')
-            .update(premiumPayload)
-            .eq('email', buyerEmail);
+    const logId: number | null = logRow?.id ?? null;
 
-        if (error) {
-            console.error('❌ Erro ao ativar plano:', error.message, '| Email:', buyerEmail);
-            return new Response(JSON.stringify({ ok: false, error: error.message }), { status: 500 });
+    const finalizeLog = (result: 'success' | 'error', error_msg?: string) =>
+        logId
+            ? admin.from('webhook_events').update({ result, error_msg: error_msg ?? null }).eq('id', logId)
+            : Promise.resolve({ error: null });
+
+    try {
+        // ── Desativar premium ─────────────────────────────────────
+        if (action === 'deactivate') {
+            const { error } = await admin.rpc('deactivate_premium_by_email', { p_email: buyerEmail });
+            if (error) throw error;
+            await finalizeLog('success');
+            console.log(`🔒 Premium removido | ${buyerEmail} | ${gateway}`);
+            return new Response(
+                JSON.stringify({ ok: true, action: 'deactivated', email: buyerEmail, gateway }),
+                { status: 200, headers: { 'Content-Type': 'application/json' } },
+            );
         }
-        console.log(`✅ Premium ativado (conta existente) | ${buyerEmail} | ${durationDays}d | gateway: ${gateway} | evento: ${caktoEvent || 'n/a'}`);
-    } else {
-        // Conta não existe: enviar convite e criar registro
-        const displayName = buyerName.trim() || buyerEmail.split('@')[0];
 
-        // inviteUserByEmail cria o auth user e envia e-mail com link de acesso
-        const { data: inviteData, error: inviteError } = await admin.auth.admin.inviteUserByEmail(
-            buyerEmail,
-            {
+        // ── Ativar / renovar premium ──────────────────────────────
+        const displayName = buyerName || buyerEmail.split('@')[0];
+
+        // Verifica se o usuário já tem perfil (para decidir se envia invite)
+        const { data: existingProfile } = await admin
+            .from('users')
+            .select('id')
+            .eq('email', buyerEmail)
+            .maybeSingle();
+
+        if (!existingProfile) {
+            // Novo comprador: enviar convite cria o auth user e dispara o trigger
+            // que cria o perfil automaticamente (handle_new_user)
+            const { error: inviteErr } = await admin.auth.admin.inviteUserByEmail(buyerEmail, {
                 redirectTo: `${APP_URL}/app?ref=payment-success`,
                 data: { full_name: displayName },
-            }
-        );
-
-        const authUserId: string | null = inviteData?.user?.id ?? null;
-
-        if (inviteError) {
-            // Usuário pode já existir no auth mas não na tabela — tenta upsert mesmo assim
-            console.warn(`⚠️ inviteUserByEmail: ${inviteError.message} | tentando upsert direto`);
-            await admin.from('users').upsert(
-                { email: buyerEmail, name: displayName, ...premiumPayload, created_at: now },
-                { onConflict: 'email' }
-            );
-        } else {
-            console.log(`📧 Convite enviado para ${buyerEmail} | auth_id: ${authUserId}`);
-
-            if (authUserId) {
-                const { error: insertError } = await admin.from('users').insert({
-                    id: authUserId,
-                    email: buyerEmail,
-                    name: displayName,
-                    plan: 'premium',
-                    plan_expires_at: expiresAt.toISOString(),
-                    created_at: now,
-                    updated_at: now,
-                });
-                if (insertError) {
-                    console.warn(`⚠️ insert falhou (${insertError.message}), tentando upsert`);
-                    await admin.from('users').upsert(
-                        { email: buyerEmail, name: displayName, ...premiumPayload, created_at: now },
-                        { onConflict: 'email' }
-                    );
-                }
+            });
+            if (inviteErr) {
+                // Usuário já existe no auth mas sem perfil — o RPC abaixo vai corrigir
+                console.warn(`⚠️ inviteUserByEmail: ${inviteErr.message} — continuando com RPC`);
+            } else {
+                console.log(`📧 Convite enviado → ${buyerEmail}`);
             }
         }
-        console.log(`✅ Premium ativado (conta criada) | ${buyerEmail} | ${durationDays}d | gateway: ${gateway} | evento: ${caktoEvent || 'n/a'}`);
-    }
 
-    return new Response(JSON.stringify({ ok: true, email: buyerEmail, planAction, durationDays, gateway }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-    });
+        // Ativa/renova via RPC (empilha dias, lida com todos os cenários de perfil)
+        const { error: rpcErr } = await admin.rpc('activate_premium_by_email', {
+            p_email:         buyerEmail,
+            p_name:          displayName,
+            p_duration_days: durationDays,
+        });
+        if (rpcErr) throw rpcErr;
+
+        await finalizeLog('success');
+        console.log(`✅ Premium ativado | ${buyerEmail} | +${durationDays}d | ${gateway} | ${eventType}`);
+
+        return new Response(
+            JSON.stringify({ ok: true, action: 'activated', email: buyerEmail, durationDays, gateway }),
+            { status: 200, headers: { 'Content-Type': 'application/json' } },
+        );
+
+    } catch (err: any) {
+        await finalizeLog('error', err.message);
+        console.error(`❌ Falha ao processar | ${buyerEmail} | ${gateway} | ${err.message}`);
+        return new Response(JSON.stringify({ ok: false, error: err.message }), { status: 500 });
+    }
 });
