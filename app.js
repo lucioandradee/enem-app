@@ -706,11 +706,14 @@ function navigate(screenName) {
 
     const currentId = screenMap[state.currentScreen];
     const nextId = screenMap[screenName];
-    if (!nextId || currentId === nextId) return;
+    if (!nextId) return;
 
     const currentEl = currentId ? document.getElementById(currentId) : null;
     const nextEl = document.getElementById(nextId);
     if (!nextEl) { console.error('Screen element not found:', nextId); return; }
+
+    // Skip only when state AND DOM both confirm we're already on this screen
+    if (currentId === nextId && nextEl.classList.contains('active')) return;
 
     // Stop quiz timer if leaving quiz
     if (state.currentScreen === 'quiz') stopTimer();
@@ -1515,11 +1518,10 @@ function init() {
     if (state.user.xp === undefined) state.user.xp = 0;
     if (state.user.level === undefined) state.user.level = 1;
 
-    // Reset para home se estava numa tela sem nav
+    // Não resetar state.currentScreen aqui — o valor correto é determinado por getCurrentUser()
+    // abaixo. Resetar prematuramente para 'home' fazia navigate('home') ser no-op no SIGNED_IN
+    // quando a home ainda não estava ativa no DOM (race condition).
     const nav = document.getElementById('bottom-nav');
-    if (screensWithoutNav.includes(state.currentScreen)) {
-        state.currentScreen = 'home';
-    }
 
     // Pular se usuário já tem dados (migração do estado antigo)
     const isReturningUser = state.user.xp > 0 || (state.quizHistory && state.quizHistory.length > 0);

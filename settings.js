@@ -117,32 +117,13 @@ async function handleLogin() {
     try {
         const result = await loginUser(email, password);
         if (result.success) {
-            // Carregar dados do perfil e plano do servidor
-            await Promise.all([
-                loadUserData(result.user.id),
-                typeof loadUserPlan !== 'undefined' ? loadUserPlan(result.user.id) : Promise.resolve(),
-            ]).catch(() => {});
-            state.user.id = result.user.id;
-            state.user.email = email;
-            state.onboardingDone = true;
-            saveState();
-            // Persistir/atualizar registro do usuário no banco ao logar
-            if (typeof saveUserData !== 'undefined') await saveUserData(result.user.id).catch(() => {});
-            if (typeof startSyncLoop !== 'undefined') startSyncLoop(result.user.id);
-            // Solicitar permissão de notificações push após login
+            // onAuthStateChange(SIGNED_IN) já carregou dados, atualizou state e navegou.
+            // Aqui fazemos apenas ações de pós-login que não dependem do state de navegação.
             _requestPushPermission();
-            // Rastrear login
             _trackEvent('login', { method: 'email' });
-            // Navegar para home.
-            // O handler onAuthStateChange(SIGNED_IN) já fez isso, mas navigate() tem
-            // guarda interna (currentId === nextId → return), então chamar aqui é seguro
-            // como fallback caso o evento tenha disparado antes do DOM estar pronto.
-            if (typeof navigate !== 'undefined') {
-                if (state.currentScreen !== 'home') {
-                    navigate('home');
-                } else {
-                    if (typeof renderDashboard !== 'undefined') renderDashboard();
-                }
+            // startSyncLoop é iniciado pelo onAuthStateChange; garante 1 única instância
+            if (typeof startSyncLoop !== 'undefined' && result.user?.id) {
+                startSyncLoop(result.user.id);
             }
         } else {
             const msg = result.error || '';
@@ -160,9 +141,5 @@ async function handleLogin() {
         btn.textContent = 'Entrar na conta';
         btn.disabled = false;
     }
-}
-
-function openPayment() {
-    navigate('checkout');
 }
 

@@ -494,7 +494,7 @@ async function changePassword() {
         const sb = window.supabase;
         if (!sb) throw new Error('Serviço indisponível.');
         const { error } = await sb.auth.resetPasswordForEmail(email, {
-            redirectTo: window.location.origin + '/app',
+            redirectTo: 'https://enemmaster.com.br/app',
         });
         if (error) throw error;
         if (msgEl) { msgEl.textContent = `✅ E-mail enviado para ${email}. Verifique sua caixa de entrada.`; msgEl.style.color = 'var(--teal, #00b4a6)'; }
