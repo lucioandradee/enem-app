@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Autenticando... — ENEM Master</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #060d1a;
+      color: #eaf4f9;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .logo { font-size: 36px; }
+    .msg  { font-size: 15px; color: #7a9ab5; }
+    .spinner {
+      width: 44px; height: 44px;
+      border: 3px solid rgba(0,201,184,.25);
+      border-top-color: #00c9b8;
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="logo">🎓</div>
+  <div class="spinner"></div>
+  <p class="msg">Autenticando com Google...</p>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    (function () {
+      var SUPABASE_URL     = 'https://nkuiwdolkluetsadauwb.supabase.co';
+      var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5rdWl3ZG9sa2x1ZXRzYWRhdXdiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyMjQ0OTgsImV4cCI6MjA4OTgwMDQ5OH0.xIkowv91_aL-v03HIPtg9Ni6M_rROs7VcZS2qa3PbV4';
+
+      // Inicializa com MESMAS configurações do supabase-config.js
+      // (storageKey idêntico = sessão compartilhada com o app)
+      var client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+        auth: {
+          persistSession:    true,
+          autoRefreshToken:  true,
+          detectSessionInUrl: true,   // ← processa ?code= automaticamente
+          storageKey: 'sb-nkuiwdolkluetsadauwb-auth-token',
+          flowType: 'pkce',
+        }
+      });
+
+      var handled = false;
+
+      function goApp()  { if (!handled) { handled = true; window.location.replace('/app'); } }
+      function goHome() { if (!handled) { handled = true; window.location.replace('/'); } }
+
+      // Escuta o evento de autenticação — SIGNED_IN dispara quando o SDK
+      // termina de trocar o ?code= pelos tokens via PKCE
+      client.auth.onAuthStateChange(function (event, session) {
+        if (event === 'SIGNED_IN' && session) {
+          goApp();
+        }
+        // INITIAL_SESSION sem sessão = code inválido/expirado
+        if (event === 'INITIAL_SESSION' && !session) {
+          // Aguarda um pouco caso o SIGNED_IN ainda esteja a caminho
+          setTimeout(function () { if (!handled) goHome(); }, 3000);
+        }
+      });
+
+      // Timeout de segurança: se em 12s nada aconteceu, volta à landing
+      setTimeout(function () {
+        if (!handled) goHome();
+      }, 12000);
+    })();
+  </script>
+</body>
+</html>

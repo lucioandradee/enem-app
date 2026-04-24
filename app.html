@@ -30,6 +30,42 @@
 
 <body>
 
+<script>
+/* ── Session Guard: redireciona para landing se não há sessão no localStorage ──
+   Executa antes de carregar qualquer script pesado. Lê apenas o localStorage
+   (sem rede), por isso é instantâneo. O Supabase SDK depois faz a validação
+   completa — aqui só evitamos carregar 20 scripts desnecessariamente.        */
+(function () {
+  // Se a URL tem ?code= é um callback OAuth ainda não processado → deixa passar
+  if (window.location.search.indexOf('code=') !== -1) return;
+  try {
+    var sbKey = 'sb-nkuiwdolkluetsadauwb-auth-token';
+    var raw = localStorage.getItem(sbKey);
+    if (!raw) { window.location.replace('/'); return; }
+    // Suporte a sessão fragmentada (chunked storage)
+    var maybeCount = parseInt(raw, 10);
+    var sessionStr = raw;
+    if (!isNaN(maybeCount) && maybeCount > 0 && String(maybeCount) === raw.trim()) {
+      var parts = [];
+      for (var i = 0; i < maybeCount; i++) {
+        var chunk = localStorage.getItem(sbKey + '.' + i);
+        if (!chunk) { window.location.replace('/'); return; }
+        parts.push(chunk);
+      }
+      sessionStr = parts.join('');
+    }
+    var parsed = JSON.parse(sessionStr);
+    var token = (parsed && parsed.access_token) ? parsed
+              : (parsed && parsed.session)       ? parsed.session
+              : null;
+    // Exige pelo menos um refresh_token (sessão renovável)
+    if (!token || !token.refresh_token) {
+      window.location.replace('/');
+    }
+  } catch (e) { /* falha silenciosa: deixa o app decidir */ }
+})();
+</script>
+
     <!-- ===================== APP WRAPPER ===================== -->
     <div id="app">
 

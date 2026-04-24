@@ -270,7 +270,7 @@ async function handleGoogleLogin() {
         const { data, error } = await sb.auth.signInWithOAuth({
             provider: 'google',
             options: {
-                redirectTo: 'https://enemmaster.com.br/app',
+                redirectTo: 'https://enemmaster.com.br/auth/callback',
                 queryParams: { prompt: 'select_account' },
             },
         });

@@ -2,6 +2,7 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "rewrites": [
+    { "source": "/auth/callback", "destination": "/auth-callback.html" },
     { "source": "/app", "destination": "/app.html" },
     { "source": "/admin", "destination": "/admin.html" }
   ],
