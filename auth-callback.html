@@ -1,23 +1,39 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="utf-8">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 <script>
-const supabase = window.supabase.createClient(
-  "https://nkuiwdolkluetsadauwb.supabase.co",
-  "SUA_ANON_KEY"
-);
+  (function () {
+    var client = window.supabase.createClient(
+      'https://nkuiwdolkluetsadauwb.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5rdWl3ZG9sa2x1ZXRzYWRhdXdiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyMjQ0OTgsImV4cCI6MjA4OTgwMDQ5OH0.xIkowv91_aL-v03HIPtg9Ni6M_rROs7VcZS2qa3PbV4',
+      {
+        auth: {
+          persistSession: true,
+          autoRefreshToken: true,
+          storageKey: 'sb-nkuiwdolkluetsadauwb-auth-token',
+          flowType: 'pkce',
+        }
+      }
+    );
 
-supabase.auth.exchangeCodeForSession(window.location.href)
-  .then(({ data, error }) => {
-    if (data.session) {
-      window.location.href = "/app";
-    } else {
-      window.location.href = "/";
-    }
-  });
+    client.auth.exchangeCodeForSession(window.location.href)
+      .then(function (res) {
+        if (res.data && res.data.session) {
+          window.location.replace('/app');
+        } else {
+          console.error('auth-callback: sem sessão', res.error);
+          window.location.replace('/');
+        }
+      })
+      .catch(function (err) {
+        console.error('auth-callback: erro', err);
+        window.location.replace('/');
+      });
+  })();
 </script>
 </body>
 </html>
