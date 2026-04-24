@@ -1491,6 +1491,23 @@ function init() {
     const _initNav = document.getElementById('bottom-nav');
     if (_initNav) _initNav.style.display = 'none';
 
+    // ── OAuth callback: ?code= na URL → SDK está trocando o código por tokens agora ──
+    // Não chama getCurrentUser() (retornaria null antes da troca terminar).
+    // O handler SIGNED_IN em supabase-config.js chama navigate('home') quando pronto.
+    if (window.location.search.indexOf('code=') !== -1) {
+        // Limpa o ?code= da barra de endereço sem recarregar
+        window.history.replaceState({}, document.title, window.location.pathname);
+        // Timeout de segurança: se SIGNED_IN não disparar em 15s, mostra login
+        setTimeout(function () {
+            if (!state.user.id) {
+                document.getElementById('screen-login').classList.add('active');
+                _initNav.style.display = 'none';
+                state.currentScreen = 'login';
+            }
+        }, 15000);
+        return; // aguarda onAuthStateChange
+    }
+
     // Migrar state antigo se necessário
     if (!state.quizHistory) state.quizHistory = [];
     if (!state.wrongAnswers) state.wrongAnswers = [];
