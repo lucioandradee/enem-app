@@ -6,6 +6,14 @@
 </head>
 <body>
 <script>
+  /*
+   * auth-callback.html
+   * Recebe o ?code= do Google OAuth (PKCE) e troca pelos tokens de sessão.
+   *
+   * IMPORTANTE: detectSessionInUrl: false — sem isso o SDK tenta trocar o
+   * código automaticamente na inicialização E depois o exchangeCodeForSession
+   * manual também tentaria, causando falha (código PKCE é de uso único).
+   */
   var client = window.supabase.createClient(
     'https://nkuiwdolkluetsadauwb.supabase.co',
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5rdWl3ZG9sa2x1ZXRzYWRhdXdiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyMjQ0OTgsImV4cCI6MjA4OTgwMDQ5OH0.xIkowv91_aL-v03HIPtg9Ni6M_rROs7VcZS2qa3PbV4',
@@ -13,11 +21,13 @@
       auth: {
         flowType: 'pkce',
         persistSession: true,
-        storageKey: 'sb-nkuiwdolkluetsadauwb-auth-token'
+        detectSessionInUrl: false,  // ← CRÍTICO: desativa troca automática do SDK
+        storageKey: 'sb-nkuiwdolkluetsadauwb-auth-token'  // mesmo key do app principal
       }
     }
   );
 
+  // Troca manual: única chamada → sem conflito
   client.auth.exchangeCodeForSession(window.location.href)
     .then(function (res) {
       if (res.error) {
