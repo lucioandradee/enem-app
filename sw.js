@@ -3,7 +3,7 @@
    Cache-first para assets • Network-first para API
    ===================================================== */
 
-const CACHE_NAME = 'enem-master-v16';
+const CACHE_NAME = 'enem-master-v17';
 const STATIC_ASSETS = [
     '/app',
     '/style.css',
@@ -35,14 +35,16 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
     const url = new URL(event.request.url);
 
-    // SW, arquivos JS e HTML principais → sempre Network first (nunca cache stale)
+    // SW, arquivos JS, HTML principais e páginas de auth → sempre Network first (nunca cache stale)
     if (
         url.pathname === '/sw.js' ||
         url.pathname.endsWith('.js') ||
         url.pathname === '/app' ||
         url.pathname === '/app.html' ||
         url.pathname === '/' ||
-        url.pathname === '/index.html'
+        url.pathname === '/index.html' ||
+        url.pathname === '/auth/callback' ||    // ← CRÍTICO: nunca cachear página de callback OAuth
+        url.pathname === '/auth-callback.html'
     ) {
         event.respondWith(networkFirst(event.request));
         return;
