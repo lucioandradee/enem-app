@@ -184,26 +184,7 @@ async function adminLogin() {
     }
 }
 
-async function adminLoginGoogle() {
-    const errEl = document.getElementById('gate-error');
-    errEl.style.display = 'none';
-    const btn = document.getElementById('gate-google-btn');
-    if (btn) { btn.disabled = true; btn.style.opacity = '.6'; }
 
-    try {
-        const { error } = await supabase.auth.signInWithOAuth({
-            provider: 'google',
-            options: {
-                redirectTo: window.location.origin + '/admin',
-            },
-        });
-        if (error) throw error;
-        // O navegador vai redirecionar ??" n�o precisa fazer mais nada
-    } catch (err) {
-        errEl.textContent   = err.message || 'Erro ao iniciar login com Google.';
-        errEl.style.display = 'block';
-        if (btn) { btn.disabled = false; btn.style.opacity = ''; }
-    }
 }
 
 async function adminLogout() {
