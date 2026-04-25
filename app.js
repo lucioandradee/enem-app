@@ -1581,7 +1581,13 @@ function init() {
                     _resumePendingPayment();
                 });
             } else {
-                // Sem sessão ativa.
+                // Sem sessão ativa segundo getCurrentUser().
+                // PROTEÇÃO CONTRA RACE CONDITION: se o usuário fez login enquanto
+                // aguardávamos getCurrentUser() (que pode demorar por rede lenta),
+                // o handler SIGNED_IN já navegou para home. Não sobrescrever.
+                const _homeAlreadyActive = document.getElementById('screen-home')?.classList.contains('active');
+                if (state.user.id || _homeAlreadyActive) return;
+
                 // Onboarding: usuário novo SEM dados locais, vindo de qualquer CTA
                 // (exceto quando explicitamente quer fazer login com ?ref=login).
                 if (!_forceLogin && (_forceFunnel || (!state.onboardingDone && !isReturningUser))) {
