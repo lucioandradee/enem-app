@@ -184,9 +184,6 @@ async function adminLogin() {
     }
 }
 
-
-}
-
 async function adminLogout() {
     stopAutoRefresh();
     teardownRealtime();
