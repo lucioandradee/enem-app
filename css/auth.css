@@ -363,7 +363,6 @@
 .ob-skip { margin-top: 12px; font-size: 13px; color: var(--text-muted); background: none; border: none; cursor: pointer; }
 .ob-skip:hover { color: var(--text-secondary); }
 
-/* Google btn no onboarding */
 /* Premium teaser no onboarding */
 .ob-premium-teaser {
   background: linear-gradient(135deg, #0f2a3f 0%, rgba(0,180,166,.08) 100%);
