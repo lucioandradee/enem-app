@@ -480,6 +480,7 @@ let quizState = {
     totalTime: 0,
     discipline: 'misto',
     startTime: null,   // timestamp real de início da sessão
+    isFinished: false, // true após showResult() — evita re-salvar como pausado
 };
 
 // =====================================================
@@ -499,7 +500,7 @@ function _clearPausedQuiz() {
 }
 
 function _savePausedQuizSnapshot() {
-    if (!quizState.questions.length || quizState.timeLeft <= 0) return;
+    if (!quizState.questions.length || quizState.timeLeft <= 0 || quizState.isFinished) return;
     const snapshot = {
         questions:    quizState.questions,
         answers:      [...quizState.answers],
@@ -576,6 +577,7 @@ async function resumeQuiz() {
     quizState.isENEMMode    = !!snapshot.isENEMMode;
     quizState.selectedOption = null;
     quizState.confirmed     = false;
+    quizState.isFinished    = false;
 
     _clearPausedQuiz(); // limpa após restaurar para não reaparecer
 

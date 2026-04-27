@@ -174,6 +174,7 @@ async function startQuiz(discipline = 'misto', count = 10, forceLocal = false, c
     showQuizLoading(true);
 
     // Ao iniciar novo quiz, descartar qualquer pausa anterior
+    quizState.isFinished = false;
     _clearPausedQuiz();
     _renderPausedQuizBanner('home');
     _renderPausedQuizBanner('setup');
@@ -617,6 +618,7 @@ function nextQuestion() {
 
 function showResult() {
     stopTimer();
+    quizState.isFinished = true; // marca como concluído — impede re-salvar como pausado
     _clearPausedQuiz(); // quiz concluído, não há nada para retomar
     const total = quizState.questions.length;
     const correct = quizState.correct;
@@ -1226,8 +1228,8 @@ function startTimer() {
 // Auto-salvar simulado quando o app vai para segundo plano
 document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
-        // App indo para segundo plano: salva o quiz automaticamente se ativo
-        if (quizState.questions.length > 0 && quizState.timeLeft > 0) {
+        // App indo para segundo plano: salva o quiz automaticamente se ativo (e não finalizado)
+        if (quizState.questions.length > 0 && quizState.timeLeft > 0 && !quizState.isFinished) {
             // Atualiza timeLeft com o tempo real decorrido antes de salvar
             if (quizState._timerStartedAt) {
                 const elapsed = Math.floor((Date.now() - quizState._timerStartedAt) / 1000);
