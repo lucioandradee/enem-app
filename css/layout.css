@@ -87,8 +87,8 @@
 .screen.active .mini-cards-row { animation: fadeInUp 0.4s ease 0.2s both; }
 .quiz-option.correct           { animation: correctPop 0.4s ease; }
 
-/* ---- Desktop ---- */
-@media (min-width: 430px) {
+/* ---- Estreito (>430px e <768px): centraliza o app como "phone frame" ---- */
+@media (min-width: 430px) and (max-width: 767px) {
   #app  { box-shadow: 0 0 60px rgba(0,0,0,0.6); border-radius: 0; }
   body  { background: #050d14; display: flex; align-items: center; justify-content: center; }
 }
