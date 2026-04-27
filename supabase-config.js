@@ -165,7 +165,7 @@ async function loadUserData(userId) {
             }
         } else {
             // Perfil n�o existe em public.users - criar agora (usu�rio registrou antes do trigger)
-            // state.user.name j� foi preenchido pelo metadata do Google no onAuthStateChange
+            // state.user.name já foi preenchido pelo metadata do provider no onAuthStateChange
             console.log('?? Perfil n�o encontrado, criando...');
             await saveUserData(userId);
         }
@@ -304,8 +304,8 @@ function initializeSupabaseListeners() {
             state.user.id    = incomingId;
             state.user.email = session.user.email;
             const _meta0 = session.user.user_metadata || {};
-            const _gName0 = (_meta0.full_name || _meta0.name || _meta0.display_name || '').trim();
-            if (_gName0 && _gName0 !== 'Alex') state.user.name = _gName0;
+            const _oauthName0 = (_meta0.full_name || _meta0.name || _meta0.display_name || '').trim();
+            if (_oauthName0 && _oauthName0 !== 'Alex') state.user.name = _oauthName0;
             state.onboardingDone = true;
             saveState();
 
@@ -335,9 +335,9 @@ function initializeSupabaseListeners() {
             state.user.email = session.user.email;
 
             const meta = session.user.user_metadata || {};
-            const googleName = (meta.full_name || meta.name || meta.display_name || '').trim();
-            if (googleName && googleName !== 'Alex') {
-                state.user.name = googleName;
+            const oauthName = (meta.full_name || meta.name || meta.display_name || '').trim();
+            if (oauthName && oauthName !== 'Alex') {
+                state.user.name = oauthName;
             }
 
             state.onboardingDone = true;

@@ -1557,11 +1557,11 @@ function init() {
     if (typeof getCurrentUser !== 'undefined') {
         getCurrentUser().then(user => {
             if (user) {
-                // Sessão ativa: aplicar nome real do Google antes de carregar do banco
+                // Sessão ativa: aplicar nome real do provider antes de carregar do banco
                 const meta = user.user_metadata || {};
-                const googleName = meta.full_name || meta.name || meta.display_name || '';
-                if (googleName && googleName.trim()) {
-                    state.user.name = googleName.trim();
+                const oauthName = meta.full_name || meta.name || meta.display_name || '';
+                if (oauthName && oauthName.trim()) {
+                    state.user.name = oauthName.trim();
                 }
                 state.user.id    = user.id;
                 state.user.email = user.email;

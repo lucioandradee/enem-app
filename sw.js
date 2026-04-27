@@ -3,19 +3,19 @@
    Cache-first para assets • Network-first para API
    ===================================================== */
 
-const CACHE_NAME = 'enem-master-v18';
+const CACHE_NAME = 'enem-master-v19';
 const STATIC_ASSETS = [
     '/app',
     '/style.css',
     '/manifest.json',
-    'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap',
+    'https://fonts.bunny.net/css?family=inter:400,500,600,700,800,900&display=swap',
 ];
 
 /* ---- Install: pré-cachear assets ---- */
 self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
-            return cache.addAll(STATIC_ASSETS.filter(url => !url.startsWith('http') || url.includes('fonts.googleapis')));
+            return cache.addAll(STATIC_ASSETS.filter(url => !url.startsWith('http') || url.includes('fonts.bunny')));
         }).then(() => self.skipWaiting())
     );
 });

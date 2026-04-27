@@ -18,9 +18,8 @@
   <link rel="manifest" href="manifest.json" />
   <link rel="icon" href="icon.svg" type="image/svg+xml" />
   <meta name="theme-color" content="#00c9b8" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="preconnect" href="https://fonts.bunny.net" />
+  <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800,900&display=swap" rel="stylesheet" />
   <style>
     /* ==========================================
        DESIGN TOKENS
@@ -905,7 +904,7 @@
     var s = window.location.search;
     var h = window.location.hash;
 
-    // 1. Fluxo PKCE: ?code= chega aqui se o Supabase/Google redirecionou para a raiz
+    // 1. Fluxo PKCE: ?code= chega aqui se o Supabase redirecionou para a raiz
     //    em vez de /app. Repassa para /app mantendo o code intacto.
     if (s && s.indexOf('code=') !== -1) {
         window.location.replace('https://enemmaster.com.br/app' + s + h);

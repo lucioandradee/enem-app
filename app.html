@@ -7,9 +7,8 @@
     <title>ENEM Master — Estude, Evolua, Conquiste</title>
     <meta name="description"
         content="Plataforma gamificada de estudos para o ENEM com simulados, ranking escolar e conquistas." />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+    <link rel="preconnect" href="https://fonts.bunny.net" />
+    <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800,900&display=swap"
         rel="stylesheet" />
     <link rel="stylesheet" href="style.css?v=12" />
     <link rel="manifest" href="manifest.json" />
@@ -21,7 +20,7 @@
     <meta name="apple-mobile-web-app-title" content="ENEM Master" />
     <!-- Security: CSP — restringe fontes de scripts, conexões, imagens e estilos -->
     <meta http-equiv="Content-Security-Policy"
-        content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; connect-src 'self' https://*.supabase.co https://api.enem.dev https://api.groq.com https://fonts.googleapis.com https://fonts.gstatic.com https://cdn.jsdelivr.net; img-src 'self' https: data: blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com; font-src 'self' https://fonts.gstatic.com data:; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self';" />
+        content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; connect-src 'self' https://*.supabase.co https://api.enem.dev https://api.groq.com https://fonts.bunny.net https://cdn.jsdelivr.net; img-src 'self' https: data: blob:; style-src 'self' 'unsafe-inline' https://fonts.bunny.net; font-src 'self' https://fonts.bunny.net data:; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self';" />
     <!-- Security: previne sniffing de MIME type -->
     <meta http-equiv="X-Content-Type-Options" content="nosniff" />
     <!-- Security: bloqueia abertura em iframes (clickjacking) -->
@@ -38,6 +37,8 @@
 (function () {
   // Callback OAuth: ?code= na URL → deixa passar (auth-callback processa)
   if (window.location.search.indexOf('code=') !== -1) return;
+  // Parâmetros de CTA da landing page → deixa o init() decidir a tela
+  if (window.location.search.indexOf('ref=') !== -1) return;
   try {
     var sbKey = 'sb-nkuiwdolkluetsadauwb-auth-token';
     var raw = localStorage.getItem(sbKey);
