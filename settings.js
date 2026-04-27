@@ -117,14 +117,19 @@ async function handleLogin() {
     try {
         const result = await loginUser(email, password);
         if (result.success) {
-            // onAuthStateChange(SIGNED_IN) já carregou dados, atualizou state e navegou.
-            // Aqui fazemos apenas ações de pós-login que não dependem do state de navegação.
+            // Atualizar state imediatamente com dados da sessão
+            if (result.user?.id) {
+                state.user.id    = result.user.id;
+                state.user.email = result.user.email || state.user.email;
+                state.onboardingDone = true;
+                saveState();
+                if (typeof startSyncLoop !== 'undefined') startSyncLoop(result.user.id);
+            }
             _requestPushPermission();
             _trackEvent('login', { method: 'email' });
-            // startSyncLoop é iniciado pelo onAuthStateChange; garante 1 única instância
-            if (typeof startSyncLoop !== 'undefined' && result.user?.id) {
-                startSyncLoop(result.user.id);
-            }
+            // Navegar diretamente — não depender só do SIGNED_IN que pode chegar tarde
+            // O SIGNED_IN continuará em background carregando dados do banco
+            if (typeof navigate !== 'undefined') navigate('home');
         } else {
             const msg = result.error || '';
             if (msg.includes('Invalid login') || msg.includes('invalid_credentials')) {
