@@ -763,12 +763,9 @@ function renderScreen(screenName) {
         switch (screenName) {
             case 'home':
                 renderDashboard();
-                // Buscar XP real do Supabase em background e re-renderizar se mudou
-                if (typeof loadUserData !== 'undefined' && state.user && state.user.id && navigator.onLine) {
-                    const _xpBefore = state.user.xp;
-                    loadUserData(state.user.id).then(() => {
-                        if (state.user.xp !== _xpBefore) renderDashboard();
-                    }).catch(() => {});
+                // Sync de plano em background (não sobrescreve XP/level/streak — loadUserData usa Math.max)
+                if (typeof saveUserData !== 'undefined' && state.user && state.user.id && navigator.onLine) {
+                    saveUserData(state.user.id).catch(() => {});
                 }
                 break;
             case 'ranking': renderRanking(); break;

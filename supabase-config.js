@@ -150,7 +150,24 @@ async function loadUserData(userId) {
             if (nameIsPlaceholder) {
                 delete data.name;
             }
+
+            // Preservar progresso local se for maior que o do banco.
+            // Evita que carga desatualizada regride XP/level/streak ainda nao sincronizados.
+            const xpLocal     = state.user.xp     || 0;
+            const levelLocal  = state.user.level  || 1;
+            const streakLocal = state.user.streak || 0;
+
             state.user = { ...state.user, ...data };
+
+            // Nunca regredir progresso numerico para valor menor que o local
+            if (xpLocal > (state.user.xp || 0)) {
+                state.user.xp    = xpLocal;
+                state.user.level = Math.max(levelLocal, Math.max(1, Math.floor(xpLocal / 500) + 1));
+            }
+            if (streakLocal > (state.user.streak || 0)) {
+                state.user.streak = streakLocal;
+            }
+
             // Se o nome ainda � placeholder ap�s o merge, derivar do email
             if (!state.user.name || state.user.name === 'Alex') {
                 if (typeof _nameFromEmail !== 'undefined') {
@@ -410,28 +427,30 @@ function startSyncLoop(userId, interval = 30000) {
         if (!userId || !navigator.onLine) return;
         const planBefore = state.user?.plan || 'free';
 
-        // 1. Carregar do servidor - captura edi��es manuais e ativa��es via webhook
+        // 1. Salvar progresso local PRIMEIRO — garante que XP/level/streak ganhos
+        //    localmente cheguem ao banco antes de qualquer carga que possa sobrescrevê-los.
+        await saveUserData(userId).catch(() => {});
+
+        // 2. Carregar do servidor — captura edições externas e ativações via webhook.
+        //    loadUserData usa Math.max, portanto não regride progresso local.
         await loadUserData(userId).catch(() => {});
 
-        // 2. Verificar plano separadamente (dados cr�ticos de assinatura)
+        // 3. Verificar plano separadamente (dados críticos de assinatura)
         if (typeof loadUserPlan !== 'undefined') {
             await loadUserPlan(userId).catch(() => {});
         }
 
-        // 3. Detectar upgrade de plano via webhook/pagamento externo
+        // 4. Detectar upgrade de plano via webhook/pagamento externo
         if (planBefore !== 'premium' && state.user?.plan === 'premium') {
-            console.log('? Upgrade para Premium detectado no sync loop!');
+            console.log('✅ Upgrade para Premium detectado no sync loop!');
             try { sessionStorage.removeItem('_pendingPayment'); } catch { /* noop */ }
             if (typeof _showPremiumSuccess !== 'undefined') {
                 setTimeout(() => _showPremiumSuccess(), 400);
             }
         }
 
-        // 4. Re-renderizar caso dados tenham mudado
+        // 5. Re-renderizar caso dados tenham mudado
         if (typeof renderDashboard !== 'undefined') renderDashboard();
-
-        // 5. Salvar dados locais que o servidor n�o rastreia (questoesHoje, etc.)
-        await saveUserData(userId).catch(() => {});
     }, interval);
 }
 
@@ -443,19 +462,23 @@ document.addEventListener('visibilitychange', () => {
             supabase.auth.refreshSession().catch(() => {});
         }
         const planBefore = state.user?.plan || 'free';
-        Promise.all([
-            loadUserData(state.user.id),
-            typeof loadUserPlan !== 'undefined' ? loadUserPlan(state.user.id) : Promise.resolve(),
-        ]).then(() => {
-            if (typeof renderDashboard !== 'undefined') renderDashboard();
-            // Detectar upgrade de plano entre sess�es (ex: webhook ativou premium)
-            if (planBefore !== 'premium' && state.user?.plan === 'premium') {
-                console.log('? Plano atualizado para Premium detectado no retorno de aba!');
-                if (typeof _showPremiumSuccess !== 'undefined') {
-                    setTimeout(() => _showPremiumSuccess(), 400);
+        // Salvar progresso local antes de carregar do servidor — evita regredir XP/level/streak
+        const userId = state.user.id;
+        saveUserData(userId).catch(() => {}).finally(() => {
+            Promise.all([
+                loadUserData(userId),
+                typeof loadUserPlan !== 'undefined' ? loadUserPlan(userId) : Promise.resolve(),
+            ]).then(() => {
+                if (typeof renderDashboard !== 'undefined') renderDashboard();
+                // Detectar upgrade de plano entre sessões (ex: webhook ativou premium)
+                if (planBefore !== 'premium' && state.user?.plan === 'premium') {
+                    console.log('✅ Plano atualizado para Premium detectado no retorno de aba!');
+                    if (typeof _showPremiumSuccess !== 'undefined') {
+                        setTimeout(() => _showPremiumSuccess(), 400);
+                    }
                 }
-            }
-        }).catch(() => {});
+            }).catch(() => {});
+        });
     }
 });
 
