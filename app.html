@@ -1,16 +1,16 @@
-Ôªø<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ENEM Master ‚Äî Estude, Evolua, Conquiste</title>
+    <title>ENEM Master ó Estude, Evolua, Conquiste</title>
     <meta name="description"
         content="Plataforma gamificada de estudos para o ENEM com simulados, ranking escolar e conquistas." />
     <link rel="preconnect" href="https://fonts.bunny.net" />
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800,900&display=swap"
         rel="stylesheet" />
-    <link rel="stylesheet" href="style.css?v=14" />
+    <link rel="stylesheet" href="style.css?v=15" />
     <link rel="manifest" href="manifest.json" />
     <link rel="icon" href="icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="icon-192.png" />
@@ -18,7 +18,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="ENEM Master" />
-    <!-- Security: CSP ‚Äî restringe fontes de scripts, conex√µes, imagens e estilos -->
+    <!-- Security: CSP ó restringe fontes de scripts, conexıes, imagens e estilos -->
     <meta http-equiv="Content-Security-Policy"
         content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; connect-src 'self' https://*.supabase.co https://api.enem.dev https://api.groq.com https://fonts.bunny.net https://cdn.jsdelivr.net; img-src 'self' https: data: blob:; style-src 'self' 'unsafe-inline' https://fonts.bunny.net; font-src 'self' https://fonts.bunny.net data:; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self';" />
     <!-- Security: previne sniffing de MIME type -->
@@ -30,23 +30,23 @@
 <body>
 
 <script>
-/* ‚îÄ‚îÄ Session Guard: evita carregar ~20 scripts se o usu√°rio n√£o est√° logado ‚îÄ‚îÄ
-   Roda de forma s√≠ncrona antes de qualquer script pesado.
-   S√ì redireciona se tiver CERTEZA de que n√£o h√° sess√£o (token ausente ou inv√°lido).
-   Qualquer d√∫vida ‚Üí deixa o SDK do Supabase decidir.                         */
+/* -- Session Guard: evita carregar ~20 scripts se o usu·rio n„o est· logado --
+   Roda de forma sÌncrona antes de qualquer script pesado.
+   S” redireciona se tiver CERTEZA de que n„o h· sess„o (token ausente ou inv·lido).
+   Qualquer d˙vida ? deixa o SDK do Supabase decidir.                         */
 (function () {
-  // Callback OAuth: ?code= na URL ‚Üí deixa passar (auth-callback processa)
+  // Callback OAuth: ?code= na URL ? deixa passar (auth-callback processa)
   if (window.location.search.indexOf('code=') !== -1) return;
-  // Par√¢metros de CTA da landing page ‚Üí deixa o init() decidir a tela
+  // Par‚metros de CTA da landing page ? deixa o init() decidir a tela
   if (window.location.search.indexOf('ref=') !== -1) return;
   try {
     var sbKey = 'sb-nkuiwdolkluetsadauwb-auth-token';
     var raw = localStorage.getItem(sbKey);
 
-    // Sem nenhum token armazenado ‚Üí redireciona imediatamente
+    // Sem nenhum token armazenado ? redireciona imediatamente
     if (!raw) { window.location.replace('/'); return; }
 
-    // Suporte a sess√£o fragmentada (chunked storage do SDK v2)
+    // Suporte a sess„o fragmentada (chunked storage do SDK v2)
     var maybeCount = parseInt(raw, 10);
     var sessionStr = raw;
     if (!isNaN(maybeCount) && maybeCount > 0 && String(maybeCount) === raw.trim()) {
@@ -60,14 +60,14 @@
     }
 
     var parsed = JSON.parse(sessionStr);
-    // Aceita sess√£o com access_token OU refresh_token ‚Äî se um expirou o SDK renova
+    // Aceita sess„o com access_token OU refresh_token ó se um expirou o SDK renova
     var hasAnyToken = parsed && (
       parsed.access_token   || parsed.refresh_token ||
       (parsed.session && (parsed.session.access_token || parsed.session.refresh_token))
     );
     if (!hasAnyToken) { window.location.replace('/'); }
   } catch (e) {
-    // JSON inv√°lido ou outro erro ‚Üí deixa o SDK decidir (n√£o redireciona)
+    // JSON inv·lido ou outro erro ? deixa o SDK decidir (n„o redireciona)
   }
 })();
 </script>
@@ -86,8 +86,8 @@
                             <span class="level-badge">LVL <span id="dash-level">1</span></span>
                         </div>
                         <div>
-                            <p class="greeting">Bom dia, <span id="dash-name">Estudante</span> üëã</p>
-                            <h2 class="goal-text" id="dash-goal">Rumo √† Federal</h2>
+                            <p class="greeting">Bom dia, <span id="dash-name">Estudante</span> ??</p>
+                            <h2 class="goal-text" id="dash-goal">Rumo ‡ Federal</h2>
                         </div>
                     </div>
                     <button class="bell-btn" id="notif-btn" onclick="navigate('notifications')">
@@ -103,20 +103,20 @@
                 <div class="stats-row">
                     <div class="stat-card stat-card-xp">
                         <div class="stat-card-head">
-                            <span class="stat-label">‚ö° TOTAL XP</span>
+                            <span class="stat-label">? TOTAL XP</span>
                             <span class="stat-lvl-badge" id="dash-lvl-badge">NV 1</span>
                         </div>
                         <span class="stat-value" id="dash-xp">0</span>
                         <div class="stat-xp-bar-wrap"><div class="stat-xp-bar" id="dash-xp-bar" style="width:0%"></div></div>
-                        <span class="stat-xp-next" id="dash-xp-next">0 / 500 p/ n√≠vel 2</span>
+                        <span class="stat-xp-next" id="dash-xp-next">0 / 500 p/ nÌvel 2</span>
                     </div>
                     <div class="stat-card stat-card-rank">
                         <div class="stat-card-head">
-                            <span class="stat-label">üèÜ RANKING</span>
-                            <span class="stat-rank-tier" id="dash-rank-tier">‚Äî</span>
+                            <span class="stat-label">?? RANKING</span>
+                            <span class="stat-rank-tier" id="dash-rank-tier">ó</span>
                         </div>
-                        <span class="stat-value teal" id="dash-ranking">‚Äî</span>
-                        <span class="stat-rank-sub">posi√ß√£o global</span>
+                        <span class="stat-value teal" id="dash-ranking">ó</span>
+                        <span class="stat-rank-sub">posiÁ„o global</span>
                     </div>
                 </div>
 
@@ -124,7 +124,7 @@
                 <div class="countdown-widget" id="enem-countdown">
                     <div class="cd-main-row">
                         <span class="cd-label">ENEM 2026</span>
-                        <span class="cd-days" id="countdown-days">‚Äî</span>
+                        <span class="cd-days" id="countdown-days">ó</span>
                         <span class="cd-days-text">dias restantes</span>
                         <span id="cd-h" style="display:none"></span>
                         <span id="cd-m" style="display:none"></span>
@@ -142,13 +142,13 @@
 
                 <!-- Today's Subject Card -->
                 <div class="subject-card" id="today-card">
-                    <div class="subject-tag" id="today-area">CI√äNCIAS DA NATUREZA</div>
-                    <div class="subject-icon" id="today-icon">üß¨</div>
-                    <h3 class="subject-title" id="today-title">Biologia: Gen√©tica</h3>
+                    <div class="subject-tag" id="today-area">CI NCIAS DA NATUREZA</div>
+                    <div class="subject-icon" id="today-icon">??</div>
+                    <h3 class="subject-title" id="today-title">Biologia: GenÈtica</h3>
                     <p class="subject-sub" id="today-sub">Leis de Mendel e Heredogramas</p>
                     <div class="progress-label-row">
                         <span class="progress-label">Progresso do dia</span>
-                        <span class="progress-count teal" id="today-progress">4/10 Quest√µes</span>
+                        <span class="progress-count teal" id="today-progress">4/10 Questıes</span>
                     </div>
                     <div class="progress-bar-wrap">
                         <div class="progress-bar" id="today-bar" style="width:40%"></div>
@@ -165,7 +165,7 @@
                     </svg>
                     <span class="home-cta-inner">
                         <strong>Praticar Agora</strong>
-                        <small>Suas quest√µes do dia est√£o esperando</small>
+                        <small>Suas questıes do dia est„o esperando</small>
                     </span>
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18" style="flex-shrink:0;opacity:.7">
                         <polyline points="9 18 15 12 9 6"/>
@@ -175,44 +175,44 @@
                 <!-- Gamification Cards -->
                 <div class="mini-cards-row">
                     <div class="mini-card">
-                        <span class="mini-card-label">üî• Ofensiva</span>
+                        <span class="mini-card-label">?? Ofensiva</span>
                         <span class="mini-card-value" id="dash-streak">15 Dias</span>
-                        <span class="mini-card-sub">Mantendo o ritmo! üî•</span>
+                        <span class="mini-card-sub">Mantendo o ritmo! ??</span>
                     </div>
                     <div class="mini-card sparkline-card" id="history-sparkline-card">
-                        <span class="mini-card-label sparkline-label">üìà Hist√≥rico</span>
+                        <span class="mini-card-label sparkline-label">?? HistÛrico</span>
                         <svg id="history-sparkline" class="sparkline-svg" xmlns="http://www.w3.org/2000/svg"></svg>
-                        <span class="mini-card-sub sparkline-empty">Fa√ßa seu 1¬∫ quiz</span>
+                        <span class="mini-card-sub sparkline-empty">FaÁa seu 1∫ quiz</span>
                         <span class="mini-card-sub sparkline-sub" style="display:none"></span>
                     </div>
                 </div>
 
-                <!-- Desafio Di√°rio -->
+                <!-- Desafio Di·rio -->
                 <div class="daily-challenge-card" id="daily-challenge-card">
                     <div class="dc-header">
-                        <span class="dc-title">üéØ Desafio do Dia</span>
+                        <span class="dc-title">?? Desafio do Dia</span>
                         <span class="dc-xp">+50 XP</span>
                     </div>
                     <div class="dc-disc-row">
-                        <span class="dc-disc-chip" id="dc-disc-chip">üî¨</span>
+                        <span class="dc-disc-chip" id="dc-disc-chip">??</span>
                         <div class="dc-disc-info">
-                            <span class="dc-disc-name" id="dc-disc-name">Ci√™ncias da Natureza</span>
-                            <span class="dc-type" id="dc-type">Treino üéØ</span>
+                            <span class="dc-disc-name" id="dc-disc-name">CiÍncias da Natureza</span>
+                            <span class="dc-type" id="dc-type">Treino ??</span>
                         </div>
                         <div class="dc-diff" id="dc-diff"><span></span><span></span><span></span></div>
                     </div>
                     <div class="dc-meta-row">
-                        <span id="dc-meta-q">üìã 10 quest√µes</span>
-                        <span class="dc-meta-sep">¬∑</span>
-                        <span id="dc-meta-t">‚è± ~12 min</span>
-                        <span class="dc-meta-sep">¬∑</span>
-                        <span id="dc-meta-diff-label">M√©dio</span>
+                        <span id="dc-meta-q">?? 10 questıes</span>
+                        <span class="dc-meta-sep">∑</span>
+                        <span id="dc-meta-t">? ~12 min</span>
+                        <span class="dc-meta-sep">∑</span>
+                        <span id="dc-meta-diff-label">MÈdio</span>
                     </div>
-                    <p class="dc-context" id="dc-context">√Årea com maior cobran√ßa no ENEM</p>
+                    <p class="dc-context" id="dc-context">¡rea com maior cobranÁa no ENEM</p>
                     <div class="dc-week" id="dc-week"></div>
-                    <div class="dc-check" style="display:none">‚úÖ Desafio conclu√≠do! Bom trabalho hoje.</div>
+                    <div class="dc-check" style="display:none">? Desafio concluÌdo! Bom trabalho hoje.</div>
                     <button class="cta-btn dc-btn" onclick="startDailyChallenge()">
-                        ‚ö° Aceitar Desafio ‚Äî Ganhar +50 XP
+                        ? Aceitar Desafio ó Ganhar +50 XP
                     </button>
                 </div>
             </div>
@@ -223,25 +223,25 @@
             <div class="pause-quiz-sheet" onclick="event.stopPropagation()">
                 <div class="pause-sheet-handle"></div>
                 <div class="pause-sheet-hero">
-                    <span class="pause-sheet-emoji">‚è∏Ô∏è</span>
+                    <span class="pause-sheet-emoji">??</span>
                     <div>
                         <h3 class="pause-sheet-title">Pausar simulado?</h3>
-                        <p class="pause-sheet-sub">Seu progresso √© salvo. Continue de onde parou quando quiser.</p>
+                        <p class="pause-sheet-sub">Seu progresso È salvo. Continue de onde parou quando quiser.</p>
                     </div>
                 </div>
-                <button class="cta-btn" onclick="pauseQuiz()">‚è∏ Pausar e Sair</button>
-                <button class="btn-outline-full" onclick="closePauseModal()">‚Ü© Continuar Estudando</button>
-                <button class="btn-ghost-danger" onclick="abandonQuiz()">üóëÔ∏è Abandonar Simulado</button>
+                <button class="cta-btn" onclick="pauseQuiz()">? Pausar e Sair</button>
+                <button class="btn-outline-full" onclick="closePauseModal()">? Continuar Estudando</button>
+                <button class="btn-ghost-danger" onclick="abandonQuiz()">??? Abandonar Simulado</button>
             </div>
         </div>
 
-        <!-- Bottom-sheet: Hist√≥rico de Atividades -->
+        <!-- Bottom-sheet: HistÛrico de Atividades -->
         <div class="week-sheet-overlay" id="activity-sheet-overlay" onclick="closeActivityHistory()">
             <div class="week-sheet" onclick="event.stopPropagation()">
                 <div class="week-sheet-handle"></div>
                 <div class="week-sheet-header">
-                    <span class="week-sheet-title">Hist√≥rico de Simulados</span>
-                    <button class="icon-btn" onclick="closeActivityHistory()">‚úï</button>
+                    <span class="week-sheet-title">HistÛrico de Simulados</span>
+                    <button class="icon-btn" onclick="closeActivityHistory()">?</button>
                 </div>
                 <div class="week-sheet-body" id="activity-sheet-body"></div>
             </div>
@@ -253,7 +253,7 @@
                 <div class="week-sheet-handle"></div>
                 <div class="week-sheet-header">
                     <span class="week-sheet-title">Cronograma da Semana</span>
-                    <button class="icon-btn" onclick="closeWeekSchedule()">‚úï</button>
+                    <button class="icon-btn" onclick="closeWeekSchedule()">?</button>
                 </div>
                 <div class="week-sheet-body" id="week-sheet-body"></div>
             </div>
@@ -268,8 +268,8 @@
             </div>
             <!-- Hero blurb -->
             <div class="setup-hero">
-                <p class="setup-hero-title">Como voc√™ quer treinar hoje?</p>
-                <p class="setup-hero-sub">+3.000 quest√µes reais do ENEM ¬∑ Simula√ß√£o oficial ¬∑ IA</p>
+                <p class="setup-hero-title">Como vocÍ quer treinar hoje?</p>
+                <p class="setup-hero-sub">+3.000 questıes reais do ENEM ∑ SimulaÁ„o oficial ∑ IA</p>
             </div>
             <div class="screen-scroll">
                 <!-- Banner: simulado pausado -->
@@ -277,132 +277,132 @@
 
                 <!-- Modo ENEM Completo -->
                 <div class="enem-mode-card" id="enem-banner" style="border-color:#00b4a6">
-                    <!-- Linha compacta (sempre vis√≠vel) -->
+                    <!-- Linha compacta (sempre visÌvel) -->
                     <div class="enem-mode-left enem-banner-toggle" onclick="toggleENEMBanner()" role="button" aria-expanded="false" style="cursor:pointer;justify-content:space-between;">
                         <div style="display:flex;align-items:center;gap:12px;">
-                            <span class="enem-mode-icon">üèõÔ∏è</span>
+                            <span class="enem-mode-icon">???</span>
                             <div>
                                 <p class="enem-mode-title">MODO ENEM COMPLETO</p>
-                                <p class="enem-mode-sub">Simulado oficial ‚Ä¢ 180 quest√µes ‚Ä¢ 2 dias</p>
-                                <p class="enem-mode-sub">Estrutura id√™ntica √† prova real do INEP üèÜ</p>
+                                <p class="enem-mode-sub">Simulado oficial ï 180 questıes ï 2 dias</p>
+                                <p class="enem-mode-sub">Estrutura idÍntica ‡ prova real do INEP ??</p>
                             </div>
                         </div>
-                        <span class="enem-banner-chevron" id="enem-banner-chevron">‚Ä∫</span>
+                        <span class="enem-banner-chevron" id="enem-banner-chevron">õ</span>
                     </div>
 
-                    <!-- Bot√£o sempre vis√≠vel -->
+                    <!-- Bot„o sempre visÌvel -->
                     <button class="cta-btn enem-mode-btn" id="enem-toggle-btn" onclick="toggleENEMBanner()" style="background:linear-gradient(135deg,#00b4a6,#0077b6)">
-                        üìã Ver Cadernos
+                        ?? Ver Cadernos
                     </button>
 
-                    <!-- Corpo colaps√°vel -->
+                    <!-- Corpo colaps·vel -->
                     <div class="enem-banner-body" id="enem-banner-body">
-                        <!-- Estat√≠sticas r√°pidas -->
+                        <!-- EstatÌsticas r·pidas -->
                         <div class="enem-banner-stats">
-                            <div class="enem-stat"><span class="enem-stat-val">180</span><span class="enem-stat-lbl">quest√µes</span></div>
+                            <div class="enem-stat"><span class="enem-stat-val">180</span><span class="enem-stat-lbl">questıes</span></div>
                             <div class="enem-stat-divider"></div>
                             <div class="enem-stat"><span class="enem-stat-val">2</span><span class="enem-stat-lbl">dias de prova</span></div>
                             <div class="enem-stat-divider"></div>
                             <div class="enem-stat"><span class="enem-stat-val">5h30</span><span class="enem-stat-lbl">por dia</span></div>
                             <div class="enem-stat-divider"></div>
-                            <div class="enem-stat"><span class="enem-stat-val">4</span><span class="enem-stat-lbl">√°reas</span></div>
+                            <div class="enem-stat"><span class="enem-stat-val">4</span><span class="enem-stat-lbl">·reas</span></div>
                         </div>
 
                         <!-- Dia 1 -->
                         <div class="enem-day-block">
                             <div class="enem-day-header">
-                                <div class="enem-day-badge enem-day-badge-1">1¬∞ DIA</div>
+                                <div class="enem-day-badge enem-day-badge-1">1∞ DIA</div>
                                 <div class="enem-day-meta">
-                                    <span class="enem-day-meta-item">‚è± 5h30min</span>
-                                    <span class="enem-day-meta-item">üìã 90 quest√µes</span>
+                                    <span class="enem-day-meta-item">? 5h30min</span>
+                                    <span class="enem-day-meta-item">?? 90 questıes</span>
                                 </div>
                             </div>
                             <div class="enem-cadernos">
-                                <div class="enem-caderno"><span class="enem-caderno-range">Q. 01‚Äì45</span><span class="enem-caderno-name">Linguagens, C√≥digos e suas Tecnologias</span></div>
-                                <div class="enem-caderno"><span class="enem-caderno-range">Q. 46‚Äì90</span><span class="enem-caderno-name">Ci√™ncias Humanas e suas Tecnologias</span></div>
+                                <div class="enem-caderno"><span class="enem-caderno-range">Q. 01ñ45</span><span class="enem-caderno-name">Linguagens, CÛdigos e suas Tecnologias</span></div>
+                                <div class="enem-caderno"><span class="enem-caderno-range">Q. 46ñ90</span><span class="enem-caderno-name">CiÍncias Humanas e suas Tecnologias</span></div>
                             </div>
-                            <button class="cta-btn enem-day-btn" id="enem-mode-btn" onclick="startENEMMode(1)">üéØ Iniciar 1¬∞ Dia de Prova</button>
+                            <button class="cta-btn enem-day-btn" id="enem-mode-btn" onclick="startENEMMode(1)">?? Iniciar 1∞ Dia de Prova</button>
                         </div>
 
                         <!-- Dia 2 -->
                         <div class="enem-day-block">
                             <div class="enem-day-header">
-                                <div class="enem-day-badge enem-day-badge-2">2¬∞ DIA</div>
+                                <div class="enem-day-badge enem-day-badge-2">2∞ DIA</div>
                                 <div class="enem-day-meta">
-                                    <span class="enem-day-meta-item">‚è± 5h30min</span>
-                                    <span class="enem-day-meta-item">üìã 90 quest√µes</span>
+                                    <span class="enem-day-meta-item">? 5h30min</span>
+                                    <span class="enem-day-meta-item">?? 90 questıes</span>
                                 </div>
                             </div>
                             <div class="enem-cadernos">
-                                <div class="enem-caderno"><span class="enem-caderno-range">Q. 91‚Äì135</span><span class="enem-caderno-name">Ci√™ncias da Natureza e suas Tecnologias</span></div>
-                                <div class="enem-caderno"><span class="enem-caderno-range">Q. 136‚Äì180</span><span class="enem-caderno-name">Matem√°tica e suas Tecnologias</span></div>
+                                <div class="enem-caderno"><span class="enem-caderno-range">Q. 91ñ135</span><span class="enem-caderno-name">CiÍncias da Natureza e suas Tecnologias</span></div>
+                                <div class="enem-caderno"><span class="enem-caderno-range">Q. 136ñ180</span><span class="enem-caderno-name">Matem·tica e suas Tecnologias</span></div>
                             </div>
-                            <button class="cta-btn enem-day-btn enem-day-btn-alt" id="enem-mode-btn-2" onclick="startENEMMode(2)">üéØ Iniciar 2¬∞ Dia de Prova</button>
+                            <button class="cta-btn enem-day-btn enem-day-btn-alt" id="enem-mode-btn-2" onclick="startENEMMode(2)">?? Iniciar 2∞ Dia de Prova</button>
                         </div>
 
-                        <!-- Rodap√© informativo -->
+                        <!-- RodapÈ informativo -->
                         <div class="enem-banner-footer">
-                            <div class="enem-footer-item">üìä Gabarito comentado ao final</div>
-                            <div class="enem-footer-item">üéØ Quest√µes reais do ENEM (INEP)</div>
-                            <div class="enem-footer-item">üìà An√°lise por √°rea do conhecimento</div>
+                            <div class="enem-footer-item">?? Gabarito comentado ao final</div>
+                            <div class="enem-footer-item">?? Questıes reais do ENEM (INEP)</div>
+                            <div class="enem-footer-item">?? An·lise por ·rea do conhecimento</div>
                         </div>
                     </div><!-- /enem-banner-body -->
                 </div>
-                <div class="setup-divider">‚Äî ou monte seu simulado personalizado ‚Äî</div>
+                <div class="setup-divider">ó ou monte seu simulado personalizado ó</div>
 
-                <!-- Reda√ß√£o ENEM -->
+                <!-- RedaÁ„o ENEM -->
                 <div class="enem-mode-card" style="margin-top:4px;border-color:#a78bfa">
                     <div class="enem-mode-left">
-                        <span class="enem-mode-icon">‚úçÔ∏è</span>
+                        <span class="enem-mode-icon">??</span>
                         <div>
-                            <p class="enem-mode-title" style="color:#a78bfa">REDA√á√ÉO ENEM</p>
-                            <p class="enem-mode-sub">Escreva e corrija pelas 5 compet√™ncias</p>
-                            <p class="enem-mode-sub">Corre√ß√£o instant√¢nea por IA ü§ñ</p>
+                            <p class="enem-mode-title" style="color:#a78bfa">REDA«√O ENEM</p>
+                            <p class="enem-mode-sub">Escreva e corrija pelas 5 competÍncias</p>
+                            <p class="enem-mode-sub">CorreÁ„o instant‚nea por IA ??</p>
                         </div>
                     </div>
                     <button class="cta-btn enem-mode-btn" style="background:linear-gradient(135deg,#7c3aed,#a78bfa)" onclick="navigate('redacao')">
-                        ‚úçÔ∏è Escrever
+                        ?? Escrever
                     </button>
                 </div>
 
                 <p class="setup-label">ESCOLHA A DISCIPLINA</p>
                 <div class="disc-grid">
                     <button class="disc-card" data-disc="humanas" onclick="selectDisc(this)">
-                        <span class="disc-icon">üåç</span>
-                        <span class="disc-name">Ci√™ncias Humanas</span>
-                        <span class="disc-sub disc-sub-humanas">Hist√≥ria ¬∑ Geo ¬∑ Filo ¬∑ Socio</span>
+                        <span class="disc-icon">??</span>
+                        <span class="disc-name">CiÍncias Humanas</span>
+                        <span class="disc-sub disc-sub-humanas">HistÛria ∑ Geo ∑ Filo ∑ Socio</span>
                     </button>
                     <button class="disc-card" data-disc="natureza" onclick="selectDisc(this)">
-                        <span class="disc-icon">üî¨</span>
-                        <span class="disc-name">Ci√™ncias da Natureza</span>
-                        <span class="disc-sub disc-sub-natureza">Bio ¬∑ F√≠sica ¬∑ Qu√≠mica</span>
+                        <span class="disc-icon">??</span>
+                        <span class="disc-name">CiÍncias da Natureza</span>
+                        <span class="disc-sub disc-sub-natureza">Bio ∑ FÌsica ∑ QuÌmica</span>
                     </button>
                     <button class="disc-card" data-disc="linguagens" onclick="selectDisc(this)">
-                        <span class="disc-icon">üìù</span>
+                        <span class="disc-icon">??</span>
                         <span class="disc-name">Linguagens</span>
-                        <span class="disc-sub disc-sub-linguagens">Portugu√™s ¬∑ Lit ¬∑ L√≠ngua Estrangeira</span>
+                        <span class="disc-sub disc-sub-linguagens">PortuguÍs ∑ Lit ∑ LÌngua Estrangeira</span>
                     </button>
                     <button class="disc-card" data-disc="matematica" onclick="selectDisc(this)">
-                        <span class="disc-icon">‚ûó</span>
-                        <span class="disc-name">Matem√°tica</span>
-                        <span class="disc-sub disc-sub-matematica">Algebra ¬∑ Geometria ¬∑ Estat</span>
+                        <span class="disc-icon">?</span>
+                        <span class="disc-name">Matem·tica</span>
+                        <span class="disc-sub disc-sub-matematica">Algebra ∑ Geometria ∑ Estat</span>
                     </button>
                 </div>
                 <button class="disc-card disc-card-full" data-disc="misto" onclick="selectDisc(this)">
-                    <span class="disc-icon">üéØ</span>
+                    <span class="disc-icon">??</span>
                     <div>
-                        <span class="disc-name">Misto ‚Äî Todas as √Åreas</span>
+                        <span class="disc-name">Misto ó Todas as ¡reas</span>
                         <span class="disc-sub">Como no ENEM real</span>
                     </div>
                 </button>
 
-                <!-- Filtro por T√≥pico -->
+                <!-- Filtro por TÛpico -->
                 <div class="topic-filter-wrap" id="topic-filter-wrap">
-                    <p class="setup-label">FILTRAR POR T√ìPICO <span class="opt-badge">OPCIONAL</span></p>
+                    <p class="setup-label">FILTRAR POR T”PICO <span class="opt-badge">OPCIONAL</span></p>
                     <div class="topic-chips" id="topic-chips"></div>
                 </div>
 
-                <p class="setup-label">QUANTAS QUEST√ïES?</p>
+                <p class="setup-label">QUANTAS QUEST’ES?</p>
                 <div class="count-row">
                     <button class="count-btn" data-count="5" onclick="selectCount(this)">5</button>
                     <button class="count-btn selected" data-count="10" onclick="selectCount(this)">10</button>
@@ -416,10 +416,10 @@
                 <div class="api-source-card" id="api-source-card">
                     <span class="api-source-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#00b4a6" stroke-width="1.8" width="26" height="26"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></span>
                     <div>
-                        <p class="api-source-title">+3.000 Quest√µes Reais do ENEM</p>
+                        <p class="api-source-title">+3.000 Questıes Reais do ENEM</p>
                         <p class="api-source-sub" id="api-source-sub">Verificando banco de dados...</p>
                     </div>
-                    <span class="api-source-status" id="api-source-status">‚è≥</span>
+                    <span class="api-source-status" id="api-source-status">?</span>
                 </div>
 
                 <button class="cta-btn setup-start-btn" id="start-quiz-btn" onclick="initQuizFromSetup()">
@@ -428,7 +428,7 @@
                     </svg>
                     <span style="flex:1;text-align:left">
                         <strong style="display:block;font-size:16px;font-weight:900">Iniciar Simulado Agora</strong>
-                        <small style="font-size:11px;opacity:.8;font-weight:500">Quest√µes reais selecionadas para voc√™</small>
+                        <small style="font-size:11px;opacity:.8;font-weight:500">Questıes reais selecionadas para vocÍ</small>
                     </span>
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18" style="flex-shrink:0;opacity:.7"><polyline points="9 18 15 12 9 6"/></svg>
                 </button>
@@ -441,28 +441,28 @@
         <!-- ===================== SCREEN: QUIZ ===================== -->
         <section id="screen-quiz" class="screen">
 
-            <!-- Overlay de Instru√ß√µes ENEM (pr√©-prova) -->
+            <!-- Overlay de InstruÁıes ENEM (prÈ-prova) -->
             <div class="enem-instructions-overlay" id="enem-instructions-overlay">
                 <div class="enem-inst-card">
                     <div class="enem-inst-header">
-                        <span class="enem-inst-seal">üèõÔ∏è</span>
+                        <span class="enem-inst-seal">???</span>
                         <div>
                             <p class="enem-inst-eyebrow">SIMULADO OFICIAL</p>
-                            <p class="enem-inst-day-title" id="enem-inst-day-title">1¬∞ DIA DE PROVA</p>
-                            <p class="enem-inst-day-desc" id="enem-inst-day-desc">Linguagens + Ci√™ncias Humanas</p>
+                            <p class="enem-inst-day-title" id="enem-inst-day-title">1∞ DIA DE PROVA</p>
+                            <p class="enem-inst-day-desc" id="enem-inst-day-desc">Linguagens + CiÍncias Humanas</p>
                         </div>
                     </div>
                     <div class="enem-inst-rules">
-                        <div class="enem-inst-rule"><span class="enem-inst-rule-icon">üìã</span><span>90 quest√µes de m√∫ltipla escolha</span></div>
-                        <div class="enem-inst-rule"><span class="enem-inst-rule-icon">‚è±</span><span>5 horas e 30 minutos de dura√ß√£o</span></div>
-                        <div class="enem-inst-rule"><span class="enem-inst-rule-icon">üìò</span><span>2 cadernos de conhecimento em sequ√™ncia</span></div>
-                        <div class="enem-inst-rule"><span class="enem-inst-rule-icon">‚ö°</span><span>O tempo corre mesmo ao pausar o app</span></div>
+                        <div class="enem-inst-rule"><span class="enem-inst-rule-icon">??</span><span>90 questıes de m˙ltipla escolha</span></div>
+                        <div class="enem-inst-rule"><span class="enem-inst-rule-icon">?</span><span>5 horas e 30 minutos de duraÁ„o</span></div>
+                        <div class="enem-inst-rule"><span class="enem-inst-rule-icon">??</span><span>2 cadernos de conhecimento em sequÍncia</span></div>
+                        <div class="enem-inst-rule"><span class="enem-inst-rule-icon">?</span><span>O tempo corre mesmo ao pausar o app</span></div>
                     </div>
                     <div class="enem-inst-cadernos-wrap">
                         <p class="enem-inst-cadernos-title">CADERNOS DESTA PROVA</p>
                         <div id="enem-inst-cadernos"></div>
                     </div>
-                    <button class="cta-btn enem-inst-start-btn" id="enem-inst-start-btn">üèõÔ∏è INICIAR PROVA AGORA</button>
+                    <button class="cta-btn enem-inst-start-btn" id="enem-inst-start-btn">??? INICIAR PROVA AGORA</button>
                     <button class="enem-inst-cancel-btn" id="enem-inst-cancel-btn">Cancelar</button>
                 </div>
             </div>
@@ -470,46 +470,46 @@
             <!-- Loading Overlay -->
             <div class="quiz-loading-overlay" id="quiz-loading-overlay">
                 <div class="loading-spinner"></div>
-                <p class="loading-text">Buscando quest√µes reais do ENEM...</p>
-                <p class="loading-sub" id="loading-sub-text">Aguarde um momento üéì</p>
+                <p class="loading-text">Buscando questıes reais do ENEM...</p>
+                <p class="loading-sub" id="loading-sub-text">Aguarde um momento ??</p>
             </div>
             <div class="quiz-header">
-                <button class="back-btn" onclick="onPauseQuizRequest()">‚úï</button>
+                <button class="back-btn" onclick="onPauseQuizRequest()">?</button>
                 <div class="quiz-meta">
-                    <span class="quiz-area" id="quiz-area-label">CI√äNCIAS HUMANAS</span>
+                    <span class="quiz-area" id="quiz-area-label">CI NCIAS HUMANAS</span>
                     <span class="quiz-type" id="quiz-type-label">Simulado ENEM</span>
                     <span class="quiz-caderno-chip" id="quiz-caderno-chip" style="display:none">CADERNO 1/2</span>
                 </div>
-                <div class="quiz-timer" id="quiz-timer">‚è± 12:45</div>
+                <div class="quiz-timer" id="quiz-timer">? 12:45</div>
             </div>
             <div class="quiz-progress-wrap">
                 <div class="quiz-progress-bar" id="quiz-progress-bar" style="width:40%"></div>
             </div>
-            <p class="quiz-question-count" id="quiz-q-count">Quest√£o 4 de 10</p>
+            <p class="quiz-question-count" id="quiz-q-count">Quest„o 4 de 10</p>
             <div class="quiz-caderno-banner" id="quiz-caderno-banner" style="display:none">
-                <span class="caderno-icon">üìò</span>
-                <span id="quiz-caderno-label">CADERNO 1 ¬∑ LINGUAGENS, C√ìDIGOS E SUAS TECNOLOGIAS</span>
+                <span class="caderno-icon">??</span>
+                <span id="quiz-caderno-label">CADERNO 1 ∑ LINGUAGENS, C”DIGOS E SUAS TECNOLOGIAS</span>
             </div>
 
             <div class="screen-scroll quiz-scroll">
                 <div class="quiz-tag-wrap">
-                    <span class="quiz-tag" id="quiz-tag">HIST√ìRIA GERAL</span>
+                    <span class="quiz-tag" id="quiz-tag">HIST”RIA GERAL</span>
                     <span class="quiz-source-badge" id="quiz-source-badge" style="display:none">API ENEM</span>
                 </div>
                 <div class="quiz-context-images" id="quiz-context-images"></div>
                 <div class="quiz-context" id="quiz-context"></div>
-                <p class="quiz-question" id="quiz-question">Carregando quest√£o...</p>
+                <p class="quiz-question" id="quiz-question">Carregando quest„o...</p>
                 <blockquote class="quiz-quote" id="quiz-quote"></blockquote>
 
                 <div class="quiz-options" id="quiz-options"></div>
 
-                <button class="hint-btn" id="hint-btn" onclick="showHint()">üí° Ver dica ou Revisar Conceito</button>
+                <button class="hint-btn" id="hint-btn" onclick="showHint()">?? Ver dica ou Revisar Conceito</button>
                 <div class="hint-box" id="hint-box" style="display:none"></div>
                 <div class="gabarito-box" id="gabarito-box" style="display:none"></div>
             </div>
 
             <div class="quiz-footer">
-                <button class="cta-btn" id="confirm-btn" onclick="confirmAnswer()">Confirmar Resposta ‚Üí</button>
+                <button class="cta-btn" id="confirm-btn" onclick="confirmAnswer()">Confirmar Resposta ?</button>
                 <p class="quiz-footer-hint" id="quiz-footer-hint">SELECIONE UMA ALTERNATIVA</p>
             </div>
         </section>
@@ -517,9 +517,9 @@
         <!-- ===================== SCREEN: QUIZ RESULT ===================== -->
         <section id="screen-result" class="screen">
             <div class="screen-scroll result-screen">
-                <div class="result-emoji" id="result-emoji">üéâ</div>
-                <h2 class="result-title" id="result-title">Simulado Conclu√≠do!</h2>
-                <p class="result-sub" id="result-sub">Voc√™ acertou 7 de 10 quest√µes</p>
+                <div class="result-emoji" id="result-emoji">??</div>
+                <h2 class="result-title" id="result-title">Simulado ConcluÌdo!</h2>
+                <p class="result-sub" id="result-sub">VocÍ acertou 7 de 10 questıes</p>
                 <div class="result-score-ring">
                     <svg viewBox="0 0 120 120" width="140" height="140">
                         <circle cx="60" cy="60" r="50" fill="none" stroke="#1a3a4a" stroke-width="10" />
@@ -533,38 +533,38 @@
                     </div>
                 </div>
                 <div class="result-stats">
-                    <div class="result-stat"><span class="rs-icon">‚úÖ</span><span
+                    <div class="result-stat"><span class="rs-icon">?</span><span
                             id="res-correct">7</span><span>Corretas</span></div>
-                    <div class="result-stat"><span class="rs-icon">‚ùå</span><span
+                    <div class="result-stat"><span class="rs-icon">?</span><span
                             id="res-wrong">3</span><span>Erradas</span></div>
-                    <div class="result-stat"><span class="rs-icon">‚ö°</span><span id="res-xp">+70</span><span>XP
+                    <div class="result-stat"><span class="rs-icon">?</span><span id="res-xp">+70</span><span>XP
                             Ganho</span></div>
                     <div class="result-stat result-xp-bonus" id="res-xp-bonus-row" style="display:none">
-                        <span class="rs-icon">üî•</span><span id="res-xp-bonus" class="bonus-highlight"></span><span>B√¥nus</span>
+                        <span class="rs-icon">??</span><span id="res-xp-bonus" class="bonus-highlight"></span><span>BÙnus</span>
                     </div>
                 </div>
 
-                <!-- An√°lise de desempenho por √°rea -->
+                <!-- An·lise de desempenho por ·rea -->
                 <div id="result-analysis" style="display:none">
-                    <p class="result-section-label" id="result-breakdown-label">üìä DESEMPENHO POR √ÅREA</p>
+                    <p class="result-section-label" id="result-breakdown-label">?? DESEMPENHO POR ¡REA</p>
                     <div id="result-breakdown"></div>
 
                     <!-- Estimativa TRI simplificada -->
                     <div class="result-tri-card" id="result-tri-card">
                         <div class="result-tri-label-col">
-                            <p class="result-tri-title" id="result-tri-title">üéØ Estimativa ENEM</p>
+                            <p class="result-tri-title" id="result-tri-title">?? Estimativa ENEM</p>
                             <p class="result-tri-desc" id="result-tri-desc">Baseado no seu desempenho</p>
                         </div>
-                        <span class="result-tri-score" id="result-tri-score">‚Äî</span>
+                        <span class="result-tri-score" id="result-tri-score">ó</span>
                     </div>
 
-                    <!-- Recomenda√ß√µes -->
-                    <p class="result-section-label">üí° PR√ìXIMOS PASSOS</p>
+                    <!-- RecomendaÁıes -->
+                    <p class="result-section-label">?? PR”XIMOS PASSOS</p>
                     <div id="result-recommendations"></div>
 
-                    <!-- Bot√£o Refazer Erros -->
+                    <!-- Bot„o Refazer Erros -->
                     <div id="retry-mistakes-wrap" style="display:none;margin-top:8px">
-                        <button class="retry-mistakes-btn" onclick="retryMistakes()">üîÅ Refazer Erros desta Sess√£o</button>
+                        <button class="retry-mistakes-btn" onclick="retryMistakes()">?? Refazer Erros desta Sess„o</button>
                     </div>
                 </div>
 
@@ -578,7 +578,7 @@
                     Compartilhar Resultado
                 </button>
 
-                <button class="cta-btn" onclick="navigate('home')" style="margin-top:16px">Voltar ao In√≠cio</button>
+                <button class="cta-btn" onclick="navigate('home')" style="margin-top:16px">Voltar ao InÌcio</button>
                 <button class="outline-btn" onclick="navigate('quiz-setup')" style="margin-top:12px">Novo Simulado</button>
             </div>
         </section>
@@ -593,68 +593,68 @@
 
             <!-- Tabs Escola / Global -->
             <div class="ranking-tabs" role="tablist">
-                <button class="ranking-tab active" id="tab-escola" role="tab" onclick="switchRankingTab('escola')">üè´ Minha Escola</button>
-                <button class="ranking-tab" id="tab-global" role="tab" onclick="switchRankingTab('global')">üåé Global</button>
+                <button class="ranking-tab active" id="tab-escola" role="tab" onclick="switchRankingTab('escola')">?? Minha Escola</button>
+                <button class="ranking-tab" id="tab-global" role="tab" onclick="switchRankingTab('global')">?? Global</button>
             </div>
 
             <div class="screen-scroll ranking-scroll">
-                <!-- P√≥dio -->
+                <!-- PÛdio -->
                 <div class="podium" id="podium-wrap">
                     <div class="podium-item second">
                         <div class="podium-avatar" id="pod-2-av">J</div>
-                        <div class="podium-medal silver">2¬∫</div>
-                        <p class="podium-name" id="pod-2-name">‚Äî</p>
-                        <p class="podium-pts" id="pod-2-pts">‚Äî</p>
+                        <div class="podium-medal silver">2∫</div>
+                        <p class="podium-name" id="pod-2-name">ó</p>
+                        <p class="podium-pts" id="pod-2-pts">ó</p>
                         <span class="podium-tier-badge tier-iniciante" id="pod-2-tier">Iniciante</span>
                     </div>
                     <div class="podium-item first">
-                        <div class="podium-crown">üëë</div>
+                        <div class="podium-crown">??</div>
                         <div class="podium-avatar gold-ring" id="pod-1-av">L</div>
-                        <div class="podium-medal gold">1¬∫</div>
-                        <p class="podium-name" id="pod-1-name">‚Äî</p>
-                        <p class="podium-pts gold-text" id="pod-1-pts">‚Äî</p>
+                        <div class="podium-medal gold">1∫</div>
+                        <p class="podium-name" id="pod-1-name">ó</p>
+                        <p class="podium-pts gold-text" id="pod-1-pts">ó</p>
                         <span class="podium-tier-badge tier-iniciante" id="pod-1-tier">Iniciante</span>
                     </div>
                     <div class="podium-item third">
                         <div class="podium-avatar" id="pod-3-av">M</div>
-                        <div class="podium-medal bronze">3¬∫</div>
-                        <p class="podium-name" id="pod-3-name">‚Äî</p>
-                        <p class="podium-pts" id="pod-3-pts">‚Äî</p>
+                        <div class="podium-medal bronze">3∫</div>
+                        <p class="podium-name" id="pod-3-name">ó</p>
+                        <p class="podium-pts" id="pod-3-pts">ó</p>
                         <span class="podium-tier-badge tier-iniciante" id="pod-3-tier">Iniciante</span>
                     </div>
                 </div>
 
                 <!-- Banner de convite -->
                 <div class="invite-banner" onclick="inviteFriends()" role="button" aria-label="Convidar amigos">
-                    <div class="invite-icon">üë•</div>
+                    <div class="invite-icon">??</div>
                     <div class="invite-text">
                         <strong>Convide seus amigos</strong>
                         <p>Ganhe 50 XP por cada amigo que entrar!</p>
                     </div>
-                    <span class="invite-arrow">‚Ä∫</span>
+                    <span class="invite-arrow">õ</span>
                 </div>
 
-                <!-- Cabe√ßalho da lista -->
+                <!-- CabeÁalho da lista -->
                 <div class="ranking-list-header">
                     <span id="ranking-list-label">TOP ALUNOS</span>
-                    <span class="ranking-avg" id="ranking-avg">M√©dia: ‚Äî</span>
+                    <span class="ranking-avg" id="ranking-avg">MÈdia: ó</span>
                 </div>
                 <div class="ranking-list" id="ranking-list"></div>
             </div>
 
-            <!-- Rodap√©: posi√ß√£o do usu√°rio -->
+            <!-- RodapÈ: posiÁ„o do usu·rio -->
             <div class="user-rank-footer" id="user-rank-footer">
                 <div class="avatar small" id="rank-footer-av">A</div>
                 <div class="user-rank-info">
-                    <span class="user-rank-pos" id="user-rank-pos">‚Äî Voc√™</span>
-                    <span class="user-rank-sub">Sua Posi√ß√£o</span>
+                    <span class="user-rank-pos" id="user-rank-pos">ó VocÍ</span>
+                    <span class="user-rank-sub">Sua PosiÁ„o</span>
                     <div class="user-rank-xp-bar-wrap">
                         <div class="user-rank-xp-bar" id="user-rank-xp-bar" style="width:0%"></div>
                     </div>
                 </div>
                 <div class="user-rank-right">
                     <span class="user-rank-pts" id="user-rank-pts">0 XP</span>
-                    <span class="user-rank-gap" id="user-rank-gap">Fa√ßa um simulado üìà</span>
+                    <span class="user-rank-gap" id="user-rank-gap">FaÁa um simulado ??</span>
                 </div>
             </div>
         </section>
@@ -664,24 +664,24 @@
             <div class="inner-header">
                 <button class="back-btn" onclick="navigate('profile')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><polyline points="15 18 9 12 15 6"/></svg></button>
                 <h2 class="inner-title">Conquistas</h2>
-                <button class="icon-btn teal-icon">üèÖ</button>
+                <button class="icon-btn teal-icon">??</button>
             </div>
             <div class="screen-scroll">
 
                 <!-- Stats Strip -->
                 <div class="ach-stats-strip">
                     <div class="ach-stat">
-                        <span class="ach-stat-val" id="ach-total-unlocked">‚Äî</span>
+                        <span class="ach-stat-val" id="ach-total-unlocked">ó</span>
                         <span class="ach-stat-label">Desbloqueadas</span>
                     </div>
                     <div class="ach-stat-divider"></div>
                     <div class="ach-stat">
-                        <span class="ach-stat-val gold" id="ach-total-xp">‚Äî</span>
+                        <span class="ach-stat-val gold" id="ach-total-xp">ó</span>
                         <span class="ach-stat-label">XP Obtidos</span>
                     </div>
                     <div class="ach-stat-divider"></div>
                     <div class="ach-stat">
-                        <span class="ach-stat-val teal" id="ach-completion">‚Äî</span>
+                        <span class="ach-stat-val teal" id="ach-completion">ó</span>
                         <span class="ach-stat-label">Completo</span>
                     </div>
                 </div>
@@ -689,11 +689,11 @@
                 <!-- Next Big Achievement -->
                 <div class="next-achievement-card">
                     <div class="na-icon-wrap">
-                        <div class="na-icon">üéì</div>
+                        <div class="na-icon">??</div>
                     </div>
                     <div class="na-info">
-                        <span class="na-label">‚ö° PR√ìXIMA CONQUISTA</span>
-                        <h3 class="na-title">Pr√≥xima Conquista</h3>
+                        <span class="na-label">? PR”XIMA CONQUISTA</span>
+                        <h3 class="na-title">PrÛxima Conquista</h3>
                         <p class="na-desc">Complete mais simulados para desbloquear.</p>
                         <div class="progress-label-row">
                             <span class="progress-label">Progresso geral</span>
@@ -703,7 +703,7 @@
                             <div class="progress-bar" style="width:0%"></div>
                         </div>
                         <div class="na-footer-row">
-                            <p class="na-remaining">‚Äî</p>
+                            <p class="na-remaining">ó</p>
                             <span class="na-xp-reward na-xp-el">+50 XP</span>
                         </div>
                     </div>
@@ -714,7 +714,7 @@
                     <div class="badge-section-header">
                         <div class="badge-section-title">
                             <span class="badge-tier-pill bronze-tier">BRONZE</span>
-                            <span>üî• Ofensiva</span>
+                            <span>?? Ofensiva</span>
                         </div>
                         <span class="badge-count teal">0/5 Desbloqueados</span>
                     </div>
@@ -726,7 +726,7 @@
                     <div class="badge-section-header">
                         <div class="badge-section-title">
                             <span class="badge-tier-pill silver-tier">PRATA</span>
-                            <span>üéØ Especialista</span>
+                            <span>?? Especialista</span>
                         </div>
                         <span class="badge-count teal">0/4 Desbloqueados</span>
                     </div>
@@ -738,7 +738,7 @@
                     <div class="badge-section-header">
                         <div class="badge-section-title">
                             <span class="badge-tier-pill gold-tier">OURO</span>
-                            <span>üèÉ Maratonista</span>
+                            <span>?? Maratonista</span>
                         </div>
                         <span class="badge-count teal">0/3 Desbloqueados</span>
                     </div>
@@ -747,12 +747,12 @@
             </div>
         </section>
 
-        <!-- ===================== SCREEN: REVIS√ÉO DE ERROS ===================== -->
+        <!-- ===================== SCREEN: REVIS√O DE ERROS ===================== -->
         <section id="screen-review" class="screen">
             <div class="inner-header">
                 <button class="back-btn" onclick="navigate('profile')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><polyline points="15 18 9 12 15 6"/></svg></button>
-                <h2 class="inner-title">Revis√£o de Erros</h2>
-                <button class="icon-btn" onclick="clearWrongAnswers()" title="Limpar">üóëÔ∏è</button>
+                <h2 class="inner-title">Revis„o de Erros</h2>
+                <button class="icon-btn" onclick="clearWrongAnswers()" title="Limpar">???</button>
             </div>
             <div class="review-tabs" id="review-tabs"></div>
             <div class="screen-scroll" id="review-list"></div>
@@ -765,12 +765,12 @@
                 <div class="profile-header">
                     <div class="profile-avatar-wrap">
                         <div class="avatar large" id="profile-avatar">A</div>
-                        <span class="avatar-edit-btn" onclick="openAvatarEditModal()">‚úèÔ∏è</span>
+                        <span class="avatar-edit-btn" onclick="openAvatarEditModal()">??</span>
                     </div>
                     <h2 class="profile-name" id="profile-name">Alex</h2>
                     <div class="profile-badges-row">
                         <span class="level-badge-lg">LVL <span id="profile-level">15</span></span>
-                        <span class="xp-badge">‚ö° +<span id="profile-xp">1.250</span> XP</span>
+                        <span class="xp-badge">? +<span id="profile-xp">1.250</span> XP</span>
                     </div>
                 </div>
 
@@ -781,12 +781,12 @@
 
                 <!-- Performance by Area -->
                 <div class="section-header">
-                    <span class="section-title">Desempenho por √Årea</span>
+                    <span class="section-title">Desempenho por ¡rea</span>
                     <button class="link-btn" onclick="navigate('review')">Ver erros</button>
                 </div>
                 <div class="area-grid" id="area-grid">
                     <div class="area-card">
-                        <span class="area-icon">üìö</span>
+                        <span class="area-icon">??</span>
                         <span class="area-name">HUMANAS</span>
                         <span class="area-pct" style="color:#a78bfa">75%</span>
                         <div class="progress-bar-wrap thin">
@@ -794,7 +794,7 @@
                         </div>
                     </div>
                     <div class="area-card">
-                        <span class="area-icon">üî¨</span>
+                        <span class="area-icon">??</span>
                         <span class="area-name">NATUREZA</span>
                         <span class="area-pct teal">60%</span>
                         <div class="progress-bar-wrap thin">
@@ -802,7 +802,7 @@
                         </div>
                     </div>
                     <div class="area-card">
-                        <span class="area-icon">üìù</span>
+                        <span class="area-icon">??</span>
                         <span class="area-name">LINGUAGENS</span>
                         <span class="area-pct" style="color:#fb923c">85%</span>
                         <div class="progress-bar-wrap thin">
@@ -810,8 +810,8 @@
                         </div>
                     </div>
                     <div class="area-card">
-                        <span class="area-icon">‚ûó</span>
-                        <span class="area-name">MATEM√ÅTICA</span>
+                        <span class="area-icon">?</span>
+                        <span class="area-name">MATEM¡TICA</span>
                         <span class="area-pct" style="color:var(--gold)">50%</span>
                         <div class="progress-bar-wrap thin">
                             <div class="progress-bar" style="width:50%;background:var(--gold)"></div>
@@ -822,43 +822,43 @@
                 <!-- Conquistas Recentes -->
                 <div class="section-header">
                     <span class="section-title">Conquistas Recentes</span>
-                    <button class="link-btn" onclick="navigate('achievements')">Ver todas ‚Üí</button>
+                    <button class="link-btn" onclick="navigate('achievements')">Ver todas ?</button>
                 </div>
                 <div class="recent-badges-scroll" id="recent-badges-scroll"></div>
 
                 <!-- Personal Goals -->
                 <div class="section-header">
                     <span class="section-title">Metas Pessoais</span>
-                    <button class="goals-edit-btn" onclick="openGoalsModal()">‚úèÔ∏è Editar</button>
+                    <button class="goals-edit-btn" onclick="openGoalsModal()">?? Editar</button>
                 </div>
                 <div class="goals-list" id="goals-list"></div>
 
-                <!-- A√ß√µes -->
+                <!-- AÁıes -->
                 <div class="section-header" style="margin-top:8px">
                     <span class="section-title">Mais</span>
                 </div>
                 <div class="profile-account-actions">
                     <button class="profile-action-row" onclick="navigate('analise')">
-                        <span>üìä Ver minha evolu√ß√£o detalhada</span>
-                        <span class="arrow">‚Ä∫</span>
+                        <span>?? Ver minha evoluÁ„o detalhada</span>
+                        <span class="arrow">õ</span>
                     </button>
                     <button class="profile-action-row" onclick="navigate('settings')">
-                        <span>‚öôÔ∏è Configura√ß√µes da conta</span>
-                        <span class="arrow">‚Ä∫</span>
+                        <span>?? ConfiguraÁıes da conta</span>
+                        <span class="arrow">õ</span>
                     </button>
                     <button class="profile-action-row danger" onclick="logout()">
-                        <span>üö™ Sair da conta</span>
-                        <span class="arrow">‚Ä∫</span>
+                        <span>?? Sair da conta</span>
+                        <span class="arrow">õ</span>
                     </button>
                 </div>
             </div>
         </section>
 
-        <!-- ===================== SCREEN: CONFIGURA√á√ïES ===================== -->
+        <!-- ===================== SCREEN: CONFIGURA«’ES ===================== -->
         <section id="screen-settings" class="screen">
             <div class="inner-header">
                 <button class="back-btn" onclick="navigate('profile')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><polyline points="15 18 9 12 15 6"/></svg></button>
-                <h2 class="inner-title">Configura√ß√µes</h2>
+                <h2 class="inner-title">ConfiguraÁıes</h2>
                 <div></div>
             </div>
             <div class="screen-scroll">
@@ -871,7 +871,7 @@
 
                 <!-- Profile Section -->
                 <div class="settings-section">
-                    <div class="settings-section-title">üë§ Perfil</div>
+                    <div class="settings-section-title">?? Perfil</div>
                     <div class="settings-field">
                         <label for="input-name">NOME COMPLETO</label>
                         <input type="text" id="input-name" value="" placeholder="Seu nome completo" />
@@ -882,7 +882,7 @@
                             placeholder="seu@email.com" />
                     </div>
                     <div class="settings-field">
-                        <label for="input-school">INSTITUI√á√ÉO DE ENSINO</label>
+                        <label for="input-school">INSTITUI«√O DE ENSINO</label>
                         <input type="text" id="input-school" value=""
                             placeholder="Digite sua escola ou universidade" />
                     </div>
@@ -890,11 +890,11 @@
 
                 <!-- Preferences Section -->
                 <div class="settings-section">
-                    <div class="settings-section-title">üîî Prefer√™ncias e Privacidade</div>
+                    <div class="settings-section-title">?? PreferÍncias e Privacidade</div>
                     <div class="settings-toggle-row">
                         <div>
                             <p class="toggle-label">Lembretes de Estudo</p>
-                            <p class="toggle-sub">Notifica√ß√µes di√°rias do cronograma</p>
+                            <p class="toggle-sub">NotificaÁıes di·rias do cronograma</p>
                         </div>
                         <label class="toggle-switch">
                             <input type="checkbox" id="toggle-reminders" checked />
@@ -904,7 +904,7 @@
                     <div class="settings-toggle-row">
                         <div>
                             <p class="toggle-label">Alertas de Resultados</p>
-                            <p class="toggle-sub">Avisos sobre simulados e corre√ß√£o</p>
+                            <p class="toggle-sub">Avisos sobre simulados e correÁ„o</p>
                         </div>
                         <label class="toggle-switch">
                             <input type="checkbox" id="toggle-alerts" checked />
@@ -913,7 +913,7 @@
                     </div>
                     <div class="settings-toggle-row">
                         <div>
-                            <p class="toggle-label">Perfil P√∫blico</p>
+                            <p class="toggle-label">Perfil P˙blico</p>
                             <p class="toggle-sub">Permitir que outros vejam seu progresso</p>
                         </div>
                         <label class="toggle-switch">
@@ -925,47 +925,47 @@
 
                 <!-- Push Notifications Card -->
                 <div class="push-notif-card" id="push-notif-card">
-                    <div class="push-notif-icon">üîî</div>
+                    <div class="push-notif-icon">??</div>
                     <div class="push-notif-info">
-                        <p class="push-notif-title">Notifica√ß√µes Push</p>
-                        <p class="push-notif-sub" id="push-notif-status">Ative para lembretes de estudo di√°rios</p>
+                        <p class="push-notif-title">NotificaÁıes Push</p>
+                        <p class="push-notif-sub" id="push-notif-status">Ative para lembretes de estudo di·rios</p>
                     </div>
                     <button class="push-notif-btn" id="push-notif-btn" onclick="requestPushPermission()">Ativar</button>
                 </div>
 
                 <!-- Security Section -->
                 <div class="settings-section">
-                    <div class="settings-section-title">üîí Seguran√ßa</div>
+                    <div class="settings-section-title">?? SeguranÁa</div>
                     <button class="settings-link-row" id="change-password-btn" onclick="changePassword()">
-                        <span>üîë Alterar Senha</span>
-                        <span class="arrow">‚Ä∫</span>
+                        <span>?? Alterar Senha</span>
+                        <span class="arrow">õ</span>
                     </button>
                     <p id="change-password-msg" style="display:none;font-size:12px;margin:6px 0 0 4px;"></p>
                 </div>
 
-                <button class="cta-btn" id="save-settings-btn" onclick="saveSettings()">Salvar Altera√ß√µes</button>
+                <button class="cta-btn" id="save-settings-btn" onclick="saveSettings()">Salvar AlteraÁıes</button>
                 <button class="settings-link-row" onclick="navigate('plans')">
-                    <span>üëë Planos e Assinatura</span>
-                    <span class="arrow">‚Ä∫</span>
+                    <span>?? Planos e Assinatura</span>
+                    <span class="arrow">õ</span>
                 </button>
                 <button class="settings-link-row" id="btn-cancel-subscription" onclick="cancelSubscription()" style="display:none">
-                    <span style="color:#ff4d6a">‚ùå Cancelar Assinatura</span>
-                    <span class="arrow" style="color:#ff4d6a">‚Ä∫</span>
+                    <span style="color:#ff4d6a">? Cancelar Assinatura</span>
+                    <span class="arrow" style="color:#ff4d6a">õ</span>
                 </button>
                 <button class="settings-link-row" onclick="navigate('support')">
-                    <span>‚ùì Suporte e FAQ</span>
-                    <span class="arrow">‚Ä∫</span>
+                    <span>? Suporte e FAQ</span>
+                    <span class="arrow">õ</span>
                 </button>
                 <button class="settings-link-row" onclick="navigate('privacy')">
-                    <span>üîê Pol√≠tica de Privacidade</span>
-                    <span class="arrow">‚Ä∫</span>
+                    <span>?? PolÌtica de Privacidade</span>
+                    <span class="arrow">õ</span>
                 </button>
                 <button class="settings-link-row" onclick="navigate('terms')">
-                    <span>üìÑ Termos de Uso</span>
-                    <span class="arrow">‚Ä∫</span>
+                    <span>?? Termos de Uso</span>
+                    <span class="arrow">õ</span>
                 </button>
                 <button class="logout-btn" onclick="logout()">
-                    <span>üö™</span> Sair da Conta
+                    <span>??</span> Sair da Conta
                 </button>
                 <p class="app-version">ENEM Master v2.4.1</p>
             </div>
@@ -986,17 +986,17 @@
             <div class="screen-scroll">
                 <!-- Search -->
                 <div class="support-search-wrap">
-                    <span class="search-icon">üîç</span>
+                    <span class="search-icon">??</span>
                     <input type="text" class="support-search" placeholder="Como podemos ajudar?" id="faq-search"
                         aria-label="Buscar no suporte" oninput="filterFAQ()" />
                 </div>
 
                 <!-- Popular Topics -->
-                <p class="support-label">T√ìPICOS POPULARES</p>
+                <p class="support-label">T”PICOS POPULARES</p>
                 <div class="chips-row">
                     <button class="chip active">Gabaritos</button>
-                    <button class="chip">C√°lculo TRI</button>
-                    <button class="chip">Reda√ß√£o</button>
+                    <button class="chip">C·lculo TRI</button>
+                    <button class="chip">RedaÁ„o</button>
                     <button class="chip">Ranking</button>
                     <button class="chip">Assinatura</button>
                 </div>
@@ -1004,68 +1004,68 @@
                 <!-- Categories -->
                 <p class="support-label">Categorias</p>
                 <div class="categories-grid">
-                    <div class="category-card"><span class="cat-icon">üë§</span><strong>Conta</strong><span>Perfil e
+                    <div class="category-card"><span class="cat-icon">??</span><strong>Conta</strong><span>Perfil e
                             senha</span></div>
-                    <div class="category-card"><span class="cat-icon">üìù</span><strong>Simulados</strong><span>Corre√ß√£o
+                    <div class="category-card"><span class="cat-icon">??</span><strong>Simulados</strong><span>CorreÁ„o
                             e tempo</span></div>
-                    <div class="category-card"><span class="cat-icon">üèÜ</span><strong>Ranking</strong><span>Pontua√ß√£o e
+                    <div class="category-card"><span class="cat-icon">??</span><strong>Ranking</strong><span>PontuaÁ„o e
                             regras</span></div>
-                    <div class="category-card" onclick="navigate('plans')"><span class="cat-icon">üí≥</span><strong>Assinatura</strong><span>Planos e
+                    <div class="category-card" onclick="navigate('plans')"><span class="cat-icon">??</span><strong>Assinatura</strong><span>Planos e
                             pagamentos</span></div>
                 </div>
 
                 <!-- FAQ -->
-                <p class="support-label">D√∫vidas Frequentes</p>
+                <p class="support-label">D˙vidas Frequentes</p>
                 <div class="faq-list" id="faq-list">
                     <div class="faq-item">
                         <button class="faq-question" onclick="toggleFAQ(this)">
-                            Como funciona a corre√ß√£o TRI?
-                            <span class="faq-arrow">‚Ä∫</span>
+                            Como funciona a correÁ„o TRI?
+                            <span class="faq-arrow">õ</span>
                         </button>
                         <div class="faq-answer">
-                            A Teoria de Resposta ao Item (TRI) avalia a consist√™ncia das suas respostas, dando pesos
-                            diferentes para quest√µes f√°ceis, m√©dias e dif√≠ceis. Acertar quest√µes dif√≠ceis que a maioria
+                            A Teoria de Resposta ao Item (TRI) avalia a consistÍncia das suas respostas, dando pesos
+                            diferentes para questıes f·ceis, mÈdias e difÌceis. Acertar questıes difÌceis que a maioria
                             erra vale mais pontos.
                         </div>
                     </div>
                     <div class="faq-item">
                         <button class="faq-question" onclick="toggleFAQ(this)">
                             Quando sai o gabarito do Simulado?
-                            <span class="faq-arrow">‚Ä∫</span>
+                            <span class="faq-arrow">õ</span>
                         </button>
                         <div class="faq-answer">
-                            O gabarito √© liberado imediatamente ap√≥s voc√™ concluir o simulado. A corre√ß√£o detalhada com
-                            explica√ß√µes fica dispon√≠vel na tela de resultado.
+                            O gabarito È liberado imediatamente apÛs vocÍ concluir o simulado. A correÁ„o detalhada com
+                            explicaÁıes fica disponÌvel na tela de resultado.
                         </div>
                     </div>
                     <div class="faq-item">
                         <button class="faq-question" onclick="toggleFAQ(this)">
                             Posso pausar um simulado em andamento?
-                            <span class="faq-arrow">‚Ä∫</span>
+                            <span class="faq-arrow">õ</span>
                         </button>
                         <div class="faq-answer">
-                            Sim! Voc√™ pode pausar o simulado a qualquer momento. O cron√¥metro para e suas respostas s√£o
+                            Sim! VocÍ pode pausar o simulado a qualquer momento. O cronÙmetro para e suas respostas s„o
                             salvas automaticamente. Basta retornar ao app para continuar de onde parou.
                         </div>
                     </div>
                     <div class="faq-item">
                         <button class="faq-question" onclick="toggleFAQ(this)">
-                            Como funciona o sistema de XP e n√≠veis?
-                            <span class="faq-arrow">‚Ä∫</span>
+                            Como funciona o sistema de XP e nÌveis?
+                            <span class="faq-arrow">õ</span>
                         </button>
                         <div class="faq-answer">
-                            Voc√™ ganha XP ao responder quest√µes, completar simulados e manter sua ofensiva. Cada acerto
-                            vale 10 XP, e b√¥nus s√£o aplicados por sequ√™ncia de acertos e dificuldade da quest√£o.
+                            VocÍ ganha XP ao responder questıes, completar simulados e manter sua ofensiva. Cada acerto
+                            vale 10 XP, e bÙnus s„o aplicados por sequÍncia de acertos e dificuldade da quest„o.
                         </div>
                     </div>
                     <div class="faq-item">
                         <button class="faq-question" onclick="toggleFAQ(this)">
                             Como entro no ranking da minha escola?
-                            <span class="faq-arrow">‚Ä∫</span>
+                            <span class="faq-arrow">õ</span>
                         </button>
                         <div class="faq-answer">
-                            Basta cadastrar sua institui√ß√£o de ensino nas Configura√ß√µes de Conta. Voc√™ ser√°
-                            automaticamente inclu√≠do no ranking da sua escola e poder√° competir com seus colegas.
+                            Basta cadastrar sua instituiÁ„o de ensino nas ConfiguraÁıes de Conta. VocÍ ser·
+                            automaticamente incluÌdo no ranking da sua escola e poder· competir com seus colegas.
                         </div>
                     </div>
                 </div>
@@ -1074,16 +1074,16 @@
             </div>
         </section>
 
-        <!-- ===================== SCREEN: NOTIFICA√á√ïES ===================== -->
+        <!-- ===================== SCREEN: NOTIFICA«’ES ===================== -->
         <section id="screen-notifications" class="screen">
             <div class="inner-header">
                 <button class="back-btn" onclick="navigate('home')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><polyline points="15 18 9 12 15 6"/></svg></button>
-                <h2 class="inner-title">Notifica√ß√µes</h2>
+                <h2 class="inner-title">NotificaÁıes</h2>
                 <button class="link-btn small" onclick="markAllRead()">Marcar todas como lidas</button>
             </div>
             <div class="notif-tabs">
                 <button class="notif-tab active" onclick="filterNotif('all', this)">Tudo</button>
-                <button class="notif-tab" onclick="filterNotif('unread', this)">N√£o lidas</button>
+                <button class="notif-tab" onclick="filterNotif('unread', this)">N„o lidas</button>
             </div>
             <div class="screen-scroll notif-scroll" id="notif-list"></div>
         </section>
@@ -1093,23 +1093,28 @@
         <section id="screen-login" class="screen">
             <div class="login-wrap">
 
-                <!-- Topo: logo + marca -->
-                <div class="login-brand">
-                    <div class="login-brand-logo">
-                        <img src="icon.svg" width="42" height="42" alt="ENEM Master" draggable="false" />
+                <!-- Painel esquerdo ó branding -->
+                <div class="login-panel-left">
+                    <!-- Topo: logo + marca -->
+                    <div class="login-brand">
+                        <div class="login-brand-logo">
+                            <img src="icon.svg" width="42" height="42" alt="ENEM Master" draggable="false" />
+                        </div>
+                        <span class="login-brand-name"><em>ENEM</em><strong>Master</strong></span>
                     </div>
-                    <span class="login-brand-name"><em>ENEM</em><strong>Master</strong></span>
+
+                    <!-- Headline principal -->
+                    <div class="login-headline-block">
+                        <h1 class="login-headline">De volta aos estudos.<br><span class="login-headline-accent">Bora passar no ENEM.</span></h1>
+                        <p class="login-subheadline">Sua sequÍncia e progresso est„o te esperando.</p>
+                    </div>
                 </div>
 
-                <!-- Headline principal -->
-                <div class="login-headline-block">
-                    <h1 class="login-headline">De volta aos estudos.<br><span class="login-headline-accent">Bora passar no ENEM.</span></h1>
-                    <p class="login-subheadline">Sua sequ√™ncia e progresso est√£o te esperando.</p>
-                </div>
-
-                <!-- Formul√°rio -->
-                <div class="login-card">
-                    <!-- Input com √≠cone inline -->
+                <!-- Painel direito ó formul·rio -->
+                <div class="login-panel-right">
+                    <!-- Formul·rio -->
+                    <div class="login-card">
+                    <!-- Input com Ìcone inline -->
                     <div class="login-input-group">
                         <div class="login-input-icon">
                             <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16"><path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/><path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/></svg>
@@ -1142,11 +1147,11 @@
 
                 </div>
 
-                <!-- Rodap√© ‚Äî CTA de cadastro -->
+                <!-- RodapÈ ó CTA de cadastro -->
                 <div class="login-footer">
                     <div class="login-register-block">
                         <span>Novo por aqui?</span>
-                        <button class="login-register-btn" onclick="goToRegister()">Criar conta gr√°tis ‚Üí</button>
+                        <button class="login-register-btn" onclick="goToRegister()">Criar conta gr·tis ?</button>
                     </div>
                     <div class="login-trust-row">
                         <span class="login-trust-chip">
@@ -1155,12 +1160,13 @@
                         </span>
                         <span class="login-trust-chip">
                             <svg viewBox="0 0 20 20" fill="currentColor" width="12" height="12"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
-                            4,9 ¬∑ 50K+ alunos
+                            4,9 ∑ 50K+ alunos
                         </span>
                     </div>
                 </div>
 
-            </div>
+                </div><!-- /login-panel-right -->
+            </div><!-- /login-wrap -->
         </section>
 
         <!-- ===================== SCREEN: ONBOARDING ===================== -->
@@ -1184,19 +1190,19 @@
                     </div>
 
                     <!-- Headline -->
-                    <h2 class="ob1-title">Sua vaga na federal<br><span class="ob1-title-accent">come√ßa aqui.</span></h2>
-                    <p class="ob1-desc">Quest√µes do ENEM real, an√°lise de desempenho inteligente e ranking entre os melhores.</p>
+                    <h2 class="ob1-title">Sua vaga na federal<br><span class="ob1-title-accent">comeÁa aqui.</span></h2>
+                    <p class="ob1-desc">Questıes do ENEM real, an·lise de desempenho inteligente e ranking entre os melhores.</p>
 
                     <!-- Prova social compacta -->
                     <div class="ob1-social-proof">
                         <div class="ob1-proof-item"><span class="ob1-proof-num">50K+</span><span class="ob1-proof-label">Alunos</span></div>
                         <div class="ob1-proof-divider"></div>
-                        <div class="ob1-proof-item"><span class="ob1-proof-num">4.9 ‚òÖ</span><span class="ob1-proof-label">Avalia√ß√£o</span></div>
+                        <div class="ob1-proof-item"><span class="ob1-proof-num">4.9 ?</span><span class="ob1-proof-label">AvaliaÁ„o</span></div>
                         <div class="ob1-proof-divider"></div>
-                        <div class="ob1-proof-item"><span class="ob1-proof-num">Gr√°tis</span><span class="ob1-proof-label">Para come√ßar</span></div>
+                        <div class="ob1-proof-item"><span class="ob1-proof-num">Gr·tis</span><span class="ob1-proof-label">Para comeÁar</span></div>
                     </div>
 
-                    <!-- Campos com √≠cone -->
+                    <!-- Campos com Ìcone -->
                     <div class="ob1-form">
                         <div class="ob1-input-group">
                             <div class="ob1-input-icon">
@@ -1224,7 +1230,7 @@
                             <div class="ob1-input-icon">
                                 <svg viewBox="0 0 20 20" fill="currentColor" width="15" height="15"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/></svg>
                             </div>
-                            <input class="ob1-input-field" id="ob-password" type="password" placeholder="Crie sua senha (m√≠n. 8 d√≠gitos)"
+                            <input class="ob1-input-field" id="ob-password" type="password" placeholder="Crie sua senha (mÌn. 8 dÌgitos)"
                                 autocomplete="new-password" aria-label="Senha"
                                 oninput="_obCheckPasswordStrength()" />
                             <button class="login-eye-btn" onclick="_obTogglePassword()" tabindex="-1" type="button" aria-label="Mostrar senha">
@@ -1243,7 +1249,7 @@
 
                         <!-- CTA -->
                         <button class="ob1-cta-btn" id="ob-btn" onclick="onboardingNext()">
-                            Criar minha conta ‚Äî √© gr√°tis
+                            Criar minha conta ó È gr·tis
                             <svg viewBox="0 0 20 20" fill="currentColor" width="17" height="17" aria-hidden="true">
                                 <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"/>
                             </svg>
@@ -1253,51 +1259,51 @@
 
 
                     <div class="ob1-login-row">
-                        <span>J√° tem conta?</span>
-                        <button class="ob1-login-link" onclick="navigate('login')" type="button">Entrar agora ‚Üí</button>
+                        <span>J· tem conta?</span>
+                        <button class="ob1-login-link" onclick="navigate('login')" type="button">Entrar agora ?</button>
                     </div>
 
                 </div>
 
                 <!-- Step 2: Meta -->
                 <div class="ob-step" id="ob-step-2">
-                    <span class="ob2-label">Passo 2 de 3 ‚Äî Personaliza√ß√£o</span>
-                    <h2 class="ob2-title">Em qual curso voc√™<br><span class="ob2-title-accent">quer entrar?</span></h2>
+                    <span class="ob2-label">Passo 2 de 3 ó PersonalizaÁ„o</span>
+                    <h2 class="ob2-title">Em qual curso vocÍ<br><span class="ob2-title-accent">quer entrar?</span></h2>
                     <p class="ob2-desc">Calculamos a nota de corte e montamos seu plano focado no que realmente importa.</p>
                     <div class="ob2-grid">
-                        <button class="ob-goal-btn ob2-card" data-goal="Medicina na Federal üè•" onclick="selectGoal(this)">
-                            <span class="ob2-card-icon">ü©∫</span>
+                        <button class="ob-goal-btn ob2-card" data-goal="Medicina na Federal ??" onclick="selectGoal(this)">
+                            <span class="ob2-card-icon">??</span>
                             <span class="ob2-card-name">Medicina</span>
-                            <span class="ob2-card-tag">Alta concorr√™ncia</span>
+                            <span class="ob2-card-tag">Alta concorrÍncia</span>
                         </button>
-                        <button class="ob-goal-btn ob2-card" data-goal="Direito na Federal ‚öñÔ∏è" onclick="selectGoal(this)">
-                            <span class="ob2-card-icon">‚öñÔ∏è</span>
+                        <button class="ob-goal-btn ob2-card" data-goal="Direito na Federal ??" onclick="selectGoal(this)">
+                            <span class="ob2-card-icon">??</span>
                             <span class="ob2-card-name">Direito</span>
                             <span class="ob2-card-tag">Top 15%</span>
                         </button>
-                        <button class="ob-goal-btn ob2-card" data-goal="Engenharia na Federal ‚öôÔ∏è" onclick="selectGoal(this)">
-                            <span class="ob2-card-icon">‚öôÔ∏è</span>
+                        <button class="ob-goal-btn ob2-card" data-goal="Engenharia na Federal ??" onclick="selectGoal(this)">
+                            <span class="ob2-card-icon">??</span>
                             <span class="ob2-card-name">Engenharia</span>
                             <span class="ob2-card-tag">Foco CN + MT</span>
                         </button>
-                        <button class="ob-goal-btn ob2-card" data-goal="Administra√ß√£o na Federal üìä" onclick="selectGoal(this)">
-                            <span class="ob2-card-icon">üìä</span>
-                            <span class="ob2-card-name">Administra√ß√£o</span>
-                            <span class="ob2-card-tag">Nota acess√≠vel</span>
+                        <button class="ob-goal-btn ob2-card" data-goal="AdministraÁ„o na Federal ??" onclick="selectGoal(this)">
+                            <span class="ob2-card-icon">??</span>
+                            <span class="ob2-card-name">AdministraÁ„o</span>
+                            <span class="ob2-card-tag">Nota acessÌvel</span>
                         </button>
-                        <button class="ob-goal-btn ob2-card" data-goal="Ci√™ncias da Computa√ß√£o üíª" onclick="selectGoal(this)">
-                            <span class="ob2-card-icon">üíª</span>
-                            <span class="ob2-card-name">Computa√ß√£o</span>
+                        <button class="ob-goal-btn ob2-card" data-goal="CiÍncias da ComputaÁ„o ??" onclick="selectGoal(this)">
+                            <span class="ob2-card-icon">??</span>
+                            <span class="ob2-card-name">ComputaÁ„o</span>
                             <span class="ob2-card-tag">Foco em MT</span>
                         </button>
                         <button class="ob-goal-btn ob2-card" data-goal="outro" onclick="selectGoal(this)">
-                            <span class="ob2-card-icon">üåü</span>
+                            <span class="ob2-card-icon">??</span>
                             <span class="ob2-card-name">Outro</span>
                             <span class="ob2-card-tag">Personalizado</span>
                         </button>
                     </div>
                     <div id="ob-outro-wrap" style="display:none; margin-top:12px; width:100%;">
-                        <input type="text" id="ob-outro-input" maxlength="60" placeholder="Ex: Psicologia, Veterin√°ria, Arquitetura‚Ä¶" style="width:100%; padding:13px 14px; border-radius:14px; border:1.5px solid var(--teal); background:rgba(255,255,255,.04); color:#fff; font-size:15px; outline:none; box-sizing:border-box; font-family:inherit;" />
+                        <input type="text" id="ob-outro-input" maxlength="60" placeholder="Ex: Psicologia, Veterin·ria, ArquiteturaÖ" style="width:100%; padding:13px 14px; border-radius:14px; border:1.5px solid var(--teal); background:rgba(255,255,255,.04); color:#fff; font-size:15px; outline:none; box-sizing:border-box; font-family:inherit;" />
                     </div>
                     <button class="ob2-cta-btn" onclick="onboardingNext()">
                         Personalizar meu plano
@@ -1305,36 +1311,36 @@
                     </button>
                 </div>
 
-                <!-- Step 3: Mat√©rias fracas -->
+                <!-- Step 3: MatÈrias fracas -->
                 <div class="ob-step" id="ob-step-3">
-                    <span class="ob3-label">Passo 3 de 3 ‚Äî Quase l√°!</span>
-                    <h2 class="ob3-title">Onde voc√™ mais<br><span class="ob3-title-accent">precisa evoluir?</span></h2>
-                    <p class="ob3-desc">Priorizaremos essas √°reas no seu cronograma di√°rio. Selecione quantas quiser.</p>
+                    <span class="ob3-label">Passo 3 de 3 ó Quase l·!</span>
+                    <h2 class="ob3-title">Onde vocÍ mais<br><span class="ob3-title-accent">precisa evoluir?</span></h2>
+                    <p class="ob3-desc">Priorizaremos essas ·reas no seu cronograma di·rio. Selecione quantas quiser.</p>
                     <div class="ob3-grid">
                         <button class="ob-subj-btn ob3-card" data-subj="humanas" onclick="toggleSubj(this)">
-                            <div class="ob3-card-icon">üåç</div>
+                            <div class="ob3-card-icon">??</div>
                             <span class="ob3-card-name">Humanas</span>
                             <span class="ob3-card-pct">21% da prova</span>
                         </button>
                         <button class="ob-subj-btn ob3-card" data-subj="natureza" onclick="toggleSubj(this)">
-                            <div class="ob3-card-icon">üî¨</div>
+                            <div class="ob3-card-icon">??</div>
                             <span class="ob3-card-name">Natureza</span>
                             <span class="ob3-card-pct">21% da prova</span>
                         </button>
                         <button class="ob-subj-btn ob3-card" data-subj="linguagens" onclick="toggleSubj(this)">
-                            <div class="ob3-card-icon">üìù</div>
+                            <div class="ob3-card-icon">??</div>
                             <span class="ob3-card-name">Linguagens</span>
                             <span class="ob3-card-pct">27% da prova</span>
                         </button>
                         <button class="ob-subj-btn ob3-card" data-subj="matematica" onclick="toggleSubj(this)">
-                            <div class="ob3-card-icon">‚ûó</div>
-                            <span class="ob3-card-name">Matem√°tica</span>
+                            <div class="ob3-card-icon">?</div>
+                            <span class="ob3-card-name">Matem·tica</span>
                             <span class="ob3-card-pct">25% da prova</span>
                         </button>
                     </div>
                     <p class="ob3-tip">
                         <svg viewBox="0 0 20 20" fill="currentColor" width="13" height="13"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
-                        Voc√™ pode ajustar isso depois nas Configura√ß√µes
+                        VocÍ pode ajustar isso depois nas ConfiguraÁıes
                     </p>
                     <button class="ob3-cta-btn" onclick="onboardingNext()">
                         <svg viewBox="0 0 20 20" fill="currentColor" width="18" height="18" aria-hidden="true"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
@@ -1347,10 +1353,10 @@
         <!-- ===================== BADGE UNLOCK TOAST ===================== -->
         <div class="badge-toast" id="badge-toast">
             <div class="badge-toast-inner">
-                <span class="badge-toast-icon" id="badge-toast-icon">üèÖ</span>
+                <span class="badge-toast-icon" id="badge-toast-icon">??</span>
                 <div>
-                    <p class="badge-toast-title">üéâ Conquista Desbloqueada!</p>
-                    <p class="badge-toast-name" id="badge-toast-name">In√≠cio Feroz</p>
+                    <p class="badge-toast-title">?? Conquista Desbloqueada!</p>
+                    <p class="badge-toast-name" id="badge-toast-name">InÌcio Feroz</p>
                 </div>
             </div>
         </div>
@@ -1361,7 +1367,7 @@
                 <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22">
                     <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
                 </svg>
-                <span>In√≠cio</span>
+                <span>InÌcio</span>
             </button>
             <button class="nav-btn" id="nav-quiz" onclick="navigate('quiz-setup')">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22">
@@ -1376,9 +1382,9 @@
                         <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
                         <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
                     </svg>
-                    <span class="nav-premium-badge" id="nav-conteudo-badge" style="display:none">üëë</span>
+                    <span class="nav-premium-badge" id="nav-conteudo-badge" style="display:none">??</span>
                 </div>
-                <span>Conte√∫do</span>
+                <span>Conte˙do</span>
             </button>
             <button class="nav-btn" id="nav-ranking" onclick="navigate('ranking')">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22">
@@ -1397,19 +1403,19 @@
             </button>
         </nav>
 
-        <!-- ===================== MODAL: METAS CONFIGUR√ÅVEIS ===================== -->
+        <!-- ===================== MODAL: METAS CONFIGUR¡VEIS ===================== -->
         <div class="goals-modal-overlay" id="goals-modal-overlay" style="display:none" onclick="closeGoalsModal()">
             <div class="goals-modal" onclick="event.stopPropagation()">
                 <div class="pause-sheet-handle" style="margin:0 auto 4px"></div>
-                <p class="goals-modal-title">üéØ Configurar Metas</p>
+                <p class="goals-modal-title">?? Configurar Metas</p>
                 <div class="goals-modal-field">
-                    <label>QUEST√ïES POR DIA</label>
+                    <label>QUEST’ES POR DIA</label>
                     <input type="range" min="5" max="50" step="5" id="goal-daily-slider" value="10"
                         oninput="document.getElementById('goal-daily-val').textContent=this.value" />
                     <div class="goals-range-display">
                         <span class="goals-range-unit">Meta:</span>
                         <span class="goals-range-val" id="goal-daily-val">10</span>
-                        <span class="goals-range-unit">quest√µes/dia</span>
+                        <span class="goals-range-unit">questıes/dia</span>
                     </div>
                 </div>
                 <div class="goals-modal-field">
@@ -1431,7 +1437,7 @@
         <div class="goals-modal-overlay" id="avatar-edit-overlay" style="display:none" onclick="closeAvatarEditModal()">
             <div class="goals-modal" onclick="event.stopPropagation()">
                 <div class="pause-sheet-handle" style="margin:0 auto 12px"></div>
-                <p class="goals-modal-title">‚úèÔ∏è Editar Perfil</p>
+                <p class="goals-modal-title">?? Editar Perfil</p>
 
                 <!-- Preview do avatar -->
                 <div style="display:flex;justify-content:center;margin-bottom:20px;">
@@ -1440,7 +1446,7 @@
 
                 <!-- Nome -->
                 <div class="goals-modal-field">
-                    <label for="avatar-edit-name">NOME DE EXIBI√á√ÉO</label>
+                    <label for="avatar-edit-name">NOME DE EXIBI«√O</label>
                     <input type="text" id="avatar-edit-name" maxlength="40"
                         placeholder="Seu nome"
                         oninput="updateAvatarPreview()"
@@ -1476,7 +1482,7 @@
                 <p style="font-size:12px;font-weight:700;color:var(--text-muted);text-align:center;text-transform:uppercase;letter-spacing:0.5px">Compartilhar Resultado</p>
                 <!-- Card de preview -->
                 <div class="share-card" id="share-card-preview">
-                    <div class="share-card-logo">üéì ENEM MASTER</div>
+                    <div class="share-card-logo">?? ENEM MASTER</div>
                     <div class="share-card-score-row">
                         <span class="share-card-pct" id="sc-pct">70%</span>
                         <div class="share-card-detail">
@@ -1493,16 +1499,16 @@
                 </div>
                 <!-- Linha 1: WhatsApp + Compartilhar -->
                 <div class="share-btns-row">
-                    <button class="share-action-btn share-btn-whats" onclick="shareViaWhatsapp()">üì≤ WhatsApp</button>
-                    <button class="share-action-btn" style="background:linear-gradient(135deg,rgba(99,102,241,0.2),rgba(139,92,246,0.2));border:1.5px solid rgba(99,102,241,0.4);color:#a78bfa" onclick="shareCardNative()">üîó Compartilhar</button>
+                    <button class="share-action-btn share-btn-whats" onclick="shareViaWhatsapp()">?? WhatsApp</button>
+                    <button class="share-action-btn" style="background:linear-gradient(135deg,rgba(99,102,241,0.2),rgba(139,92,246,0.2));border:1.5px solid rgba(99,102,241,0.4);color:#a78bfa" onclick="shareCardNative()">?? Compartilhar</button>
                 </div>
                 <!-- Linha 2: Download PNG + Instagram -->
                 <div class="share-btns-row">
-                    <button class="share-action-btn" style="background:rgba(0,180,166,0.15);border:1.5px solid rgba(0,180,166,0.4);color:var(--teal)" onclick="downloadShareCard()">üñºÔ∏è Salvar imagem</button>
-                    <button class="share-action-btn" style="background:linear-gradient(135deg,rgba(251,113,133,0.2),rgba(251,191,36,0.2));border:1.5px solid rgba(251,113,133,0.4);color:#fb7185" onclick="shareToInstagram()">üì∏ Instagram</button>
+                    <button class="share-action-btn" style="background:rgba(0,180,166,0.15);border:1.5px solid rgba(0,180,166,0.4);color:var(--teal)" onclick="downloadShareCard()">??? Salvar imagem</button>
+                    <button class="share-action-btn" style="background:linear-gradient(135deg,rgba(251,113,133,0.2),rgba(251,191,36,0.2));border:1.5px solid rgba(251,113,133,0.4);color:#fb7185" onclick="shareToInstagram()">?? Instagram</button>
                 </div>
                 <!-- Linha 3: Copiar texto -->
-                <button class="share-action-btn share-btn-copy" style="width:100%;margin-top:4px" onclick="copyShareText()">üìã Copiar texto</button>
+                <button class="share-action-btn share-btn-copy" style="width:100%;margin-top:4px" onclick="copyShareText()">?? Copiar texto</button>
                 <button class="share-btn-close" onclick="closeShareModal()">Fechar</button>
             </div>
         </div>
@@ -1510,62 +1516,62 @@
         <!-- ===================== MODAL: PAYWALL ===================== -->
         <div id="paywall-modal" class="paywall-overlay" role="dialog" aria-modal="true" aria-labelledby="paywall-title">
             <div class="paywall-card">
-                <div class="paywall-icon">üëë</div>
+                <div class="paywall-icon">??</div>
                 <h2 class="paywall-title" id="paywall-title">Recurso Premium</h2>
                 <p class="paywall-body" id="paywall-body">Assine o Premium para desbloquear este recurso e estudar sem limites!</p>
 
                 <!-- Prova social -->
-                <p class="paywall-social-proof">‚úÖ Mais de 50.000 alunos j√° estudam com Premium</p>
+                <p class="paywall-social-proof">? Mais de 50.000 alunos j· estudam com Premium</p>
 
-                <!-- Pre√ßo direto no modal -->
-                <div class="paywall-price-row" aria-label="Plano a partir de R$ 19,90 por m√™s">
+                <!-- PreÁo direto no modal -->
+                <div class="paywall-price-row" aria-label="Plano a partir de R$ 19,90 por mÍs">
                     <span class="paywall-price-currency">R$</span>
                     <span class="paywall-price-value">19</span>
-                    <span class="paywall-price-period">,90/m√™s</span>
+                    <span class="paywall-price-period">,90/mÍs</span>
                 </div>
 
-                <!-- 4 benef√≠cios chave -->
-                <div class="paywall-features" aria-label="Benef√≠cios inclusos">
-                    <div class="paywall-feature">üéØ Simulados ilimitados todos os dias</div>
-                    <div class="paywall-feature">ü§ñ Tutor IA ‚Äî tire d√∫vidas 24h sobre o ENEM</div>
-                    <div class="paywall-feature">‚úçÔ∏è Corre√ß√£o de reda√ß√£o por IA (5 compet√™ncias)</div>
-                    <div class="paywall-feature">üìä Modo ENEM completo (90 quest√µes)</div>
+                <!-- 4 benefÌcios chave -->
+                <div class="paywall-features" aria-label="BenefÌcios inclusos">
+                    <div class="paywall-feature">?? Simulados ilimitados todos os dias</div>
+                    <div class="paywall-feature">?? Tutor IA ó tire d˙vidas 24h sobre o ENEM</div>
+                    <div class="paywall-feature">?? CorreÁ„o de redaÁ„o por IA (5 competÍncias)</div>
+                    <div class="paywall-feature">?? Modo ENEM completo (90 questıes)</div>
                 </div>
 
-                <!-- Urg√™ncia: contador ENEM -->
+                <!-- UrgÍncia: contador ENEM -->
                 <div class="paywall-urgency" id="paywall-urgency"></div>
 
-                <button class="cta-btn" onclick="navigate('checkout'); closePaywall()">Assinar agora üëë</button>
-                <button class="paywall-secondary-cta" onclick="navigate('plans'); closePaywall()">Ver todos os planos ‚Üí</button>
-                <button class="paywall-dismiss" onclick="closePaywall()">Agora n√£o</button>
+                <button class="cta-btn" onclick="navigate('checkout'); closePaywall()">Assinar agora ??</button>
+                <button class="paywall-secondary-cta" onclick="navigate('plans'); closePaywall()">Ver todos os planos ?</button>
+                <button class="paywall-dismiss" onclick="closePaywall()">Agora n„o</button>
             </div>
         </div>
 
-        <!-- ===================== MODAL: OFERTA P√ìS-ONBOARDING ===================== -->
+        <!-- ===================== MODAL: OFERTA P”S-ONBOARDING ===================== -->
         <div id="welcome-offer-modal" class="paywall-overlay" role="dialog" aria-modal="true" aria-labelledby="wo-title">
             <div class="paywall-card wo-card">
-                <button class="paywall-dismiss wo-close-x" onclick="closeWelcomeOffer()" aria-label="Fechar" style="position:absolute;top:12px;right:12px;background:none;border:none;color:var(--text-muted);font-size:18px;cursor:pointer">‚úï</button>
-                <div style="font-size:42px;margin-bottom:8px">üéÅ</div>
+                <button class="paywall-dismiss wo-close-x" onclick="closeWelcomeOffer()" aria-label="Fechar" style="position:absolute;top:12px;right:12px;background:none;border:none;color:var(--text-muted);font-size:18px;cursor:pointer">?</button>
+                <div style="font-size:42px;margin-bottom:8px">??</div>
                 <h2 class="paywall-title" id="wo-title" style="font-size:20px">Oferta especial de boas-vindas!</h2>
                 <p style="color:var(--text-secondary);font-size:13px;margin:6px 0 14px;text-align:center;line-height:1.5">
-                    Voc√™ acabou de criar sua conta. Por tempo limitado, garanta o Premium com <strong style="color:var(--teal)">37% OFF</strong> e comece a estudar do jeito certo.
+                    VocÍ acabou de criar sua conta. Por tempo limitado, garanta o Premium com <strong style="color:var(--teal)">37% OFF</strong> e comece a estudar do jeito certo.
                 </p>
                 <div class="paywall-price-row" style="margin-bottom:6px">
-                    <span style="font-size:13px;color:var(--text-muted);text-decoration:line-through;margin-right:8px">R$ 19,90/m√™s</span>
+                    <span style="font-size:13px;color:var(--text-muted);text-decoration:line-through;margin-right:8px">R$ 19,90/mÍs</span>
                 </div>
                 <div class="paywall-price-row">
                     <span class="paywall-price-currency">R$</span>
                     <span class="paywall-price-value">12</span>
-                    <span class="paywall-price-period">,42/m√™s no plano anual</span>
+                    <span class="paywall-price-period">,42/mÍs no plano anual</span>
                 </div>
                 <div class="paywall-features" style="margin-top:10px">
-                    <div class="paywall-feature">‚úÖ Quest√µes ilimitadas todos os dias</div>
-                    <div class="paywall-feature">ü§ñ Tutor IA ‚Äî professor particular 24h</div>
-                    <div class="paywall-feature">‚úçÔ∏è Corre√ß√£o de reda√ß√£o com nota por IA</div>
-                    <div class="paywall-feature">üìä Modo ENEM completo (90 quest√µes)</div>
+                    <div class="paywall-feature">? Questıes ilimitadas todos os dias</div>
+                    <div class="paywall-feature">?? Tutor IA ó professor particular 24h</div>
+                    <div class="paywall-feature">?? CorreÁ„o de redaÁ„o com nota por IA</div>
+                    <div class="paywall-feature">?? Modo ENEM completo (90 questıes)</div>
                 </div>
                 <button class="cta-btn" style="margin-top:14px" onclick="selectCheckoutPlan && selectCheckoutPlan('anual'); navigate('checkout'); closeWelcomeOffer()">
-                    üéÅ Quero o desconto de boas-vindas ‚Üí
+                    ?? Quero o desconto de boas-vindas ?
                 </button>
                 <button class="paywall-dismiss" onclick="closeWelcomeOffer()" style="margin-top:8px">Continuar no plano gratuito</button>
             </div>
@@ -1578,12 +1584,12 @@
                     <div class="pw-spinner"></div>
                 </div>
                 <h2 class="paywall-title">Verificando pagamento</h2>
-                <p class="paywall-body" id="pw-status-text">Aguardando confirma√ß√£o do seu pagamento...</p>
+                <p class="paywall-body" id="pw-status-text">Aguardando confirmaÁ„o do seu pagamento...</p>
                 <div class="pw-progress-wrap">
                     <div class="pw-progress-bar" id="pw-progress-bar"></div>
                 </div>
                 <p class="pw-hint" id="pw-hint-text">Verificando automaticamente a cada 8 segundos</p>
-                <button class="paywall-dismiss" onclick="cancelPaymentWaiting()">‚úï Cancelar</button>
+                <button class="paywall-dismiss" onclick="cancelPaymentWaiting()">? Cancelar</button>
             </div>
         </div>
 
@@ -1591,17 +1597,17 @@
         <div id="premium-success-modal" class="paywall-overlay">
             <div class="paywall-card ps-card">
                 <div class="ps-confetti" id="ps-confetti"></div>
-                <div class="ps-emoji">üéâ</div>
-                <h2 class="ps-title">Voc√™ √© Premium!</h2>
+                <div class="ps-emoji">??</div>
+                <h2 class="ps-title">VocÍ È Premium!</h2>
                 <p class="ps-body">Acesso ilimitado desbloqueado. Bons estudos!</p>
                 <div class="ps-features">
-                    <div class="ps-feature">‚úÖ Quest√µes ilimitadas por dia</div>
-                    <div class="ps-feature">‚úÖ Quiz de at√© 90 quest√µes</div>
-                    <div class="ps-feature">‚úÖ Corre√ß√£o de reda√ß√£o por IA</div>
-                    <div class="ps-feature">‚úÖ Gabarito comentado completo</div>
+                    <div class="ps-feature">? Questıes ilimitadas por dia</div>
+                    <div class="ps-feature">? Quiz de atÈ 90 questıes</div>
+                    <div class="ps-feature">? CorreÁ„o de redaÁ„o por IA</div>
+                    <div class="ps-feature">? Gabarito comentado completo</div>
                 </div>
                 <button class="cta-btn ps-cta" onclick="closePremiumSuccess()">
-                    Come√ßar a estudar üöÄ
+                    ComeÁar a estudar ??
                 </button>
             </div>
         </div>
@@ -1617,56 +1623,56 @@
 
                 <!-- Resumo do plano selecionado -->
                 <div class="checkout-plan-summary" id="checkout-plan-summary" aria-label="Plano selecionado">
-                    <span class="cps-icon">üëë</span>
+                    <span class="cps-icon">??</span>
                     <div class="cps-info">
                         <p class="cps-title" id="cps-title">Premium Mensal</p>
-                        <p class="cps-sub" id="cps-sub">Acesso ilimitado ¬∑ cancele quando quiser</p>
+                        <p class="cps-sub" id="cps-sub">Acesso ilimitado ∑ cancele quando quiser</p>
                     </div>
                     <div style="text-align:right">
                         <p class="cps-price" id="cps-price">R$ 19,90</p>
-                        <p class="cps-price-sub" id="cps-price-sub">/m√™s</p>
+                        <p class="cps-price-sub" id="cps-price-sub">/mÍs</p>
                     </div>
                 </div>
 
                 <!-- Seletor de plano -->
-                <div class="checkout-plan-toggle" role="group" aria-label="Selecionar per√≠odo">
+                <div class="checkout-plan-toggle" role="group" aria-label="Selecionar perÌodo">
                     <button class="checkout-plan-btn active" id="plan-btn-mensal" onclick="selectCheckoutPlan('mensal')" aria-pressed="true">
                         <span class="cpt-name">Mensal</span>
-                        <span class="cpt-price">R$ 19,90<span class="cpt-period">/m√™s</span></span>
+                        <span class="cpt-price">R$ 19,90<span class="cpt-period">/mÍs</span></span>
                     </button>
                     <button class="checkout-plan-btn" id="plan-btn-anual" onclick="selectCheckoutPlan('anual')" aria-pressed="false">
                         <span class="checkout-badge-eco">37% OFF</span>
                         <span class="cpt-name">Anual</span>
                         <span class="cpt-price">R$ 149,00<span class="cpt-period">/ano</span></span>
-                        <span class="cpt-sub">‚ú¶ R$ 12,42/m√™s</span>
+                        <span class="cpt-sub">? R$ 12,42/mÍs</span>
                     </button>
                 </div>
 
-                <!-- O que voc√™ recebe -->
+                <!-- O que vocÍ recebe -->
                 <div class="checkout-benefits">
-                    <p class="checkout-section-label">‚úÖ O QUE EST√Å INCLU√çDO</p>
+                    <p class="checkout-section-label">? O QUE EST¡ INCLUÕDO</p>
                     <div class="checkout-benefit-list">
-                        <div class="checkout-benefit">üëë Quest√µes ilimitadas todos os dias</div>
-                        <div class="checkout-benefit">üéØ Modo ENEM: 90 quest√µes + 5h30min</div>
-                        <div class="checkout-benefit">ü§ñ Corre√ß√£o de reda√ß√£o por IA (5 compet√™ncias)</div>
-                        <div class="checkout-benefit">üìä Gabarito comentado com IA</div>
-                        <div class="checkout-benefit">üìà An√°lise de desempenho com TRI</div>
-                        <div class="checkout-benefit">üèÜ Ranking nacional + plano de estudos</div>
+                        <div class="checkout-benefit">?? Questıes ilimitadas todos os dias</div>
+                        <div class="checkout-benefit">?? Modo ENEM: 90 questıes + 5h30min</div>
+                        <div class="checkout-benefit">?? CorreÁ„o de redaÁ„o por IA (5 competÍncias)</div>
+                        <div class="checkout-benefit">?? Gabarito comentado com IA</div>
+                        <div class="checkout-benefit">?? An·lise de desempenho com TRI</div>
+                        <div class="checkout-benefit">?? Ranking nacional + plano de estudos</div>
                     </div>
                 </div>
 
-                <!-- Tabs de m√©todo de pagamento -->
+                <!-- Tabs de mÈtodo de pagamento -->
                 <div>
-                    <p class="checkout-section-label">üí≥ FORMA DE PAGAMENTO</p>
+                    <p class="checkout-section-label">?? FORMA DE PAGAMENTO</p>
                     <div class="checkout-method-tabs" role="tablist">
                         <button class="checkout-tab active" id="tab-pix" role="tab" aria-selected="true" aria-controls="method-pix" onclick="selectPaymentMethod('pix')">
-                            <span aria-hidden="true">üíö</span> PIX
+                            <span aria-hidden="true">??</span> PIX
                         </button>
                         <button class="checkout-tab" id="tab-card" role="tab" aria-selected="false" aria-controls="method-card" onclick="selectPaymentMethod('card')">
-                            <span aria-hidden="true">üí≥</span> Cart√£o
+                            <span aria-hidden="true">??</span> Cart„o
                         </button>
                         <button class="checkout-tab" id="tab-code" role="tab" aria-selected="false" aria-controls="method-code" onclick="selectPaymentMethod('code')">
-                            <span aria-hidden="true">üîë</span> C√≥digo
+                            <span aria-hidden="true">??</span> CÛdigo
                         </button>
                     </div>
 
@@ -1674,26 +1680,26 @@
                     <div class="checkout-method-content" id="method-pix" role="tabpanel">
                         <div class="pix-card">
                             <p style="text-align:center;font-size:13px;color:var(--text-secondary);margin:0 0 10px;line-height:1.6">
-                                Voc√™ ser√° redirecionado para o checkout seguro da <strong>Cakto</strong>.<br>
-                                O QR Code PIX √© gerado automaticamente ‚Äî √© s√≥ escanear e pagar.
+                                VocÍ ser· redirecionado para o checkout seguro da <strong>Cakto</strong>.<br>
+                                O QR Code PIX È gerado automaticamente ó È sÛ escanear e pagar.
                             </p>
                             <p id="pix-price-display" style="font-size:26px;font-weight:900;color:var(--teal);text-align:center;margin:0 0 14px" aria-live="polite">R$ 19,90</p>
                             <button class="cta-btn" onclick="goToCaktoCheckout('pix')">
-                                üíö Pagar com PIX ‚Üí
+                                ?? Pagar com PIX ?
                             </button>
                             <button class="outline-btn" id="pix-verify-btn" onclick="verifyPayment()" style="margin-top:10px;display:none;">
-                                ‚úÖ J√° paguei ‚Äî verificar acesso
+                                ? J· paguei ó verificar acesso
                             </button>
-                            <p class="pix-hint">Acesso liberado automaticamente ap√≥s confirma√ß√£o ¬∑ geralmente em minutos</p>
+                            <p class="pix-hint">Acesso liberado automaticamente apÛs confirmaÁ„o ∑ geralmente em minutos</p>
                         </div>
                     </div>
 
-                    <!-- Cart√£o de Cr√©dito -->
+                    <!-- Cart„o de CrÈdito -->
                     <div class="checkout-method-content" id="method-card" style="display:none" role="tabpanel">
                         <div class="card-checkout-info">
                             <p class="card-info-text">
-                                Voc√™ ser√° redirecionado para uma p√°gina de pagamento <strong>100% segura</strong> processada pela Cakto.
-                                Aceitamos cart√£o de cr√©dito em at√© 12√ó.
+                                VocÍ ser· redirecionado para uma p·gina de pagamento <strong>100% segura</strong> processada pela Cakto.
+                                Aceitamos cart„o de crÈdito em atÈ 12◊.
                             </p>
                             <div class="card-logos" aria-label="Bandeiras aceitas">
                                 <span class="card-logo">VISA</span>
@@ -1702,47 +1708,47 @@
                                 <span class="card-logo">AMEX</span>
                             </div>
                             <button class="cta-btn" id="card-checkout-btn" onclick="goToCaktoCheckout('card')">
-                                üí≥ Pagar com Cart√£o ‚Üí
+                                ?? Pagar com Cart„o ?
                             </button>
                             <button class="outline-btn" id="card-verify-btn" onclick="verifyPayment()" style="margin-top:10px;display:none;">
-                                ‚úÖ J√° paguei ‚Äî verificar acesso
+                                ? J· paguei ó verificar acesso
                             </button>
-                            <p class="card-info-sub">üîí Criptografia SSL ¬∑ Seus dados nunca s√£o armazenados</p>
+                            <p class="card-info-sub">?? Criptografia SSL ∑ Seus dados nunca s„o armazenados</p>
                         </div>
                     </div>
 
-                    <!-- C√≥digo de Ativa√ß√£o -->
+                    <!-- CÛdigo de AtivaÁ„o -->
                     <div class="checkout-method-content" id="method-code" style="display:none" role="tabpanel">
                         <div class="code-card">
-                            <p class="code-label">üîë C√≥digo de ativa√ß√£o</p>
-                            <p class="code-hint">Recebeu um c√≥digo no WhatsApp ou e-mail ap√≥s o pagamento? Digite aqui para ativar o Premium instantaneamente.</p>
+                            <p class="code-label">?? CÛdigo de ativaÁ„o</p>
+                            <p class="code-hint">Recebeu um cÛdigo no WhatsApp ou e-mail apÛs o pagamento? Digite aqui para ativar o Premium instantaneamente.</p>
                             <div class="code-input-row">
                                 <input type="text" id="activation-code-input" class="code-input"
                                        placeholder="ENEM-XXXX-XXXX"
                                        maxlength="14"
-                                       aria-label="C√≥digo de ativa√ß√£o Premium"
+                                       aria-label="CÛdigo de ativaÁ„o Premium"
                                        autocomplete="off"
                                        oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9-]/g,'')" />
                             </div>
                             <button class="cta-btn" id="activate-btn" onclick="activateWithCode()">
-                                üîë Ativar Premium Agora
+                                ?? Ativar Premium Agora
                             </button>
                             <p id="code-feedback" class="code-feedback" style="display:none" aria-live="polite"></p>
-                            <p class="code-hint" style="margin-top:8px">N√£o recebeu o c√≥digo? <button class="link-inline" onclick="navigate('support')">Falar com o suporte</button></p>
+                            <p class="code-hint" style="margin-top:8px">N„o recebeu o cÛdigo? <button class="link-inline" onclick="navigate('support')">Falar com o suporte</button></p>
                         </div>
                     </div>
                 </div>
 
-                <!-- Indicadores de confian√ßa -->
-                <div class="checkout-trust-row" aria-label="Selos de confian√ßa">
-                    <div class="checkout-trust-item"><span class="checkout-trust-icon">üîí</span> Pagamento seguro</div>
-                    <div class="checkout-trust-item"><span class="checkout-trust-icon">‚Ü©Ô∏è</span> Cancele quando quiser</div>
-                    <div class="checkout-trust-item"><span class="checkout-trust-icon">‚ö°</span> Acesso imediato</div>
+                <!-- Indicadores de confianÁa -->
+                <div class="checkout-trust-row" aria-label="Selos de confianÁa">
+                    <div class="checkout-trust-item"><span class="checkout-trust-icon">??</span> Pagamento seguro</div>
+                    <div class="checkout-trust-item"><span class="checkout-trust-icon">??</span> Cancele quando quiser</div>
+                    <div class="checkout-trust-item"><span class="checkout-trust-icon">?</span> Acesso imediato</div>
                 </div>
 
-                <p class="checkout-footer-note">Ao assinar, voc√™ concorda com os
+                <p class="checkout-footer-note">Ao assinar, vocÍ concorda com os
                     <button class="link-inline" onclick="navigate('terms')">Termos de Uso</button>
-                    e a <button class="link-inline" onclick="navigate('privacy')">Pol√≠tica de Privacidade</button>.
+                    e a <button class="link-inline" onclick="navigate('privacy')">PolÌtica de Privacidade</button>.
                 </p>
             </div>
         </section>
@@ -1756,13 +1762,13 @@
             </div>
             <div class="screen-scroll" id="plans-scroll">
                 <div class="plans-hero">
-                    <div class="plans-hero-icon">üëë</div>
-                    <h2 class="plans-hero-title">Suba de nota mais r√°pido</h2>
-                    <p class="plans-hero-sub">Desbloqueie tudo do ENEM Master e maximize sua prepara√ß√£o.</p>
+                    <div class="plans-hero-icon">??</div>
+                    <h2 class="plans-hero-title">Suba de nota mais r·pido</h2>
+                    <p class="plans-hero-sub">Desbloqueie tudo do ENEM Master e maximize sua preparaÁ„o.</p>
                 </div>
 
                 <!-- Toggle Mensal / Anual -->
-                <div class="plans-period-toggle" role="group" aria-label="Selecionar per√≠odo do plano">
+                <div class="plans-period-toggle" role="group" aria-label="Selecionar perÌodo do plano">
                     <button class="ppt-btn active" id="ppt-mensal" onclick="selectPlanPeriod('mensal')" aria-pressed="true">Mensal</button>
                     <button class="ppt-btn" id="ppt-anual" onclick="selectPlanPeriod('anual')" aria-pressed="false">
                         Anual
@@ -1770,95 +1776,95 @@
                     </button>
                 </div>
 
-                <!-- Plano Gr√°tis -->
+                <!-- Plano Gr·tis -->
                 <div class="plan-card" id="plan-card-free">
                     <div class="plan-header">
                         <div>
-                            <p class="plan-name">Gr√°tis</p>
+                            <p class="plan-name">Gr·tis</p>
                             <p class="plan-price">R$ 0<span class="plan-period">/sempre</span></p>
                         </div>
                         <span class="plan-badge-free" id="plan-free-badge">ATUAL</span>
                     </div>
-                    <ul class="plan-features" aria-label="Recursos inclusos no plano gr√°tis">
-                        <li class="plan-feat ok">‚úÖ 10 quest√µes por dia</li>
-                        <li class="plan-feat ok">‚úÖ Quiz por disciplina</li>
-                        <li class="plan-feat ok">‚úÖ XP, moedas e conquistas</li>
-                        <li class="plan-feat ok">‚úÖ Ranking da sua escola</li>
-                        <li class="plan-feat no">‚ùå Simulados completos</li>
-                        <li class="plan-feat no">‚ùå Modo ENEM (90 quest√µes)</li>
-                        <li class="plan-feat no">‚ùå Corre√ß√£o de reda√ß√£o por IA</li>
-                        <li class="plan-feat no">‚ùå An√°lise TRI detalhada</li>
-                        <li class="plan-feat no">‚ùå Plano de estudos autom√°tico</li>
+                    <ul class="plan-features" aria-label="Recursos inclusos no plano gr·tis">
+                        <li class="plan-feat ok">? 10 questıes por dia</li>
+                        <li class="plan-feat ok">? Quiz por disciplina</li>
+                        <li class="plan-feat ok">? XP, moedas e conquistas</li>
+                        <li class="plan-feat ok">? Ranking da sua escola</li>
+                        <li class="plan-feat no">? Simulados completos</li>
+                        <li class="plan-feat no">? Modo ENEM (90 questıes)</li>
+                        <li class="plan-feat no">? CorreÁ„o de redaÁ„o por IA</li>
+                        <li class="plan-feat no">? An·lise TRI detalhada</li>
+                        <li class="plan-feat no">? Plano de estudos autom·tico</li>
                     </ul>
                 </div>
 
                 <!-- Plano Premium -->
                 <div class="plan-card premium" id="plan-card-premium">
-                    <div class="plan-badge-premium">‚≠ê MAIS POPULAR</div>
+                    <div class="plan-badge-premium">? MAIS POPULAR</div>
                     <div class="plan-header">
                         <div>
-                            <p class="plan-name premium">Premium üëë</p>
-                            <!-- Pre√ßo din√¢mico gerenciado por selectPlanPeriod() -->
+                            <p class="plan-name premium">Premium ??</p>
+                            <!-- PreÁo din‚mico gerenciado por selectPlanPeriod() -->
                             <p class="plan-price premium" id="plan-premium-price">
-                                R$ 19,90<span class="plan-period">/m√™s</span>
+                                R$ 19,90<span class="plan-period">/mÍs</span>
                             </p>
                             <p class="plan-price-anual-destaque" id="plan-anual-destaque">
-                                R$ 149/ano ¬∑ R$ 12,42/m√™s
+                                R$ 149/ano ∑ R$ 12,42/mÍs
                             </p>
                             <p class="plan-price-mensal-sub" id="plan-mensal-sub">
-                                ou R$ 149/ano ‚Äî economize 37%
+                                ou R$ 149/ano ó economize 37%
                             </p>
                         </div>
-                        <span class="plan-icon-premium">üëë</span>
+                        <span class="plan-icon-premium">??</span>
                     </div>
                     <ul class="plan-features" aria-label="Recursos inclusos no plano Premium">
-                        <li class="plan-feat ok">‚úÖ <strong>Quest√µes ilimitadas</strong> todos os dias</li>
-                        <li class="plan-feat ok">‚úÖ Modo ENEM: 90 quest√µes + 5h30min</li>
-                        <li class="plan-feat ok">‚úÖ Corre√ß√£o de reda√ß√£o por IA (5 compet√™ncias)</li>
-                        <li class="plan-feat ok">‚úÖ An√°lise de desempenho com TRI</li>
-                        <li class="plan-feat ok">‚úÖ Gabarito comentado com IA</li>
-                        <li class="plan-feat ok">‚úÖ Plano de estudos personalizado</li>
-                        <li class="plan-feat ok">‚úÖ Ranking nacional</li>
-                        <li class="plan-feat ok">‚úÖ Quest√µes ENEM 2010‚Äì2024</li>
-                        <li class="plan-feat ok">‚úÖ Suporte priorit√°rio</li>
-                        <li class="plan-feat section-divider" style="list-style:none;padding:6px 0 2px;font-size:11px;font-weight:700;color:var(--teal);letter-spacing:.5px;border-top:1px solid rgba(255,255,255,.08);margin-top:4px">üìö ABA CONTE√öDO</li>
-                        <li class="plan-feat ok">‚úÖ <strong>Flashcards</strong> ‚Äî domine cada tema com repeti√ß√£o espa√ßada</li>
-                        <li class="plan-feat ok">‚úÖ <strong>Resumos</strong> ‚Äî revis√£o r√°pida de todas as disciplinas</li>
-                        <li class="plan-feat ok">‚úÖ <strong>Tutor IA</strong> ‚Äî tire d√∫vidas 24h sobre qualquer assunto do ENEM</li>
-                        <li class="plan-feat ok">‚úÖ <strong>Progresso detalhado</strong> ‚Äî veja sua evolu√ß√£o por disciplina</li>
+                        <li class="plan-feat ok">? <strong>Questıes ilimitadas</strong> todos os dias</li>
+                        <li class="plan-feat ok">? Modo ENEM: 90 questıes + 5h30min</li>
+                        <li class="plan-feat ok">? CorreÁ„o de redaÁ„o por IA (5 competÍncias)</li>
+                        <li class="plan-feat ok">? An·lise de desempenho com TRI</li>
+                        <li class="plan-feat ok">? Gabarito comentado com IA</li>
+                        <li class="plan-feat ok">? Plano de estudos personalizado</li>
+                        <li class="plan-feat ok">? Ranking nacional</li>
+                        <li class="plan-feat ok">? Questıes ENEM 2010ñ2024</li>
+                        <li class="plan-feat ok">? Suporte priorit·rio</li>
+                        <li class="plan-feat section-divider" style="list-style:none;padding:6px 0 2px;font-size:11px;font-weight:700;color:var(--teal);letter-spacing:.5px;border-top:1px solid rgba(255,255,255,.08);margin-top:4px">?? ABA CONTE⁄DO</li>
+                        <li class="plan-feat ok">? <strong>Flashcards</strong> ó domine cada tema com repetiÁ„o espaÁada</li>
+                        <li class="plan-feat ok">? <strong>Resumos</strong> ó revis„o r·pida de todas as disciplinas</li>
+                        <li class="plan-feat ok">? <strong>Tutor IA</strong> ó tire d˙vidas 24h sobre qualquer assunto do ENEM</li>
+                        <li class="plan-feat ok">? <strong>Progresso detalhado</strong> ó veja sua evoluÁ„o por disciplina</li>
                     </ul>
 
                     <button class="cta-btn plans-cta" id="plans-subscribe-btn" onclick="openCheckoutFromPlans()" style="margin-top:14px">
-                        Assinar Premium ‚Üí
+                        Assinar Premium ?
                     </button>
-                    <p class="plans-guarantee">üîí Pagamento seguro ¬∑ Cancele quando quiser</p>
-                    <!-- Status premium ‚Äî visibilidade controlada por renderPlans() -->
+                    <p class="plans-guarantee">?? Pagamento seguro ∑ Cancele quando quiser</p>
+                    <!-- Status premium ó visibilidade controlada por renderPlans() -->
                     <div id="plans-premium-msg" style="display:none;margin-top:12px"></div>
                 </div>
 
-                <p class="plans-footer-note">Ao assinar, voc√™ concorda com os
+                <p class="plans-footer-note">Ao assinar, vocÍ concorda com os
                     <button class="link-inline" onclick="navigate('terms')">Termos de Uso</button>
                     e nossa
-                    <button class="link-inline" onclick="navigate('privacy')">Pol√≠tica de Privacidade</button>.
+                    <button class="link-inline" onclick="navigate('privacy')">PolÌtica de Privacidade</button>.
                 </p>
 
 
             </div>
         </section>
 
-        <!-- ===================== SCREEN: REDA√á√ÉO ENEM ===================== -->
+        <!-- ===================== SCREEN: REDA«√O ENEM ===================== -->
         <section id="screen-redacao" class="screen">
             <div class="inner-header">
                 <button class="back-btn" onclick="navigate('quiz-setup')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><polyline points="15 18 9 12 15 6"/></svg></button>
-                <h2 class="inner-title">Reda√ß√£o ENEM</h2>
+                <h2 class="inner-title">RedaÁ„o ENEM</h2>
                 <div></div>
             </div>
             <div class="screen-scroll" style="padding:16px;display:flex;flex-direction:column;gap:16px;">
 
                 <!-- Abas de categoria de temas -->
                 <div class="rt-tabs">
-                    <button class="rt-tab-btn active" data-tab="enem" onclick="switchThemeTab('enem')">üìö ENEM Hist√≥rico</button>
-                    <button class="rt-tab-btn" data-tab="atual" onclick="switchThemeTab('atual')">üî• Temas Atuais</button>
+                    <button class="rt-tab-btn active" data-tab="enem" onclick="switchThemeTab('enem')">?? ENEM HistÛrico</button>
+                    <button class="rt-tab-btn" data-tab="atual" onclick="switchThemeTab('atual')">?? Temas Atuais</button>
                 </div>
 
                 <!-- Tema atual -->
@@ -1866,104 +1872,104 @@
                     <p class="rt-label" id="rt-label">TEMA ENEM</p>
                     <p class="rt-year" id="rt-year">ENEM 2023</p>
                     <p class="rt-theme" id="rt-theme">Desafios para o enfrentamento da invisibilidade do trabalho de cuidado realizado pela mulher no Brasil</p>
-                    <button class="outline-btn rt-change-btn" onclick="drawNewTheme()">üé≤ Sortear outro tema</button>
+                    <button class="outline-btn rt-change-btn" onclick="drawNewTheme()">?? Sortear outro tema</button>
                 </div>
 
-                <!-- √Årea de escrita -->
+                <!-- ¡rea de escrita -->
                 <div>
-                    <textarea id="redacao-text" class="redacao-textarea" placeholder="Escreva sua reda√ß√£o dissertativo-argumentativa aqui...&#10;&#10;Dica: apresente uma tese, desenvolva argumentos com exemplos e proponha uma interven√ß√£o concreta ao final."></textarea>
+                    <textarea id="redacao-text" class="redacao-textarea" placeholder="Escreva sua redaÁ„o dissertativo-argumentativa aqui...&#10;&#10;Dica: apresente uma tese, desenvolva argumentos com exemplos e proponha uma intervenÁ„o concreta ao final."></textarea>
                     <div class="redacao-counter">
                         <span id="redacao-word-count">0 palavras</span>
                         <span id="redacao-char-count">0 / 2000 caracteres</span>
                     </div>
                 </div>
 
-                <!-- Hist√≥rico de Reda√ß√µes -->
+                <!-- HistÛrico de RedaÁıes -->
                 <div id="redacao-hist-wrap">
-                    <p class="setup-label" style="margin:0">üìú HIST√ìRICO DE REDA√á√ïES</p>
+                    <p class="setup-label" style="margin:0">?? HIST”RICO DE REDA«’ES</p>
                     <div id="redacao-hist-list" style="display:flex;flex-direction:column;gap:10px"></div>
                 </div>
 
                 <button class="cta-btn" id="redacao-submit-btn" onclick="submitEssay()">
-                    ü§ñ Corrigir com IA
+                    ?? Corrigir com IA
                 </button>
 
-                <!-- Resultado (oculto at√© envio) -->
+                <!-- Resultado (oculto atÈ envio) -->
                 <div id="redacao-result" style="display:none;flex-direction:column;gap:12px;">
-                    <p class="setup-label" style="margin-bottom:0">üìä AVALIA√á√ÉO POR COMPET√äNCIA</p>
+                    <p class="setup-label" style="margin-bottom:0">?? AVALIA«√O POR COMPET NCIA</p>
                     <div id="redacao-competencias" style="display:flex;flex-direction:column;gap:10px;"></div>
 
                     <div class="redacao-total-card">
                         <p class="redacao-total-label">NOTA TOTAL ESTIMADA</p>
-                        <p class="redacao-total-score" id="redacao-total">‚Äî</p>
+                        <p class="redacao-total-score" id="redacao-total">ó</p>
                         <p class="redacao-total-sub">de 1000 pontos</p>
                     </div>
 
-                    <p class="setup-label" style="margin-bottom:0">üí¨ COMENT√ÅRIO GERAL</p>
+                    <p class="setup-label" style="margin-bottom:0">?? COMENT¡RIO GERAL</p>
                     <div class="redacao-comment-card" id="redacao-comment"></div>
 
-                    <button class="outline-btn" onclick="document.getElementById('redacao-result').style.display='none';var _rt=document.getElementById('redacao-text');_rt.value='';_updateRedacaoCounter.call(_rt);">‚úçÔ∏è Nova reda√ß√£o</button>
+                    <button class="outline-btn" onclick="document.getElementById('redacao-result').style.display='none';var _rt=document.getElementById('redacao-text');_rt.value='';_updateRedacaoCounter.call(_rt);">?? Nova redaÁ„o</button>
                 </div>
 
             </div>
         </section>
 
-        <!-- ===================== SCREEN: AN√ÅLISE ===================== -->
+        <!-- ===================== SCREEN: AN¡LISE ===================== -->
         <section id="screen-analise" class="screen">
             <div class="inner-header">
                 <button class="back-btn" onclick="navigate('profile')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><polyline points="15 18 9 12 15 6"/></svg></button>
-                <h2 class="inner-title">Minha An√°lise</h2>
-                <button class="icon-btn" onclick="renderAnalise()" title="Atualizar">‚Ü∫</button>
+                <h2 class="inner-title">Minha An·lise</h2>
+                <button class="icon-btn" onclick="renderAnalise()" title="Atualizar">?</button>
             </div>
             <div class="screen-scroll" style="padding:16px;display:flex;flex-direction:column;gap:14px">
                 <div class="analise-stats-grid" id="analise-stats-grid"></div>
                 <div class="analise-chart-card">
-                    <p class="analise-chart-title">üìà DESEMPENHO NOS √öLTIMOS SIMULADOS</p>
+                    <p class="analise-chart-title">?? DESEMPENHO NOS ⁄LTIMOS SIMULADOS</p>
                     <div class="analise-bars" id="analise-bars"></div>
                 </div>
                 <div class="analise-chart-card">
-                    <p class="analise-chart-title">üéØ ACERTOS POR DISCIPLINA</p>
+                    <p class="analise-chart-title">?? ACERTOS POR DISCIPLINA</p>
                     <div id="analise-disc-list"></div>
                 </div>
                 <div class="analise-chart-card">
-                    <p class="analise-chart-title">üìÖ MAPA DE ATIVIDADE ‚Äî 5 SEMANAS</p>
+                    <p class="analise-chart-title">?? MAPA DE ATIVIDADE ó 5 SEMANAS</p>
                     <div class="analise-heatmap" id="analise-heatmap"></div>
                 </div>
                 <div style="background:var(--bg-card);border-radius:var(--radius-md);padding:14px;border:1px solid var(--border-subtle)">
-                    <p style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px">üéØ FOCO RECOMENDADO</p>
+                    <p style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px">?? FOCO RECOMENDADO</p>
                     <div id="analise-focus-list" style="margin-top:10px;display:flex;flex-direction:column;gap:8px"></div>
                 </div>
             </div>
         </section>
 
-        <!-- ===================== SCREEN: CONTE√öDO ===================== -->
+        <!-- ===================== SCREEN: CONTE⁄DO ===================== -->
         <section id="screen-conteudo" class="screen">
             <!-- Tabs -->
             <div class="conteudo-tabs">
-                <button class="conteudo-tab active" onclick="switchConteudoTab('flashcard', this)">üÉè Flashcards</button>
-                <button class="conteudo-tab" onclick="switchConteudoTab('resumos', this)">üìñ Resumos</button>
-                <button class="conteudo-tab" onclick="switchConteudoTab('tutor', this)">ü§ñ Tutor IA</button>
-                <button class="conteudo-tab" onclick="switchConteudoTab('progresso', this)">üìä Progresso</button>
+                <button class="conteudo-tab active" onclick="switchConteudoTab('flashcard', this)">?? Flashcards</button>
+                <button class="conteudo-tab" onclick="switchConteudoTab('resumos', this)">?? Resumos</button>
+                <button class="conteudo-tab" onclick="switchConteudoTab('tutor', this)">?? Tutor IA</button>
+                <button class="conteudo-tab" onclick="switchConteudoTab('progresso', this)">?? Progresso</button>
             </div>
 
-            <!-- ‚îÄ‚îÄ PAINEL: Flashcards ‚îÄ‚îÄ -->
+            <!-- -- PAINEL: Flashcards -- -->
             <div class="conteudo-panel active" id="conteudo-panel-flashcard">
 
-                <!-- BARRA √öNICA: disciplina + separador + dificuldade (scroll horizontal) -->
+                <!-- BARRA ⁄NICA: disciplina + separador + dificuldade (scroll horizontal) -->
                 <div class="fc-toolbar">
-                    <button class="fc-disc-btn selected" data-disc="" onclick="selectFlashcardDisc(this,'')">‚ú® Misto</button>
-                    <button class="fc-disc-btn" data-disc="humanas" onclick="selectFlashcardDisc(this,'humanas')">üåç Hum.</button>
-                    <button class="fc-disc-btn" data-disc="natureza" onclick="selectFlashcardDisc(this,'natureza')">üî¨ Nat.</button>
-                    <button class="fc-disc-btn" data-disc="linguagens" onclick="selectFlashcardDisc(this,'linguagens')">üìù Ling.</button>
-                    <button class="fc-disc-btn" data-disc="matematica" onclick="selectFlashcardDisc(this,'matematica')">‚ûó Mat.</button>
+                    <button class="fc-disc-btn selected" data-disc="" onclick="selectFlashcardDisc(this,'')">? Misto</button>
+                    <button class="fc-disc-btn" data-disc="humanas" onclick="selectFlashcardDisc(this,'humanas')">?? Hum.</button>
+                    <button class="fc-disc-btn" data-disc="natureza" onclick="selectFlashcardDisc(this,'natureza')">?? Nat.</button>
+                    <button class="fc-disc-btn" data-disc="linguagens" onclick="selectFlashcardDisc(this,'linguagens')">?? Ling.</button>
+                    <button class="fc-disc-btn" data-disc="matematica" onclick="selectFlashcardDisc(this,'matematica')">? Mat.</button>
                     <span class="fc-toolbar-sep"></span>
                     <button class="fc-lvl-chip selected" data-lvl="0" onclick="selectFlashcardLvl(this,0)">Todos</button>
-                    <button class="fc-lvl-chip fc-easy" data-lvl="1" onclick="selectFlashcardLvl(this,1)">F√°cil</button>
-                    <button class="fc-lvl-chip fc-medium" data-lvl="2" onclick="selectFlashcardLvl(this,2)">M√©dio</button>
-                    <button class="fc-lvl-chip fc-hard" data-lvl="3" onclick="selectFlashcardLvl(this,3)">Dif√≠cil</button>
+                    <button class="fc-lvl-chip fc-easy" data-lvl="1" onclick="selectFlashcardLvl(this,1)">F·cil</button>
+                    <button class="fc-lvl-chip fc-medium" data-lvl="2" onclick="selectFlashcardLvl(this,2)">MÈdio</button>
+                    <button class="fc-lvl-chip fc-hard" data-lvl="3" onclick="selectFlashcardLvl(this,3)">DifÌcil</button>
                 </div>
 
-                <!-- Barra de progresso segmentada: verde=dominados ¬∑ vermelho=confusos -->
+                <!-- Barra de progresso segmentada: verde=dominados ∑ vermelho=confusos -->
                 <div class="fc-status-row">
                     <div class="fc-seg-bar" id="fc-seg-bar">
                         <div class="fc-seg-known" id="fc-seg-known"></div>
@@ -1974,7 +1980,7 @@
                 <div class="fc-legend-row">
                     <span class="fc-legend-item fc-legend-known" id="fc-known-label">0 dominados</span>
                     <span class="fc-legend-item fc-legend-difficult" id="fc-difficult-label">0 confusos</span>
-                    <button class="fc-review-btn" id="fc-review-btn" onclick="toggleReviewDifficult()" style="display:none">üîÅ Revisar confusos</button>
+                    <button class="fc-review-btn" id="fc-review-btn" onclick="toggleReviewDifficult()" style="display:none">?? Revisar confusos</button>
                 </div>
 
                 <!-- Card principal -->
@@ -1982,8 +1988,8 @@
                     <div class="flashcard" id="flashcard">
                         <div class="flashcard-face flashcard-front">
                             <div class="fc-face-header">
-                                <span class="flashcard-area" id="fc-area">CI√äNCIAS HUMANAS</span>
-                                <span class="fc-lvl-badge" id="fc-lvl-badge">F√ÅCIL</span>
+                                <span class="flashcard-area" id="fc-area">CI NCIAS HUMANAS</span>
+                                <span class="fc-lvl-badge" id="fc-lvl-badge">F¡CIL</span>
                             </div>
                             <p class="flashcard-question" id="fc-question">Carregando...</p>
                             <span class="flashcard-hint">
@@ -1998,65 +2004,65 @@
                     </div>
                 </div>
 
-                <!-- 4 a√ß√µes em UMA linha: ‚Üê | Confundo | Sei! | ‚Üí -->
+                <!-- 4 aÁıes em UMA linha: ? | Confundo | Sei! | ? -->
                 <div class="fc-actions-row">
                     <button class="fc-act-nav" onclick="prevFlashcard()" title="Anterior"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><polyline points="15 18 9 12 15 6"/></svg></button>
                     <button class="fc-act-no" onclick="rateFlashcard(false)">
-                        <span class="fc-act-icon">‚úó</span> Ainda confuso
+                        <span class="fc-act-icon">?</span> Ainda confuso
                     </button>
                     <button class="fc-act-yes" onclick="rateFlashcard(true)">
-                        <span class="fc-act-icon">‚úì</span> Domino isso!
+                        <span class="fc-act-icon">?</span> Domino isso!
                     </button>
-                    <button class="fc-act-nav" onclick="nextFlashcard()" title="Pr√≥ximo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg></button>
+                    <button class="fc-act-nav" onclick="nextFlashcard()" title="PrÛximo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg></button>
                 </div>
 
             </div>
 
-            <!-- ‚îÄ‚îÄ PAINEL: Resumos ‚îÄ‚îÄ -->
+            <!-- -- PAINEL: Resumos -- -->
             <div class="conteudo-panel" id="conteudo-panel-resumos">
                 <!-- Hero dos Resumos -->
                 <div class="resumos-hero">
                     <div class="resumos-hero-left">
                         <p class="resumos-hero-title">Resumos por Disciplina</p>
-                        <p class="resumos-hero-sub">Teoria objetiva ¬∑ Foco no ENEM ¬∑ Atualizado</p>
+                        <p class="resumos-hero-sub">Teoria objetiva ∑ Foco no ENEM ∑ Atualizado</p>
                     </div>
-                    <span class="resumos-hero-badge">üìñ</span>
+                    <span class="resumos-hero-badge">??</span>
                 </div>
                 <!-- Barra de leitura no topo -->
                 <div class="resumo-read-bar" id="resumo-read-bar"></div>
                 <div id="resumos-list" class="resumos-list-inner"></div>
             </div>
 
-            <!-- ‚îÄ‚îÄ PAINEL: Tutor IA ‚îÄ‚îÄ -->
-            <!-- IMPORTANTE: sem display:flex inline ‚Äî controlado pelo JS -->
+            <!-- -- PAINEL: Tutor IA -- -->
+            <!-- IMPORTANTE: sem display:flex inline ó controlado pelo JS -->
             <div class="conteudo-panel conteudo-panel-tutor" id="conteudo-panel-tutor">
-                <!-- Cabe√ßalho: t√≠tulo + bot√£o Nova conversa -->
+                <!-- CabeÁalho: tÌtulo + bot„o Nova conversa -->
                 <div class="tutor-header">
                     <div class="tutor-header-info">
-                        <span class="tutor-header-title">ü§ñ Tutor IA</span>
+                        <span class="tutor-header-title">?? Tutor IA</span>
                         <span class="tutor-header-sub">Especialista exclusivo em ENEM</span>
                     </div>
                     <button class="tutor-new-btn" onclick="tutorNovaConversa()" title="Limpar conversa">+ Nova conversa</button>
                 </div>
-                <!-- Grid 3x4 de sugest√µes r√°pidas (vis√≠vel antes da primeira mensagem) -->
+                <!-- Grid 3x4 de sugestıes r·pidas (visÌvel antes da primeira mensagem) -->
                 <div class="tutor-suggestions-grid" id="tutor-suggestions">
-                    <button class="tutor-chip" onclick="sendTutorSuggestion('Como funciona o Teorema de Pit√°goras?')">üìê Pit√°goras</button>
-                    <button class="tutor-chip" onclick="sendTutorSuggestion('Explique as Leis de Newton com exemplos')">üçé Leis de Newton</button>
-                    <button class="tutor-chip" onclick="sendTutorSuggestion('Como fazer a reda√ß√£o ENEM nota 1000?')">‚úçÔ∏è Reda√ß√£o 1000</button>
-                    <button class="tutor-chip" onclick="sendTutorSuggestion('O que √© fotoss√≠ntese e como funciona?')">üåø Fotoss√≠ntese</button>
-                    <button class="tutor-chip" onclick="sendTutorSuggestion('Explique probabilidade com exemplos pr√°ticos')">üé≤ Probabilidade</button>
-                    <button class="tutor-chip" onclick="sendTutorSuggestion('O que foi a Revolu√ß√£o Francesa?')">üè∞ Rev. Francesa</button>
-                    <button class="tutor-chip" onclick="sendTutorSuggestion('Como calcular juros compostos? Mostre um exemplo')">üí∞ Juros Compostos</button>
-                    <button class="tutor-chip" onclick="sendTutorSuggestion('Explique as Leis de Mendel e heran√ßa gen√©tica')">üß¨ Gen√©tica</button>
-                    <button class="tutor-chip" onclick="sendTutorSuggestion('O que √© a proposta de interven√ß√£o na reda√ß√£o ENEM?')">üìù Proposta Interv.</button>
-                    <button class="tutor-chip" onclick="sendTutorSuggestion('Explique rea√ß√µes qu√≠micas org√¢nicas para o ENEM')">‚öóÔ∏è Qu√≠mica Org√¢nica</button>
-                    <button class="tutor-chip" onclick="sendTutorSuggestion('Qual foi o impacto da Era Vargas no Brasil?')">üáßüá∑ Era Vargas</button>
-                    <button class="tutor-chip" onclick="sendTutorSuggestion('Como resolver quest√µes de geometria plana no ENEM?')">üìè Geometria</button>
+                    <button class="tutor-chip" onclick="sendTutorSuggestion('Como funciona o Teorema de Pit·goras?')">?? Pit·goras</button>
+                    <button class="tutor-chip" onclick="sendTutorSuggestion('Explique as Leis de Newton com exemplos')">?? Leis de Newton</button>
+                    <button class="tutor-chip" onclick="sendTutorSuggestion('Como fazer a redaÁ„o ENEM nota 1000?')">?? RedaÁ„o 1000</button>
+                    <button class="tutor-chip" onclick="sendTutorSuggestion('O que È fotossÌntese e como funciona?')">?? FotossÌntese</button>
+                    <button class="tutor-chip" onclick="sendTutorSuggestion('Explique probabilidade com exemplos pr·ticos')">?? Probabilidade</button>
+                    <button class="tutor-chip" onclick="sendTutorSuggestion('O que foi a RevoluÁ„o Francesa?')">?? Rev. Francesa</button>
+                    <button class="tutor-chip" onclick="sendTutorSuggestion('Como calcular juros compostos? Mostre um exemplo')">?? Juros Compostos</button>
+                    <button class="tutor-chip" onclick="sendTutorSuggestion('Explique as Leis de Mendel e heranÁa genÈtica')">?? GenÈtica</button>
+                    <button class="tutor-chip" onclick="sendTutorSuggestion('O que È a proposta de intervenÁ„o na redaÁ„o ENEM?')">?? Proposta Interv.</button>
+                    <button class="tutor-chip" onclick="sendTutorSuggestion('Explique reaÁıes quÌmicas org‚nicas para o ENEM')">?? QuÌmica Org‚nica</button>
+                    <button class="tutor-chip" onclick="sendTutorSuggestion('Qual foi o impacto da Era Vargas no Brasil?')">???? Era Vargas</button>
+                    <button class="tutor-chip" onclick="sendTutorSuggestion('Como resolver questıes de geometria plana no ENEM?')">?? Geometria</button>
                 </div>
                 <div class="tutor-messages-scroll" id="tutor-messages"></div>
                 <div class="tutor-input-row">
                     <input class="tutor-input" id="tutor-input" type="text"
-                        placeholder="Ex: Explique a Revolu√ß√£o Industrial para o ENEM..."
+                        placeholder="Ex: Explique a RevoluÁ„o Industrial para o ENEM..."
                         onkeydown="if(event.key==='Enter')sendTutorMessage()" />
                     <button class="tutor-send-btn" onclick="sendTutorMessage()">
                         <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
@@ -2064,117 +2070,117 @@
                 </div>
             </div>
 
-            <!-- ‚îÄ‚îÄ PAINEL: Progresso ‚îÄ‚îÄ -->
+            <!-- -- PAINEL: Progresso -- -->
             <div class="conteudo-panel" id="conteudo-panel-progresso">
                 <!-- Hero Progresso -->
                 <div class="prog-hero">
                     <div>
-                        <p class="prog-hero-title">Sua evolu√ß√£o nos Flashcards</p>
-                        <p class="prog-hero-sub">Continue dominando ¬∑ cada card conta</p>
+                        <p class="prog-hero-title">Sua evoluÁ„o nos Flashcards</p>
+                        <p class="prog-hero-sub">Continue dominando ∑ cada card conta</p>
                     </div>
-                    <button class="prog-hero-cta" onclick="navigate('analise')">Ver an√°lise completa ‚Üí</button>
+                    <button class="prog-hero-cta" onclick="navigate('analise')">Ver an·lise completa ?</button>
                 </div>
                 <!-- Contador de streak -->
                 <div class="prog-streak-card">
-                    <span class="prog-streak-icon">üî•</span>
+                    <span class="prog-streak-icon">??</span>
                     <div class="prog-streak-info">
                         <span class="prog-streak-num" id="prog-streak-num">0</span>
                         <span class="prog-streak-label">dias seguidos estudando</span>
                     </div>
                 </div>
 
-                <!-- Gr√°fico de barras por mat√©ria -->
-                <h3 class="prog-section-title">Flashcards dominados por mat√©ria</h3>
+                <!-- Gr·fico de barras por matÈria -->
+                <h3 class="prog-section-title">Flashcards dominados por matÈria</h3>
                 <div id="prog-disc-bars" class="prog-disc-bars"></div>
 
-                <!-- Top 3 t√≥picos com mais erros -->
-                <h3 class="prog-section-title">3 t√≥picos com mais erros</h3>
+                <!-- Top 3 tÛpicos com mais erros -->
+                <h3 class="prog-section-title">3 tÛpicos com mais erros</h3>
                 <ol id="prog-top-errors" class="prog-top-errors"></ol>
             </div>
         </section>
 
-        <!-- ===================== SCREEN: POL√çTICA DE PRIVACIDADE ===================== -->
+        <!-- ===================== SCREEN: POLÕTICA DE PRIVACIDADE ===================== -->
         <section id="screen-privacy" class="screen">
             <div class="inner-header">
                 <button class="back-btn" onclick="navigate('settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><polyline points="15 18 9 12 15 6"/></svg></button>
-                <h2 class="inner-title">Pol√≠tica de Privacidade</h2>
+                <h2 class="inner-title">PolÌtica de Privacidade</h2>
                 <div></div>
             </div>
             <div class="screen-scroll">
                 <div class="legal-wrap">
-                    <p class="legal-date">√öltima atualiza√ß√£o: 30 de mar√ßo de 2026</p>
+                    <p class="legal-date">⁄ltima atualizaÁ„o: 30 de marÁo de 2026</p>
 
-                    <h3 class="legal-section">1. Identifica√ß√£o do Controlador</h3>
-                    <p class="legal-text">O <strong>ENEM Master</strong> √© uma plataforma digital de prepara√ß√£o para o ENEM, dispon√≠vel em <strong>enem.app</strong>. Para fins da Lei Geral de Prote√ß√£o de Dados (Lei n¬∫ 13.709/2018 ‚Äî LGPD), o respons√°vel pelo tratamento dos seus dados pessoais √© o desenvolvedor e operador da plataforma.</p>
+                    <h3 class="legal-section">1. IdentificaÁ„o do Controlador</h3>
+                    <p class="legal-text">O <strong>ENEM Master</strong> È uma plataforma digital de preparaÁ„o para o ENEM, disponÌvel em <strong>enem.app</strong>. Para fins da Lei Geral de ProteÁ„o de Dados (Lei n∫ 13.709/2018 ó LGPD), o respons·vel pelo tratamento dos seus dados pessoais È o desenvolvedor e operador da plataforma.</p>
                     <p class="legal-text">Canal de privacidade: <strong>contato@enem.app</strong></p>
 
                     <h3 class="legal-section">2. Quais dados coletamos</h3>
-                    <p class="legal-text">Coletamos apenas os dados estritamente necess√°rios para o funcionamento da plataforma:</p>
+                    <p class="legal-text">Coletamos apenas os dados estritamente necess·rios para o funcionamento da plataforma:</p>
                     <ul class="legal-list">
-                        <li><strong>Dados de cadastro:</strong> nome completo e endere√ßo de e-mail, fornecidos diretamente no cadastro.</li>
-                        <li><strong>Dados de desempenho:</strong> respostas em simulados e quizzes, percentuais de acerto por √°rea e hist√≥rico de quest√µes respondidas.</li>
-                        <li><strong>Dados de progresso:</strong> XP acumulado, n√≠vel, sequ√™ncia de estudo (streak), badges conquistados e metas pessoais.</li>
-                        <li><strong>Dados escolares (opcional):</strong> nome da institui√ß√£o de ensino, usado exclusivamente para o ranking escolar.</li>
-                        <li><strong>Dados de pagamento:</strong> em caso de assinatura Premium, o processamento √© feito por plataformas externas (Hotmart, Kiwify ou Mercado Pago). O ENEM Master <em>n√£o armazena</em> dados de cart√£o de cr√©dito.</li>
-                        <li><strong>Dados t√©cnicos:</strong> eventos de uso an√¥nimos para an√°lise de performance do app (sem identifica√ß√£o pessoal).</li>
+                        <li><strong>Dados de cadastro:</strong> nome completo e endereÁo de e-mail, fornecidos diretamente no cadastro.</li>
+                        <li><strong>Dados de desempenho:</strong> respostas em simulados e quizzes, percentuais de acerto por ·rea e histÛrico de questıes respondidas.</li>
+                        <li><strong>Dados de progresso:</strong> XP acumulado, nÌvel, sequÍncia de estudo (streak), badges conquistados e metas pessoais.</li>
+                        <li><strong>Dados escolares (opcional):</strong> nome da instituiÁ„o de ensino, usado exclusivamente para o ranking escolar.</li>
+                        <li><strong>Dados de pagamento:</strong> em caso de assinatura Premium, o processamento È feito por plataformas externas (Hotmart, Kiwify ou Mercado Pago). O ENEM Master <em>n„o armazena</em> dados de cart„o de crÈdito.</li>
+                        <li><strong>Dados tÈcnicos:</strong> eventos de uso anÙnimos para an·lise de performance do app (sem identificaÁ„o pessoal).</li>
                     </ul>
 
                     <h3 class="legal-section">3. Finalidade e base legal do tratamento</h3>
                     <ul class="legal-list">
-                        <li><strong>Execu√ß√£o de contrato (Art. 7¬∫, V):</strong> fornecer os servi√ßos de quiz, simulado, an√°lise de desempenho e gamifica√ß√£o.</li>
-                        <li><strong>Leg√≠timo interesse (Art. 7¬∫, IX):</strong> personalizar recomenda√ß√µes de estudo com base no seu hist√≥rico.</li>
-                        <li><strong>Consentimento (Art. 7¬∫, I):</strong> envio de lembretes e notifica√ß√µes de estudo ‚Äî voc√™ pode revogar a qualquer momento nas configura√ß√µes do app.</li>
-                        <li><strong>Cumprimento de obriga√ß√£o legal:</strong> emiss√£o de recibos e registros fiscais relacionados ao plano Premium.</li>
+                        <li><strong>ExecuÁ„o de contrato (Art. 7∫, V):</strong> fornecer os serviÁos de quiz, simulado, an·lise de desempenho e gamificaÁ„o.</li>
+                        <li><strong>LegÌtimo interesse (Art. 7∫, IX):</strong> personalizar recomendaÁıes de estudo com base no seu histÛrico.</li>
+                        <li><strong>Consentimento (Art. 7∫, I):</strong> envio de lembretes e notificaÁıes de estudo ó vocÍ pode revogar a qualquer momento nas configuraÁıes do app.</li>
+                        <li><strong>Cumprimento de obrigaÁ„o legal:</strong> emiss„o de recibos e registros fiscais relacionados ao plano Premium.</li>
                     </ul>
                     <p class="legal-text"><strong>Nunca vendemos, alugamos ou compartilhamos seus dados pessoais com terceiros para fins comerciais.</strong></p>
 
                     <h3 class="legal-section">4. Compartilhamento de dados</h3>
                     <p class="legal-text">Seus dados podem ser compartilhados apenas com:</p>
                     <ul class="legal-list">
-                        <li><strong>Supabase (infraestrutura):</strong> banco de dados e autentica√ß√£o. Dados armazenados em servidores seguros com criptografia AES-256 em repouso e TLS 1.3 em tr√¢nsito.</li>
+                        <li><strong>Supabase (infraestrutura):</strong> banco de dados e autenticaÁ„o. Dados armazenados em servidores seguros com criptografia AES-256 em repouso e TLS 1.3 em tr‚nsito.</li>
 
-                        <li><strong>Processadores de pagamento:</strong> Hotmart, Kiwify ou Mercado Pago processam cobran√ßas do plano Premium de forma independente, com suas pr√≥prias pol√≠ticas de privacidade.</li>
-                        <li><strong>Groq AI:</strong> o texto da sua reda√ß√£o √© enviado √† API da Groq para corre√ß√£o autom√°tica. N√£o s√£o inclu√≠dos dados identificadores na requisi√ß√£o.</li>
+                        <li><strong>Processadores de pagamento:</strong> Hotmart, Kiwify ou Mercado Pago processam cobranÁas do plano Premium de forma independente, com suas prÛprias polÌticas de privacidade.</li>
+                        <li><strong>Groq AI:</strong> o texto da sua redaÁ„o È enviado ‡ API da Groq para correÁ„o autom·tica. N„o s„o incluÌdos dados identificadores na requisiÁ„o.</li>
                     </ul>
 
                     <h3 class="legal-section">5. Seus direitos como titular (LGPD)</h3>
-                    <p class="legal-text">Conforme a Lei n¬∫ 13.709/2018, voc√™ tem direito a:</p>
+                    <p class="legal-text">Conforme a Lei n∫ 13.709/2018, vocÍ tem direito a:</p>
                     <ul class="legal-list">
-                        <li><strong>Acesso:</strong> solicitar uma c√≥pia de todos os seus dados pessoais armazenados.</li>
-                        <li><strong>Corre√ß√£o:</strong> atualizar nome, e-mail ou escola diretamente nas Configura√ß√µes do app.</li>
-                        <li><strong>Exclus√£o:</strong> solicitar a exclus√£o completa da sua conta e dados associados.</li>
+                        <li><strong>Acesso:</strong> solicitar uma cÛpia de todos os seus dados pessoais armazenados.</li>
+                        <li><strong>CorreÁ„o:</strong> atualizar nome, e-mail ou escola diretamente nas ConfiguraÁıes do app.</li>
+                        <li><strong>Exclus„o:</strong> solicitar a exclus„o completa da sua conta e dados associados.</li>
                         <li><strong>Portabilidade:</strong> receber seus dados em formato estruturado (JSON).</li>
-                        <li><strong>Revoga√ß√£o de consentimento:</strong> desativar notifica√ß√µes a qualquer momento nas Configura√ß√µes.</li>
-                        <li><strong>Oposi√ß√£o:</strong> contestar tratamentos que voc√™ considere desnecess√°rios ou excessivos.</li>
+                        <li><strong>RevogaÁ„o de consentimento:</strong> desativar notificaÁıes a qualquer momento nas ConfiguraÁıes.</li>
+                        <li><strong>OposiÁ„o:</strong> contestar tratamentos que vocÍ considere desnecess·rios ou excessivos.</li>
                     </ul>
-                    <p class="legal-text">Para exercer qualquer um destes direitos, envie um e-mail para <strong>contato@enem.app</strong> com o assunto "LGPD ‚Äì [seu direito]". Atendemos em at√© 15 dias √∫teis.</p>
+                    <p class="legal-text">Para exercer qualquer um destes direitos, envie um e-mail para <strong>contato@enem.app</strong> com o assunto "LGPD ñ [seu direito]". Atendemos em atÈ 15 dias ˙teis.</p>
 
                     <h3 class="legal-section">6. Armazenamento local no dispositivo</h3>
-                    <p class="legal-text">Utilizamos o <em>localStorage</em> e <em>sessionStorage</em> do seu dispositivo para salvar progresso localmente e permitir uso offline do app. Esses dados ficam apenas no seu dispositivo e podem ser removidos limpando os dados do navegador. N√£o utilizamos cookies de rastreamento ou publicidade.</p>
+                    <p class="legal-text">Utilizamos o <em>localStorage</em> e <em>sessionStorage</em> do seu dispositivo para salvar progresso localmente e permitir uso offline do app. Esses dados ficam apenas no seu dispositivo e podem ser removidos limpando os dados do navegador. N„o utilizamos cookies de rastreamento ou publicidade.</p>
 
-                    <h3 class="legal-section">7. Reten√ß√£o de dados</h3>
-                    <p class="legal-text">Mantemos seus dados enquanto sua conta estiver ativa. Ap√≥s exclus√£o da conta, os dados pessoais s√£o removidos em at√© 30 dias, exceto os que precisem ser retidos por obriga√ß√£o legal (ex: registros fiscais, por 5 anos conforme legisla√ß√£o tribut√°ria).</p>
+                    <h3 class="legal-section">7. RetenÁ„o de dados</h3>
+                    <p class="legal-text">Mantemos seus dados enquanto sua conta estiver ativa. ApÛs exclus„o da conta, os dados pessoais s„o removidos em atÈ 30 dias, exceto os que precisem ser retidos por obrigaÁ„o legal (ex: registros fiscais, por 5 anos conforme legislaÁ„o tribut·ria).</p>
 
-                    <h3 class="legal-section">8. Seguran√ßa</h3>
-                    <p class="legal-text">Adotamos as seguintes medidas t√©cnicas de prote√ß√£o:</p>
+                    <h3 class="legal-section">8. SeguranÁa</h3>
+                    <p class="legal-text">Adotamos as seguintes medidas tÈcnicas de proteÁ„o:</p>
                     <ul class="legal-list">
-                        <li>Todas as conex√µes s√£o criptografadas via HTTPS/TLS 1.3.</li>
-                        <li>Banco de dados com Row Level Security (RLS): cada usu√°rio acessa apenas seus pr√≥prios dados.</li>
-                        <li>Senhas jamais s√£o armazenadas em texto plano ‚Äî gerenciadas pelo Supabase Auth com hashing bcrypt.</li>
+                        <li>Todas as conexıes s„o criptografadas via HTTPS/TLS 1.3.</li>
+                        <li>Banco de dados com Row Level Security (RLS): cada usu·rio acessa apenas seus prÛprios dados.</li>
+                        <li>Senhas jamais s„o armazenadas em texto plano ó gerenciadas pelo Supabase Auth com hashing bcrypt.</li>
                         <li>Content Security Policy (CSP) aplicada para prevenir ataques XSS.</li>
                     </ul>
 
                     <h3 class="legal-section">9. Menores de idade</h3>
-                    <p class="legal-text">A plataforma √© destinada a pessoas com 13 anos ou mais. Usu√°rios com menos de 18 anos precisam da autoriza√ß√£o de pais ou respons√°veis legais para criar uma conta. N√£o coletamos dados de crian√ßas com menos de 13 anos de forma consciente.</p>
+                    <p class="legal-text">A plataforma È destinada a pessoas com 13 anos ou mais. Usu·rios com menos de 18 anos precisam da autorizaÁ„o de pais ou respons·veis legais para criar uma conta. N„o coletamos dados de crianÁas com menos de 13 anos de forma consciente.</p>
 
-                    <h3 class="legal-section">10. Altera√ß√µes nesta pol√≠tica</h3>
-                    <p class="legal-text">Esta pol√≠tica pode ser atualizada. Em caso de mudan√ßas relevantes, notificaremos voc√™ por e-mail ou por notifica√ß√£o no pr√≥prio app com pelo menos 15 dias de anteced√™ncia. O uso continuado ap√≥s a notifica√ß√£o implica aceite dos novos termos.</p>
+                    <h3 class="legal-section">10. AlteraÁıes nesta polÌtica</h3>
+                    <p class="legal-text">Esta polÌtica pode ser atualizada. Em caso de mudanÁas relevantes, notificaremos vocÍ por e-mail ou por notificaÁ„o no prÛprio app com pelo menos 15 dias de antecedÍncia. O uso continuado apÛs a notificaÁ„o implica aceite dos novos termos.</p>
 
                     <h3 class="legal-section">11. Contato e DPO</h3>
-                    <p class="legal-text">Para d√∫vidas, solicita√ß√µes ou reclama√ß√µes relacionadas √† privacidade, entre em contato:</p>
+                    <p class="legal-text">Para d˙vidas, solicitaÁıes ou reclamaÁıes relacionadas ‡ privacidade, entre em contato:</p>
                     <ul class="legal-list">
                         <li>E-mail: <strong>contato@enem.app</strong></li>
-                        <li>Tamb√©m √© poss√≠vel acionar a Autoridade Nacional de Prote√ß√£o de Dados (ANPD) em <strong>gov.br/anpd</strong>.</li>
+                        <li>TambÈm È possÌvel acionar a Autoridade Nacional de ProteÁ„o de Dados (ANPD) em <strong>gov.br/anpd</strong>.</li>
                     </ul>
                 </div>
             </div>
@@ -2189,81 +2195,81 @@
             </div>
             <div class="screen-scroll">
                 <div class="legal-wrap">
-                    <p class="legal-date">√öltima atualiza√ß√£o: 30 de mar√ßo de 2026</p>
+                    <p class="legal-date">⁄ltima atualizaÁ„o: 30 de marÁo de 2026</p>
 
-                    <h3 class="legal-section">1. Aceita√ß√£o dos Termos</h3>
-                    <p class="legal-text">Ao criar uma conta, acessar ou utilizar o <strong>ENEM Master</strong> (dispon√≠vel em <strong>enem.app</strong>), voc√™ declara ter lido, compreendido e concordado com estes Termos de Uso. Se voc√™ n√£o concordar com qualquer parte destes termos, n√£o utilize o servi√ßo.</p>
+                    <h3 class="legal-section">1. AceitaÁ„o dos Termos</h3>
+                    <p class="legal-text">Ao criar uma conta, acessar ou utilizar o <strong>ENEM Master</strong> (disponÌvel em <strong>enem.app</strong>), vocÍ declara ter lido, compreendido e concordado com estes Termos de Uso. Se vocÍ n„o concordar com qualquer parte destes termos, n„o utilize o serviÁo.</p>
 
-                    <h3 class="legal-section">2. Descri√ß√£o do Servi√ßo</h3>
-                    <p class="legal-text">O ENEM Master √© uma plataforma digital de prepara√ß√£o para o Exame Nacional do Ensino M√©dio (ENEM) que oferece:</p>
+                    <h3 class="legal-section">2. DescriÁ„o do ServiÁo</h3>
+                    <p class="legal-text">O ENEM Master È uma plataforma digital de preparaÁ„o para o Exame Nacional do Ensino MÈdio (ENEM) que oferece:</p>
                     <ul class="legal-list">
-                        <li>Quizzes e simulados com quest√µes das provas oficiais do ENEM (dom√≠nio p√∫blico).</li>
-                        <li>An√°lise de desempenho por √°rea de conhecimento.</li>
-                        <li>Sistema de gamifica√ß√£o (XP, levels, streak, conquistas e ranking).</li>
-                        <li>Corre√ß√£o de reda√ß√£o por Intelig√™ncia Artificial (plano Premium).</li>
-                        <li>Simulado completo no formato oficial ENEM ‚Äî 90 quest√µes com cron√¥metro (plano Premium).</li>
+                        <li>Quizzes e simulados com questıes das provas oficiais do ENEM (domÌnio p˙blico).</li>
+                        <li>An·lise de desempenho por ·rea de conhecimento.</li>
+                        <li>Sistema de gamificaÁ„o (XP, levels, streak, conquistas e ranking).</li>
+                        <li>CorreÁ„o de redaÁ„o por InteligÍncia Artificial (plano Premium).</li>
+                        <li>Simulado completo no formato oficial ENEM ó 90 questıes com cronÙmetro (plano Premium).</li>
                     </ul>
-                    <p class="legal-text">O servi√ßo √© fornecido "como est√°". Nos reservamos o direito de modificar, suspender ou descontinuar funcionalidades com aviso pr√©vio.</p>
+                    <p class="legal-text">O serviÁo È fornecido "como est·". Nos reservamos o direito de modificar, suspender ou descontinuar funcionalidades com aviso prÈvio.</p>
 
                     <h3 class="legal-section">3. Cadastro e Responsabilidades da Conta</h3>
                     <ul class="legal-list">
-                        <li>Voc√™ deve fornecer informa√ß√µes verdadeiras, precisas e atualizadas ao se cadastrar.</li>
-                        <li>√â sua responsabilidade manter a confidencialidade da sua senha e notificar-nos imediatamente em caso de uso n√£o autorizado.</li>
-                        <li>Cada pessoa f√≠sica pode ter apenas uma conta. Contas duplicadas poder√£o ser suspensas.</li>
-                        <li>Voc√™ √© respons√°vel por todas as atividades realizadas sob sua conta.</li>
-                        <li>Menores de 18 anos precisam da autoriza√ß√£o de pais ou respons√°veis legais.</li>
+                        <li>VocÍ deve fornecer informaÁıes verdadeiras, precisas e atualizadas ao se cadastrar.</li>
+                        <li>… sua responsabilidade manter a confidencialidade da sua senha e notificar-nos imediatamente em caso de uso n„o autorizado.</li>
+                        <li>Cada pessoa fÌsica pode ter apenas uma conta. Contas duplicadas poder„o ser suspensas.</li>
+                        <li>VocÍ È respons·vel por todas as atividades realizadas sob sua conta.</li>
+                        <li>Menores de 18 anos precisam da autorizaÁ„o de pais ou respons·veis legais.</li>
                     </ul>
 
                     <h3 class="legal-section">4. Planos e Assinatura Premium</h3>
-                    <p class="legal-text"><strong>Plano Gratuito:</strong> acesso limitado a at√© 10 quest√µes por dia, simulados de at√© 10 quest√µes. Sem custo.</p>
+                    <p class="legal-text"><strong>Plano Gratuito:</strong> acesso limitado a atÈ 10 questıes por dia, simulados de atÈ 10 questıes. Sem custo.</p>
                     <p class="legal-text"><strong>Plano Premium:</strong> acesso ilimitado a todas as funcionalidades mediante assinatura paga.</p>
                     <ul class="legal-list">
-                        <li>O pagamento √© processado por plataformas externas (Hotmart, Kiwify ou Mercado Pago), sujeito √†s condi√ß√µes delas.</li>
-                        <li>A assinatura √© pessoal e intransfer√≠vel ‚Äî compartilhar acesso √© proibido e pode resultar em suspens√£o.</li>
-                        <li>O cancelamento interrompe a renova√ß√£o autom√°tica. O acesso Premium permanece ativo at√© o fim do per√≠odo j√° pago.</li>
-                        <li><strong>Pol√≠tica de reembolso:</strong> reembolso integral dispon√≠vel em at√© 7 (sete) dias corridos ap√≥s a compra, mediante solicita√ß√£o para <strong>contato@enem.app</strong>, desde que n√£o haja uso abusivo da plataforma no per√≠odo.</li>
-                        <li>Pre√ßos podem ser alterados com aviso pr√©vio de 30 dias. Assinantes ativos mant√™m o pre√ßo vigente at√© o pr√≥ximo ciclo de renova√ß√£o.</li>
+                        <li>O pagamento È processado por plataformas externas (Hotmart, Kiwify ou Mercado Pago), sujeito ‡s condiÁıes delas.</li>
+                        <li>A assinatura È pessoal e intransferÌvel ó compartilhar acesso È proibido e pode resultar em suspens„o.</li>
+                        <li>O cancelamento interrompe a renovaÁ„o autom·tica. O acesso Premium permanece ativo atÈ o fim do perÌodo j· pago.</li>
+                        <li><strong>PolÌtica de reembolso:</strong> reembolso integral disponÌvel em atÈ 7 (sete) dias corridos apÛs a compra, mediante solicitaÁ„o para <strong>contato@enem.app</strong>, desde que n„o haja uso abusivo da plataforma no perÌodo.</li>
+                        <li>PreÁos podem ser alterados com aviso prÈvio de 30 dias. Assinantes ativos mantÍm o preÁo vigente atÈ o prÛximo ciclo de renovaÁ„o.</li>
                     </ul>
 
-                    <h3 class="legal-section">5. Uso Aceit√°vel</h3>
-                    <p class="legal-text">√â expressamente proibido:</p>
+                    <h3 class="legal-section">5. Uso Aceit·vel</h3>
+                    <p class="legal-text">… expressamente proibido:</p>
                     <ul class="legal-list">
                         <li>Compartilhar credenciais ou acesso da conta com terceiros.</li>
-                        <li>Utilizar automa√ß√£o, bots ou scripts para simular uso humano ou burlar limites do plano gratuito.</li>
-                        <li>Reproduzir, distribuir ou revender conte√∫do da plataforma sem autoriza√ß√£o expressa.</li>
-                        <li>Tentar acessar dados de outros usu√°rios ou realizar engenharia reversa do sistema.</li>
+                        <li>Utilizar automaÁ„o, bots ou scripts para simular uso humano ou burlar limites do plano gratuito.</li>
+                        <li>Reproduzir, distribuir ou revender conte˙do da plataforma sem autorizaÁ„o expressa.</li>
+                        <li>Tentar acessar dados de outros usu·rios ou realizar engenharia reversa do sistema.</li>
                         <li>Usar a plataforma para qualquer finalidade ilegal ou que viole direitos de terceiros.</li>
-                        <li>Inserir conte√∫do ofensivo, falso ou prejudicial em campos de texto da plataforma.</li>
+                        <li>Inserir conte˙do ofensivo, falso ou prejudicial em campos de texto da plataforma.</li>
                     </ul>
-                    <p class="legal-text">O descumprimento pode resultar em suspens√£o ou exclus√£o da conta, sem direito a reembolso.</p>
+                    <p class="legal-text">O descumprimento pode resultar em suspens„o ou exclus„o da conta, sem direito a reembolso.</p>
 
-                    <h3 class="legal-section">6. Conte√∫do e Propriedade Intelectual</h3>
-                    <p class="legal-text">As quest√µes utilizadas nos simulados s√£o extra√≠das de provas oficiais do ENEM, disponibilizadas pelo <strong>INEP/MEC</strong> como material de dom√≠nio p√∫blico, exclusivamente para finalidade educacional.</p>
-                    <p class="legal-text">O design, o c√≥digo-fonte, a identidade visual, os textos pr√≥prios, a gamifica√ß√£o e os recursos desenvolvidos pelo ENEM Master s√£o protegidos por direitos autorais (Lei n¬∫ 9.610/1998). √â proibida qualquer reprodu√ß√£o sem autoriza√ß√£o.</p>
+                    <h3 class="legal-section">6. Conte˙do e Propriedade Intelectual</h3>
+                    <p class="legal-text">As questıes utilizadas nos simulados s„o extraÌdas de provas oficiais do ENEM, disponibilizadas pelo <strong>INEP/MEC</strong> como material de domÌnio p˙blico, exclusivamente para finalidade educacional.</p>
+                    <p class="legal-text">O design, o cÛdigo-fonte, a identidade visual, os textos prÛprios, a gamificaÁ„o e os recursos desenvolvidos pelo ENEM Master s„o protegidos por direitos autorais (Lei n∫ 9.610/1998). … proibida qualquer reproduÁ„o sem autorizaÁ„o.</p>
 
-                    <h3 class="legal-section">7. Corre√ß√£o de Reda√ß√£o por IA</h3>
-                    <p class="legal-text">A corre√ß√£o de reda√ß√£o √© realizada por Intelig√™ncia Artificial e tem car√°ter <strong>orientativo</strong>. O resultado n√£o equivale √† corre√ß√£o oficial do INEP e n√£o garante nota pr√≥xima √† prova real. Utilize o recurso como ferramenta de estudo e feedback, n√£o como avalia√ß√£o definitiva.</p>
+                    <h3 class="legal-section">7. CorreÁ„o de RedaÁ„o por IA</h3>
+                    <p class="legal-text">A correÁ„o de redaÁ„o È realizada por InteligÍncia Artificial e tem car·ter <strong>orientativo</strong>. O resultado n„o equivale ‡ correÁ„o oficial do INEP e n„o garante nota prÛxima ‡ prova real. Utilize o recurso como ferramenta de estudo e feedback, n„o como avaliaÁ„o definitiva.</p>
 
-                    <h3 class="legal-section">8. Limita√ß√£o de Responsabilidade</h3>
-                    <p class="legal-text">O ENEM Master √© uma ferramenta de estudo. <strong>N√£o garantimos aprova√ß√£o no ENEM, ingresso em universidades ou qualquer resultado espec√≠fico.</strong> O desempenho depende exclusivamente do esfor√ßo, dedica√ß√£o e circunst√¢ncias individuais de cada usu√°rio.</p>
-                    <p class="legal-text">N√£o nos responsabilizamos por danos indiretos, perda de dados por falha do dispositivo do usu√°rio, ou interrup√ß√µes moment√¢neas de servi√ßo causadas por terceiros (infraestrutura, provedores de API, etc.).</p>
+                    <h3 class="legal-section">8. LimitaÁ„o de Responsabilidade</h3>
+                    <p class="legal-text">O ENEM Master È uma ferramenta de estudo. <strong>N„o garantimos aprovaÁ„o no ENEM, ingresso em universidades ou qualquer resultado especÌfico.</strong> O desempenho depende exclusivamente do esforÁo, dedicaÁ„o e circunst‚ncias individuais de cada usu·rio.</p>
+                    <p class="legal-text">N„o nos responsabilizamos por danos indiretos, perda de dados por falha do dispositivo do usu·rio, ou interrupÁıes moment‚neas de serviÁo causadas por terceiros (infraestrutura, provedores de API, etc.).</p>
 
-                    <h3 class="legal-section">9. Disponibilidade do Servi√ßo</h3>
-                    <p class="legal-text">Buscamos disponibilidade cont√≠nua, mas n√£o garantimos 100% de uptime. Manuten√ß√µes programadas ser√£o comunicadas com anteced√™ncia. Em caso de indisponibilidade prolongada que afete substancialmente o uso do plano Premium, o per√≠odo ser√° compensado.</p>
+                    <h3 class="legal-section">9. Disponibilidade do ServiÁo</h3>
+                    <p class="legal-text">Buscamos disponibilidade contÌnua, mas n„o garantimos 100% de uptime. ManutenÁıes programadas ser„o comunicadas com antecedÍncia. Em caso de indisponibilidade prolongada que afete substancialmente o uso do plano Premium, o perÌodo ser· compensado.</p>
 
                     <h3 class="legal-section">10. Privacidade</h3>
-                    <p class="legal-text">O tratamento dos seus dados pessoais √© regido pela nossa <strong>Pol√≠tica de Privacidade</strong>, em conformidade com a LGPD (Lei n¬∫ 13.709/2018). Ao usar o app, voc√™ consente com esse tratamento conforme descrito na Pol√≠tica de Privacidade.</p>
+                    <p class="legal-text">O tratamento dos seus dados pessoais È regido pela nossa <strong>PolÌtica de Privacidade</strong>, em conformidade com a LGPD (Lei n∫ 13.709/2018). Ao usar o app, vocÍ consente com esse tratamento conforme descrito na PolÌtica de Privacidade.</p>
 
-                    <h3 class="legal-section">11. Modifica√ß√µes nos Termos</h3>
-                    <p class="legal-text">Podemos atualizar estes Termos a qualquer momento. Mudan√ßas relevantes ser√£o comunicadas com pelo menos 15 dias de anteced√™ncia por e-mail ou notifica√ß√£o no app. O uso continuado ap√≥s o prazo de aviso implica aceite dos novos termos.</p>
+                    <h3 class="legal-section">11. ModificaÁıes nos Termos</h3>
+                    <p class="legal-text">Podemos atualizar estes Termos a qualquer momento. MudanÁas relevantes ser„o comunicadas com pelo menos 15 dias de antecedÍncia por e-mail ou notificaÁ„o no app. O uso continuado apÛs o prazo de aviso implica aceite dos novos termos.</p>
 
-                    <h3 class="legal-section">12. Rescis√£o</h3>
-                    <p class="legal-text">Voc√™ pode encerrar sua conta a qualquer momento pelo app ou via e-mail. Podemos suspender ou encerrar contas que violem estes termos, sem necessidade de aviso pr√©vio em casos graves.</p>
+                    <h3 class="legal-section">12. Rescis„o</h3>
+                    <p class="legal-text">VocÍ pode encerrar sua conta a qualquer momento pelo app ou via e-mail. Podemos suspender ou encerrar contas que violem estes termos, sem necessidade de aviso prÈvio em casos graves.</p>
 
-                    <h3 class="legal-section">13. Lei Aplic√°vel e Foro</h3>
-                    <p class="legal-text">Estes Termos s√£o regidos pelas leis da <strong>Rep√∫blica Federativa do Brasil</strong>. Para dirimir quaisquer controv√©rsias ser√° competente o foro do domic√≠lio do usu√°rio, conforme disposto no C√≥digo de Defesa do Consumidor (Lei n¬∫ 8.078/1990).</p>
+                    <h3 class="legal-section">13. Lei Aplic·vel e Foro</h3>
+                    <p class="legal-text">Estes Termos s„o regidos pelas leis da <strong>Rep˙blica Federativa do Brasil</strong>. Para dirimir quaisquer controvÈrsias ser· competente o foro do domicÌlio do usu·rio, conforme disposto no CÛdigo de Defesa do Consumidor (Lei n∫ 8.078/1990).</p>
 
-                    <p class="legal-contact">D√∫vidas ou solicita√ß√µes: <strong>contato@enem.app</strong></p>
+                    <p class="legal-contact">D˙vidas ou solicitaÁıes: <strong>contato@enem.app</strong></p>
                 </div>
             </div>
         </section>
@@ -2291,10 +2297,12 @@
         // Registrar Service Worker (PWA)
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/sw.js').then(reg => {
-                console.log('‚úÖ SW registrado:', reg.scope);
+                console.log('? SW registrado:', reg.scope);
             }).catch(err => console.log('SW erro:', err));
         }
     </script>
 </body>
 
 </html>
+
+

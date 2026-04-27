@@ -311,10 +311,8 @@
     min-height: 320px;
   }
 
-  /* ---- Login Screen — centralizado ---- */
-  #screen-login .login-wrap {
-    align-items: center;
-  }
+  /* ---- Login Screen — centralizado (tablet) ---- */
+  #screen-login .login-panel-left,
   #screen-login .login-brand {
     max-width: 440px;
     width: 100%;
@@ -491,7 +489,7 @@
   }
 
   /* Painel esquerdo — visual / branding */
-  #screen-login .login-wrap > :first-child {
+  #screen-login .login-panel-left {
     flex: 1.1;
     display: flex;
     flex-direction: column;
@@ -501,9 +499,25 @@
                 radial-gradient(ellipse 50% 40% at 80% 20%, rgba(0,100,120,0.1) 0%, transparent 60%);
     border-right: 1px solid rgba(0, 180, 166, 0.1);
   }
+  #screen-login .login-panel-left .login-brand {
+    max-width: none;
+    width: 100%;
+    padding: 0 0 32px;
+  }
+  #screen-login .login-panel-left .login-headline-block {
+    max-width: none;
+    width: 100%;
+    padding: 0;
+  }
+  #screen-login .login-panel-left .login-headline {
+    font-size: 36px;
+  }
+  #screen-login .login-panel-left .login-subheadline {
+    font-size: 16px;
+  }
 
   /* Painel direito — formulário */
-  #screen-login .login-wrap > :last-child {
+  #screen-login .login-panel-right {
     flex: 0.9;
     display: flex;
     flex-direction: column;
@@ -511,16 +525,14 @@
     align-items: center;
     padding: 48px;
     overflow-y: auto;
+    gap: 0;
   }
-  #screen-login .login-card,
-  #screen-login .login-footer {
+  #screen-login .login-panel-right .login-card,
+  #screen-login .login-panel-right .login-footer {
     max-width: 380px;
     width: 100%;
-  }
-  #screen-login .login-brand,
-  #screen-login .login-headline-block {
-    max-width: none;
-    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
   }
 }
 

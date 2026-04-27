@@ -2,17 +2,19 @@
    ENEM Master � CSS Entry Point
    Todos os estilos estao nos modulos abaixo.
    ===================================================== */
-@import url('./css/base.css?v=14');
-@import url('./css/components.css?v=14');
-@import url('./css/dashboard.css?v=14');
-@import url('./css/quiz.css?v=14');
-@import url('./css/result.css?v=14');
-@import url('./css/ranking.css?v=14');
-@import url('./css/achievements.css?v=14');
-@import url('./css/profile.css?v=14');
-@import url('./css/auth.css?v=14');
-@import url('./css/premium.css?v=14');
-@import url('./css/redacao.css?v=14');
-@import url('./css/content.css?v=14');
-@import url('./css/layout.css?v=14');
-@import url('./css/responsive.css?v=14');
+@import url('./css/base.css?v=15');
+@import url('./css/components.css?v=15');
+@import url('./css/dashboard.css?v=15');
+@import url('./css/quiz.css?v=15');
+@import url('./css/result.css?v=15');
+@import url('./css/ranking.css?v=15');
+@import url('./css/achievements.css?v=15');
+@import url('./css/profile.css?v=15');
+@import url('./css/auth.css?v=15');
+@import url('./css/premium.css?v=15');
+@import url('./css/redacao.css?v=15');
+@import url('./css/content.css?v=15');
+@import url('./css/layout.css?v=15');
+@import url('./css/responsive.css?v=15');
+
+
