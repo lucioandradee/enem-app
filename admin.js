@@ -232,7 +232,7 @@ async function bootApp() {
     adminUser = verifiedUser;
     document.getElementById('gate').style.display           = 'none';
     document.getElementById('app').style.display            = 'flex';
-    document.getElementById('topbar-email').textContent     = adminUser?.email • '-';
+    document.getElementById('topbar-email').textContent     = adminUser?.email ?? '-';
 
     await loadAll();
     startAutoRefresh();
@@ -275,7 +275,7 @@ function setupRealtime() {
     _realtimeCh = supabase
         .channel('admin-realtime')
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'webhook_events' }, (payload) => {
-            const ev      = payload.new • {};
+            const ev      = payload.new ?? {};
             const liveDot = document.getElementById('live-dot');
             if (liveDot) {
                 liveDot.classList.add('live-pulse');
@@ -345,13 +345,13 @@ async function loadStats() {
                 .gte('created_at', startOfToday),
         ]);
 
-        const tot = total  • 0;
-        const act = active • 0;
+        const tot = total  ?? 0;
+        const act = active ?? 0;
 
         _setText('stat-total',  tot);
         _setText('stat-active', act);
         _setText('stat-active-sub',    `${tot > 0 ? Math.round((act / tot) * 100) : 0}% do total`);
-        _setText('stat-new-today-sub', (newToday • 0) > 0 ? `+${newToday} hoje` : '');
+        _setText('stat-new-today-sub', (newToday ?? 0) > 0 ? `+${newToday} hoje` : '');
 
         const mrr = act * PRICE_MENSAL;
         _setText('stat-mrr', _brl(mrr));
@@ -378,12 +378,12 @@ async function loadStats() {
         ]);
 
         const actCnt = parseInt(document.getElementById('stat-active')?.textContent) || 0;
-        const cancel = cancelMonth • 0;
+        const cancel = cancelMonth ?? 0;
 
-        _setText('stat-new-month',       newMonth • 0);
+        _setText('stat-new-month',       newMonth ?? 0);
         _setText('stat-cancelled-month', cancel);
         _setText('stat-churn',           actCnt > 0 ? ((cancel / actCnt) * 100).toFixed(1) + '%' : '0%');
-        _setText('stat-webhooks',        whTotal • 0);
+        _setText('stat-webhooks',        whTotal ?? 0);
         _setText('stat-new-month-sub',   new Date().toLocaleString('pt-BR', { month: 'long' }));
 
     } catch (err) {

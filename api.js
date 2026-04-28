@@ -146,7 +146,7 @@ async function fetchDisciplineQuestions(year, disc) {
     const cacheKey = `enem_qc_${year}_${disc}`;
     const cached = cacheGet(cacheKey);
     if (cached) return cached;
-    const offset = DISC_OFFSET[disc] • 0;
+    const offset = DISC_OFFSET[disc] || 0;
     // Timeout de 4s por request individual (antes era 5s global)
     const data = await apiFetch(`/exams/${year}/questions?limit=45&offset=${offset}`, 4000);
     const questions = (data.questions || []).filter(q => q.discipline === disc);
@@ -173,7 +173,7 @@ async function prewarmENEM(yearsCount = 2) {
 function normalizeQuestion(q) {
     const letterToIdx = { A: 0, B: 1, C: 2, D: 3, E: 4 };
     const alts = q.alternatives || [];
-    const correctIdx = letterToIdx[q.correctAlternative] • 0;
+    const correctIdx = letterToIdx[q.correctAlternative] || 0;
 
     // A "question" real é o enunciado + o que se pede
     // context = trecho/texto base | alternativesIntroduction = comando da questão
