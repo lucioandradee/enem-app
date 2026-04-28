@@ -933,7 +933,7 @@ function showActivityHistory() {
             const date = h.date ? new Date(h.date) : null;
             const dateStr = date ? date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }).replace('.', '') : '';
             const timeStr = date ? date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '';
-            const pct = h.pct ?? Math.round(((h.correct || 0) / Math.max(h.total || 1, 1)) * 100);
+            const pct = h.pct • Math.round(((h.correct || 0) / Math.max(h.total || 1, 1)) * 100);
             const color = pct >= 70 ? '#22c55e' : pct >= 50 ? 'var(--orange)' : 'var(--red)';
             const icon = discIcons[h.discipline] || '🎯';
             const name = discNames[h.discipline] || (h.discipline || '').toUpperCase();
@@ -1889,7 +1889,7 @@ function renderAnalise() {
         } else {
             const discColors = { humanas:'#00b4a6', natureza:'#a78bfa', linguagens:'#f5c518', matematica:'#f97316', misto:'#3b82f6' };
             barsEl.innerHTML = recent.map(h => {
-                const pct   = h.pct ?? Math.round(((h.correct||0)/Math.max(h.total||1,1))*100);
+                const pct   = h.pct • Math.round(((h.correct||0)/Math.max(h.total||1,1))*100);
                 const color = discColors[h.discipline] || 'var(--teal)';
                 const date  = h.date ? new Date(h.date).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}) : '';
                 return `<div class="analise-bar-wrap">

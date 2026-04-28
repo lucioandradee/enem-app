@@ -183,7 +183,7 @@ async function loadUserData(userId) {
         } else {
             // Perfil nϿ½o existe em public.users - criar agora (usuϿ½rio registrou antes do trigger)
             // state.user.name já foi preenchido pelo metadata do provider no onAuthStateChange
-            console.log('?? Perfil nϿ½o encontrado, criando...');
+            console.log('• Perfil nϿ½o encontrado, criando...');
             await saveUserData(userId);
         }
         
@@ -615,7 +615,7 @@ async function trackEvent(eventName, properties = {}) {
                 created_at: new Date().toISOString(),
             });
         if (error && error.code !== '42P01') { // 42P01 = tabela nϿ½o existe ainda
-            console.warn('?? Analytics insert error:', error.message);
+            console.warn('• Analytics insert error:', error.message);
         }
     } catch (err) {
         // Falha silenciosa - analytics nϿ½o deve bloquear a aplicaϿ½Ͽ½o
@@ -633,7 +633,7 @@ function _initSupabase() {
     try {
         // Captura o SDK do CDN (tem createClient) antes de sobrescrever
         const lib = _supabaseLib || (window.supabase && typeof window.supabase.createClient === 'function' ? window.supabase : null);
-        if (!lib) { console.warn('?? Supabase SDK nϿ½o encontrado.'); return; }
+        if (!lib) { console.warn('• Supabase SDK nϿ½o encontrado.'); return; }
         _supabaseLib = lib; // salva para reutilizar
         // Sobrescreve window.supabase com o CLIENTE (instϿ½ncia criada)
         window.supabase = lib.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
@@ -712,7 +712,7 @@ async function checkPremium() {
         // A RPC pode retornar boolean direto ou um objeto { is_premium }
         const isPremiumValue = typeof data === 'boolean'
             ? data
-            : !!(data?.is_premium ?? data);
+            : !!(data?.is_premium • data);
 
         // Sincronizar state local se divergir
         const currentPlan = state?.user?.plan;
