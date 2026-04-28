@@ -227,7 +227,8 @@ const defaultState = {
     wrongAnswers: [],   // [{ question, userAnswer, correctAnswer, date }] — cap: 300
     onboardingDone: false,
     weakSubjects: [],   // disciplinas prioritárias do onboarding
-    dailyChallenge: null, // { date, discipline, count, done, xp }
+    dailyChallenge:  null, // legado — substituído por dailyChallenges
+    dailyChallenges: null, // [{ date, discipline, count, xp, done }] — 3 desafios
     badges: {
         ofensiva: [],
         especialista: [],
@@ -286,7 +287,8 @@ function _migrateState(saved) {
     // Campos de topo opcionais
     if (saved.onboardingDone === undefined) saved.onboardingDone = false;
     if (saved.currentScreen === undefined)  saved.currentScreen  = 'home';
-    if (saved.dailyChallenge === undefined) saved.dailyChallenge = null;
+    if (saved.dailyChallenge  === undefined) saved.dailyChallenge  = null;
+    if (saved.dailyChallenges === undefined) saved.dailyChallenges = null;
 
     saved._version = STATE_VERSION;
     return saved;
@@ -1128,102 +1130,173 @@ const _CHALLENGE_NAMES = {
     misto:      'Desafio Misto',
 };
 
-function _generateDailyChallenge() {
+// ── Daily Challenge Carousel ──────────────────────────────────────────────────
+let _dcCurrentIdx = 0;
+let _dcAbortCtrl  = null;
+
+function _generateDailyChallenges() {
     const today = new Date().toISOString().slice(0, 10);
-    // Determinístico: seed pela data
     const seed  = parseInt(today.replace(/-/g, ''), 10);
     const rand  = _seededRandom(seed);
 
-    const disc  = _CHALLENGE_DISCS[Math.floor(rand() * _CHALLENGE_DISCS.length)];
-    const count = _CHALLENGE_COUNTS[Math.floor(rand() * _CHALLENGE_COUNTS.length)];
-    const xp    = _CHALLENGE_XP[count] || 50;
-    return { date: today, discipline: disc, count, xp, done: false };
+    // Embaralha disciplinas de forma determinística (Fisher-Yates seeded)
+    const discs = [..._CHALLENGE_DISCS];
+    for (let i = discs.length - 1; i > 0; i--) {
+        const j = Math.floor(rand() * (i + 1));
+        [discs[i], discs[j]] = [discs[j], discs[i]];
+    }
+    // 3 desafios fixos: Relâmpago (5q), Treino (10q), Maratona (15q)
+    return [5, 10, 15].map((count, i) => ({
+        date:       today,
+        discipline: discs[i],
+        count,
+        xp:         _CHALLENGE_XP[count] || 50,
+        done:       false,
+    }));
 }
 
-function _ensureDailyChallenge() {
+function _ensureDailyChallenges() {
     const today = new Date().toISOString().slice(0, 10);
-    if (!state.dailyChallenge || state.dailyChallenge.date !== today) {
-        state.dailyChallenge = _generateDailyChallenge();
+    if (!Array.isArray(state.dailyChallenges) || state.dailyChallenges[0]?.date !== today) {
+        state.dailyChallenges = _generateDailyChallenges();
         saveState();
     }
-    return state.dailyChallenge;
+    return state.dailyChallenges;
+}
+
+function _buildDcSlide(ch, idx) {
+    const discName  = _CHALLENGE_NAMES[ch.discipline]  || ch.discipline;
+    const diffClass = ch.count <= 5 ? 'easy' : ch.count <= 10 ? 'medium' : 'hard';
+    const diffText  = ch.count <= 5 ? 'Fácil' : ch.count <= 10 ? 'Médio' : 'Difícil';
+    const icon  = _DISC_ICONS[ch.discipline]  || '🎯';
+    const color = _DISC_COLORS[ch.discipline] || 'rgba(0,201,184,0.18)';
+    const type  = _CHALLENGE_TYPES[ch.count]  || 'Treino 🎯';
+    const ctx   = _CHALLENGE_CONTEXT[ch.discipline] || '';
+    const mins  = Math.round(ch.count * 1.3);
+
+    const s = document.createElement('div');
+    s.className   = 'dc-slide';
+    s.dataset.idx = idx;
+    s.innerHTML = `
+        <div class="dc-header">
+            <span class="dc-title">${ch.done ? '✅ Concluído!' : '🎯 Desafio do Dia'}</span>
+            <span class="dc-xp">+${ch.xp} XP</span>
+        </div>
+        <div class="dc-disc-row">
+            <span class="dc-disc-chip" style="background:${color}">${icon}</span>
+            <div class="dc-disc-info">
+                <span class="dc-disc-name">${discName}</span>
+                <span class="dc-type">${type}</span>
+            </div>
+            <div class="dc-diff ${diffClass}"><span></span><span></span><span></span></div>
+        </div>
+        <div class="dc-meta-row">
+            <span>📋 ${ch.count} questões</span>
+            <span class="dc-meta-sep">·</span>
+            <span>⏱ ~${mins} min</span>
+            <span class="dc-meta-sep">·</span>
+            <span>${diffText}</span>
+        </div>
+        <p class="dc-context">${ctx}</p>
+        ${ch.done
+            ? '<div class="dc-check">✅ Desafio concluído! Bom trabalho hoje.</div>'
+            : `<button class="cta-btn dc-btn" onclick="startDailyChallenge(${idx})">⚔️ Aceitar Desafio · Ganhar +${ch.xp} XP</button>`
+        }
+    `;
+    return s;
+}
+
+function _applyDcSlide() {
+    const track = document.getElementById('dc-carousel-track');
+    if (!track) return;
+    track.style.transform = `translateX(-${_dcCurrentIdx * 100}%)`;
+    const challenges = state.dailyChallenges || [];
+    document.querySelectorAll('#dc-nav-dots .dc-nav-dot').forEach((d, i) => {
+        d.className = 'dc-nav-dot' +
+            (i === _dcCurrentIdx ? ' active' : '') +
+            ((challenges[i] && challenges[i].done) ? ' done' : '');
+    });
+}
+
+function goToDcSlide(idx) {
+    const challenges = state.dailyChallenges || [];
+    _dcCurrentIdx = Math.max(0, Math.min(idx, challenges.length - 1));
+    _applyDcSlide();
 }
 
 function renderDailyChallenge() {
-    const el = document.getElementById('daily-challenge-card');
-    if (!el) return;
-    const ch = _ensureDailyChallenge();
-
-    const discName = _CHALLENGE_NAMES[ch.discipline] || ch.discipline;
-    const titleEl  = el.querySelector('.dc-title');
-    const xpEl     = el.querySelector('.dc-xp');
-    const btnEl    = el.querySelector('.dc-btn');
-    const checkEl  = el.querySelector('.dc-check');
-
-    if (titleEl) titleEl.textContent = ch.done ? '✅ Desafio Concluído!' : '🎯 Desafio do Dia';
-    if (xpEl)    xpEl.textContent    = `+${ch.xp} XP`;
-    if (btnEl)   btnEl.style.display = ch.done ? 'none' : '';
-    if (checkEl) checkEl.style.display = ch.done ? '' : 'none';
-    el.classList.toggle('completed', ch.done);
-
-    // Chip de disciplina
-    const chipEl = document.getElementById('dc-disc-chip');
-    if (chipEl) {
-        chipEl.textContent = _DISC_ICONS[ch.discipline] || '🎯';
-        chipEl.style.background = _DISC_COLORS[ch.discipline] || 'rgba(0,201,184,0.18)';
-    }
-    const nameEl = document.getElementById('dc-disc-name');
-    if (nameEl) nameEl.textContent = discName;
-
-    // Tipo de treino
-    const typeEl = document.getElementById('dc-type');
-    if (typeEl) typeEl.textContent = _CHALLENGE_TYPES[ch.count] || 'Treino 🎯';
-
-    // Dificuldade (bolinhas)
-    const diffEl = document.getElementById('dc-diff');
-    const diffLabel = document.getElementById('dc-meta-diff-label');
-    const diffClass = ch.count <= 5 ? 'easy' : ch.count <= 10 ? 'medium' : 'hard';
-    const diffText  = ch.count <= 5 ? 'Fácil' : ch.count <= 10 ? 'Médio' : 'Difícil';
-    if (diffEl) diffEl.className = 'dc-diff ' + diffClass;
-    if (diffLabel) diffLabel.textContent = diffText;
-
-    // Meta (questões + tempo)
-    const metaQ = document.getElementById('dc-meta-q');
-    const metaT = document.getElementById('dc-meta-t');
-    if (metaQ) metaQ.textContent = `📋 ${ch.count} questões`;
-    if (metaT) metaT.textContent = `⏱ ~${Math.round(ch.count * 1.3)} min`;
-
-    // Contexto
-    const ctxEl = document.getElementById('dc-context');
-    if (ctxEl) ctxEl.textContent = _CHALLENGE_CONTEXT[ch.discipline] || '';
-
-    // Tracker semanal (últimos 7 dias)
+    const card   = document.getElementById('daily-challenge-card');
+    const track  = document.getElementById('dc-carousel-track');
+    const dotsEl = document.getElementById('dc-nav-dots');
     const weekEl = document.getElementById('dc-week');
+    if (!card || !track || !dotsEl) return;
+
+    const challenges = _ensureDailyChallenges();
+
+    // Garante que o índice ativo é válido
+    _dcCurrentIdx = Math.max(0, Math.min(_dcCurrentIdx, challenges.length - 1));
+
+    // Render slides
+    track.innerHTML = '';
+    challenges.forEach((ch, i) => track.appendChild(_buildDcSlide(ch, i)));
+
+    // Render dots de navegação
+    dotsEl.innerHTML = '';
+    challenges.forEach((ch, i) => {
+        const dot = document.createElement('button');
+        dot.className = 'dc-nav-dot' +
+            (i === _dcCurrentIdx ? ' active' : '') +
+            (ch.done ? ' done' : '');
+        dot.setAttribute('aria-label', `Desafio ${i + 1}`);
+        dot.onclick = () => goToDcSlide(i);
+        dotsEl.appendChild(dot);
+    });
+
+    // Posiciona no slide atual
+    _applyDcSlide();
+
+    // Touch swipe (recria os listeners a cada render, cancela os anteriores)
+    if (_dcAbortCtrl) _dcAbortCtrl.abort();
+    _dcAbortCtrl = new AbortController();
+    const sig = _dcAbortCtrl.signal;
+    let _txStart = 0;
+    track.addEventListener('touchstart', e => { _txStart = e.touches[0].clientX; }, { passive: true, signal: sig });
+    track.addEventListener('touchend',   e => {
+        const dx = e.changedTouches[0].clientX - _txStart;
+        if (Math.abs(dx) > 40) goToDcSlide(_dcCurrentIdx + (dx < 0 ? 1 : -1));
+    }, { passive: true, signal: sig });
+
+    // Tracker semanal (abaixo do carousel, acima dos dots)
     if (weekEl) {
         const dayLabels = ['D','S','T','Q','Q','S','S'];
-        const streak = Math.max(0, state.user?.streak || 0);
+        const streak  = Math.max(0, state.user?.streak || 0);
+        const anyDone = challenges.some(c => c.done);
         weekEl.innerHTML = '';
         for (let daysAgo = 6; daysAgo >= 0; daysAgo--) {
             const d = new Date(); d.setDate(d.getDate() - daysAgo);
             const isToday = daysAgo === 0;
-            const done = isToday ? ch.done : daysAgo < streak;
+            const done = isToday ? anyDone : daysAgo < streak;
             const dot = document.createElement('div');
             dot.className = 'dc-week-dot' + (done ? ' done' : '') + (isToday ? ' today' : '');
             dot.textContent = dayLabels[d.getDay()];
             weekEl.appendChild(dot);
         }
     }
+
+    // Marca card como completado se todos os desafios foram feitos
+    card.classList.toggle('completed', challenges.every(c => c.done));
 }
 
-function startDailyChallenge() {
-    const ch = _ensureDailyChallenge();
-    if (ch.done) return;
-    // Guardar referência para detectar completion em showResult()
-    quizState._isDailyChallenge = true;
-    quizState._dailyChallengeTarget = ch.count;
-    quizState._dailyChallengeDisc   = ch.discipline;
+function startDailyChallenge(idx) {
+    const challenges = _ensureDailyChallenges();
+    const slideIdx = (typeof idx === 'number') ? idx : _dcCurrentIdx;
+    const ch = challenges[slideIdx];
+    if (!ch || ch.done) return;
+    quizState._isDailyChallenge      = true;
+    quizState._dailyChallengeIdx     = slideIdx;
+    quizState._dailyChallengeTarget  = ch.count;
+    quizState._dailyChallengeDisc    = ch.discipline;
     navigate('quiz-setup');
-    // Pré-selecionar a disciplina e quantidade do desafio
     quizSetup.discipline = ch.discipline;
     quizSetup.count      = ch.count;
     renderQuizSetup();
@@ -1232,15 +1305,17 @@ function startDailyChallenge() {
 /** Verifica e completa o desafio diário se o quiz atual bater as condições */
 function _checkDailyChallengeCompletion() {
     if (!quizState._isDailyChallenge) return;
-    const ch = _ensureDailyChallenge();
-    if (ch.done) return;
+    const challenges = _ensureDailyChallenges();
+    const idx = quizState._dailyChallengeIdx ?? 0;
+    const ch  = challenges[idx];
+    if (!ch || ch.done) return;
 
-    const sameDisc = quizState._dailyChallengeDisc === 'misto'
+    const sameDisc  = quizState._dailyChallengeDisc === 'misto'
         || quizState.discipline === quizState._dailyChallengeDisc;
     const metTarget = quizState.questions.length >= quizState._dailyChallengeTarget;
     if (!sameDisc || !metTarget) return;
 
-    state.dailyChallenge.done = true;
+    state.dailyChallenges[idx].done = true;
     state.user.xp += ch.xp;
     state.user.level = Math.max(1, Math.floor(state.user.xp / 500) + 1);
     quizState._isDailyChallenge = false;

@@ -137,6 +137,38 @@
 .dc-check { font-size: 13px; font-weight: 600; color: var(--green); }
 .dc-btn   { width: 100%; margin-top: 2px; }
 
+/* ── Daily Challenge Carousel ────────────────────────────────── */
+.dc-carousel-wrap  { overflow: hidden; width: 100%; }
+.dc-carousel-track {
+  display: flex;
+  transition: transform 0.32s cubic-bezier(.4,0,.2,1);
+  will-change: transform;
+}
+.dc-slide {
+  flex: 0 0 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.dc-nav-dots {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+}
+.dc-nav-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--border-subtle);
+  border: none; padding: 0; cursor: pointer;
+  transition: background .22s, width .22s, border-radius .22s;
+}
+.dc-nav-dot.active        { background: var(--teal); width: 20px; border-radius: 4px; }
+.dc-nav-dot.done          { background: var(--green); }
+.dc-nav-dot.active.done   { background: var(--green); width: 20px; border-radius: 4px; }
+
 /* ---- Mini Cards ---- */
 /* Streak card - orange glow */
 .mini-card:first-child {
