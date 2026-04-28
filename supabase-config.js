@@ -1,4 +1,4 @@
-﻿/* =====================================================
+ϻ¿/* =====================================================
    SUPABASE CONFIG
    ===================================================== */
 
@@ -6,25 +6,25 @@
 const SUPABASE_URL = 'https://nkuiwdolkluetsadauwb.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5rdWl3ZG9sa2x1ZXRzYWRhdXdiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyMjQ0OTgsImV4cCI6MjA4OTgwMDQ5OH0.xIkowv91_aL-v03HIPtg9Ni6M_rROs7VcZS2qa3PbV4';
 
-// Cliente Supabase - guardamos refer�ncia da biblioteca antes de sobrescrever window.supabase
-// Aten��o: N�O declarar 'let supabase' aqui - o CDN do Supabase usa 'var supabase' no scope global
-// e uma declara��o 'let' com mesmo nome causaria SyntaxError.
-let _supabaseLib = null; // refer�ncia ao SDK (createClient)
+// Cliente Supabase - guardamos referϿ½ncia da biblioteca antes de sobrescrever window.supabase
+// AtenϿ½Ͽ½o: NϿ½O declarar 'let supabase' aqui - o CDN do Supabase usa 'var supabase' no scope global
+// e uma declaraϿ½Ͽ½o 'let' com mesmo nome causaria SyntaxError.
+let _supabaseLib = null; // referϿ½ncia ao SDK (createClient)
 
-// Normaliza o valor do plano vindo do banco (aceita pt-BR, ingl�s e varia��es)
+// Normaliza o valor do plano vindo do banco (aceita pt-BR, inglϿ½s e variaϿ½Ͽ½es)
 function _normalizePlan(val) {
     if (!val) return 'free';
     const v = String(val).toLowerCase().trim();
     if (v === 'premium') return 'premium';
-    return 'free'; // 'free', 'gr�tis', 'gratis', 'gratuito' ? 'free'
+    return 'free'; // 'free', 'grϿ½tis', 'gratis', 'gratuito' ? 'free'
 }
 
 
 // =====================================================
-// FUN��ES DE AUTENTICA��O
+// FUNϿ½Ͽ½ES DE AUTENTICAϿ½Ͽ½O
 // =====================================================
 
-// Registrar novo usu�rio
+// Registrar novo usuϿ½rio
 async function signUpUser(email, password, fullName) {
     try {
         const { data, error } = await supabase.auth.signUp({
@@ -39,7 +39,7 @@ async function signUpUser(email, password, fullName) {
         
         if (error) throw error;
         
-        console.log('? Usu�rio registrado com sucesso');
+        console.log('? UsuϿ½rio registrado com sucesso');
         return { success: true, user: data.user };
     } catch (error) {
         console.error('? Erro ao registrar:', error.message);
@@ -57,11 +57,11 @@ async function loginUser(email, password) {
         
         if (error) throw error;
         
-        console.log('✅ Login bem-sucedido');
+        console.log('… Login bem-sucedido');
         // onAuthStateChange(SIGNED_IN) cuida de: state, loadUserData, navigate('home'), sync
         return { success: true, user: data.user };
     } catch (error) {
-        console.error('❌ Erro ao fazer login:', error.message);
+        console.error('Œ Erro ao fazer login:', error.message);
         return { success: false, error: error.message };
     }
 }
@@ -84,10 +84,10 @@ async function logoutUser() {
 }
 
 // Verificar usuário autenticado
-// Usa getSession() primeiro (lê do localStorage, sem rede) — essencial para mobile/PWA
+// Usa getSession() primeiro (lê do localStorage, sem rede) ” essencial para mobile/PWA
 async function getCurrentUser() {
     try {
-        // Caminho rápido: sessão local — sem requisição de rede, funciona offline
+        // Caminho rápido: sessão local ” sem requisição de rede, funciona offline
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) return session.user;
         // Sem sessão local: se estiver online, tenta validar com o servidor
@@ -101,10 +101,10 @@ async function getCurrentUser() {
 }
 
 // =====================================================
-// FUN��ES DE DADOS DO USU�RIO
+// FUNϿ½Ͽ½ES DE DADOS DO USUϿ½RIO
 // =====================================================
 
-// Salvar dados do usu�rio no Supabase
+// Salvar dados do usuϿ½rio no Supabase
 async function saveUserData(userId) {
     try {
         const { error } = await supabase
@@ -123,7 +123,7 @@ async function saveUserData(userId) {
             });
         
         if (error) throw error;
-        console.log('? Dados do usu�rio salvos');
+        console.log('? Dados do usuϿ½rio salvos');
         return { success: true };
     } catch (error) {
         console.error('? Erro ao salvar dados:', error.message);
@@ -131,7 +131,7 @@ async function saveUserData(userId) {
     }
 }
 
-// Carregar dados do usu�rio do Supabase
+// Carregar dados do usuϿ½rio do Supabase
 async function loadUserData(userId) {
     try {
         const { data, error } = await supabase
@@ -145,7 +145,7 @@ async function loadUserData(userId) {
         if (data) {
             // Normalizar plano antes de aplicar no state
             data.plan = _normalizePlan(data.plan);
-            // Se o nome no banco for placeholder ('Alex' ou vazio), n�o sobrescrever o nome real do state
+            // Se o nome no banco for placeholder ('Alex' ou vazio), nϿ½o sobrescrever o nome real do state
             const nameIsPlaceholder = !data.name || data.name === 'Alex';
             if (nameIsPlaceholder) {
                 delete data.name;
@@ -168,22 +168,22 @@ async function loadUserData(userId) {
                 state.user.streak = streakLocal;
             }
 
-            // Se o nome ainda � placeholder ap�s o merge, derivar do email
+            // Se o nome ainda Ͽ½ placeholder apϿ½s o merge, derivar do email
             if (!state.user.name || state.user.name === 'Alex') {
                 if (typeof _nameFromEmail !== 'undefined') {
                     state.user.name = _nameFromEmail(state.user.email || '');
                 }
             }
             saveState();
-            console.log('? Dados do usu�rio carregados');
+            console.log('? Dados do usuϿ½rio carregados');
             // Atualizar nome real no banco se estava como placeholder
             if (nameIsPlaceholder && state.user.name && state.user.name !== 'Alex') {
                 saveUserData(userId).catch(() => {});
             }
         } else {
-            // Perfil n�o existe em public.users - criar agora (usu�rio registrou antes do trigger)
+            // Perfil nϿ½o existe em public.users - criar agora (usuϿ½rio registrou antes do trigger)
             // state.user.name já foi preenchido pelo metadata do provider no onAuthStateChange
-            console.log('?? Perfil n�o encontrado, criando...');
+            console.log('?? Perfil nϿ½o encontrado, criando...');
             await saveUserData(userId);
         }
         
@@ -194,7 +194,7 @@ async function loadUserData(userId) {
     }
 }
 
-// Salvar progresso (simulados, quest�es respondidas)
+// Salvar progresso (simulados, questϿ½es respondidas)
 async function saveProgress(userId, subject, questionsAnswered, correct, opts = {}) {
     try {
         const { error } = await supabase
@@ -219,7 +219,7 @@ async function saveProgress(userId, subject, questionsAnswered, correct, opts = 
     }
 }
 
-// Salvar conquista/badge desbloqueado (upsert - ignora se j� existir)
+// Salvar conquista/badge desbloqueado (upsert - ignora se jϿ½ existir)
 async function saveBadgeToSupabase(userId, badgeId, badgeName, category) {
     try {
         const { error } = await supabase
@@ -237,7 +237,7 @@ async function saveBadgeToSupabase(userId, badgeId, badgeName, category) {
     }
 }
 
-// Carregar hist�rico de progresso
+// Carregar histϿ½rico de progresso
 async function loadProgressHistory(userId) {
     try {
         const { data, error } = await supabase
@@ -247,16 +247,16 @@ async function loadProgressHistory(userId) {
             .order('created_at', { ascending: false });
         
         if (error) throw error;
-        console.log('? Hist�rico carregado:', data.length, 'registros');
+        console.log('? HistϿ½rico carregado:', data.length, 'registros');
         return { success: true, data: data };
     } catch (error) {
-        console.error('? Erro ao carregar hist�rico:', error.message);
+        console.error('? Erro ao carregar histϿ½rico:', error.message);
         return { success: false, error: error.message };
     }
 }
 
 // =====================================================
-// FUN��ES DE RANKING
+// FUNϿ½Ͽ½ES DE RANKING
 // =====================================================
 
 // Obter ranking escolar
@@ -270,7 +270,7 @@ async function getSchoolRanking(school) {
             .limit(20);
         
         if (error) throw error;
-        console.log('? Ranking carregado:', data.length, 'usu�rios');
+        console.log('? Ranking carregado:', data.length, 'usuϿ½rios');
         return { success: true, data: data };
     } catch (error) {
         console.error('? Erro ao obter ranking:', error.message);
@@ -297,17 +297,17 @@ async function getGlobalTop() {
 }
 
 // =====================================================
-// LISTENERS E SINCRONIZA��O
+// LISTENERS E SINCRONIZAϿ½Ͽ½O
 // =====================================================
 
 function initializeSupabaseListeners() {
     supabase.auth.onAuthStateChange((event, session) => {
         console.log('Auth state mudou:', event);
 
-        // ── INITIAL_SESSION ───────────────────────────────────────────────────
+        // €€ INITIAL_SESSION €€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€
         // Dispara como microtask logo após o cliente Supabase ser criado,
         // ANTES de DOMContentLoaded e ANTES de init() rodar.
-        // Regra: atualizar state mas NÃO navegar no contexto do app —
+        // Regra: atualizar state mas NÃO navegar no contexto do app ”
         // init() é o responsável pela tela inicial (via getCurrentUser).
         // No contexto da landing page (navigate indefinido), redireciona ao /app.
         if (event === 'INITIAL_SESSION') {
@@ -334,7 +334,7 @@ function initializeSupabaseListeners() {
             return;
         }
 
-        // ── SIGNED_IN | TOKEN_REFRESHED ───────────────────────────────────────
+        // €€ SIGNED_IN | TOKEN_REFRESHED €€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€
         // SIGNED_IN  : disparado após login explícito (email/senha ou OAuth)
         // TOKEN_REFRESHED: disparado após renovação automática do access token
         // Ambos devem navegar para home se o usuário estiver em tela de auth.
@@ -400,7 +400,7 @@ function initializeSupabaseListeners() {
             return;
         }
 
-        // ── SIGNED_OUT ────────────────────────────────────────────────────────
+        // €€ SIGNED_OUT €€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€
         if (event === 'SIGNED_OUT') {
             const _hadAccount = !!(state.user && state.user.id);
             state = JSON.parse(JSON.stringify(defaultState));
@@ -427,11 +427,11 @@ function startSyncLoop(userId, interval = 30000) {
         if (!userId || !navigator.onLine) return;
         const planBefore = state.user?.plan || 'free';
 
-        // 1. Salvar progresso local PRIMEIRO — garante que XP/level/streak ganhos
+        // 1. Salvar progresso local PRIMEIRO ” garante que XP/level/streak ganhos
         //    localmente cheguem ao banco antes de qualquer carga que possa sobrescrevê-los.
         await saveUserData(userId).catch(() => {});
 
-        // 2. Carregar do servidor — captura edições externas e ativações via webhook.
+        // 2. Carregar do servidor ” captura edições externas e ativações via webhook.
         //    loadUserData usa Math.max, portanto não regride progresso local.
         await loadUserData(userId).catch(() => {});
 
@@ -442,7 +442,7 @@ function startSyncLoop(userId, interval = 30000) {
 
         // 4. Detectar upgrade de plano via webhook/pagamento externo
         if (planBefore !== 'premium' && state.user?.plan === 'premium') {
-            console.log('✅ Upgrade para Premium detectado no sync loop!');
+            console.log('… Upgrade para Premium detectado no sync loop!');
             try { sessionStorage.removeItem('_pendingPayment'); } catch { /* noop */ }
             if (typeof _showPremiumSuccess !== 'undefined') {
                 setTimeout(() => _showPremiumSuccess(), 400);
@@ -454,15 +454,15 @@ function startSyncLoop(userId, interval = 30000) {
     }, interval);
 }
 
-// Recarregar dados do servidor quando o app volta ao foco (ex: ap�s editar no dashboard)
+// Recarregar dados do servidor quando o app volta ao foco (ex: apϿ½s editar no dashboard)
 document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible' && typeof state !== 'undefined' && state.user && state.user.id) {
-        // Renova sessão JWT ao voltar ao foco — essencial para mobile/PWA
+        // Renova sessão JWT ao voltar ao foco ” essencial para mobile/PWA
         if (typeof supabase !== 'undefined' && supabase?.auth) {
             supabase.auth.refreshSession().catch(() => {});
         }
         const planBefore = state.user?.plan || 'free';
-        // Salvar progresso local antes de carregar do servidor — evita regredir XP/level/streak
+        // Salvar progresso local antes de carregar do servidor ” evita regredir XP/level/streak
         const userId = state.user.id;
         saveUserData(userId).catch(() => {}).finally(() => {
             Promise.all([
@@ -472,7 +472,7 @@ document.addEventListener('visibilitychange', () => {
                 if (typeof renderDashboard !== 'undefined') renderDashboard();
                 // Detectar upgrade de plano entre sessões (ex: webhook ativou premium)
                 if (planBefore !== 'premium' && state.user?.plan === 'premium') {
-                    console.log('✅ Plano atualizado para Premium detectado no retorno de aba!');
+                    console.log('… Plano atualizado para Premium detectado no retorno de aba!');
                     if (typeof _showPremiumSuccess !== 'undefined') {
                         setTimeout(() => _showPremiumSuccess(), 400);
                     }
@@ -482,7 +482,7 @@ document.addEventListener('visibilitychange', () => {
     }
 });
 
-// Carregar plano do usu�rio do Supabase e aplicar no state
+// Carregar plano do usuϿ½rio do Supabase e aplicar no state
 async function loadUserPlan(userId) {
     try {
         const { data, error } = await supabase
@@ -494,7 +494,7 @@ async function loadUserPlan(userId) {
         if (error && error.code !== 'PGRST116') throw error;
 
         if (data) {
-            // Verificar expira��o: se expirou, reverter para free
+            // Verificar expiraϿ½Ͽ½o: se expirou, reverter para free
             let plan = _normalizePlan(data.plan);
             if (plan === 'premium' && data.plan_expires_at) {
                 const expired = new Date(data.plan_expires_at) < new Date();
@@ -507,7 +507,7 @@ async function loadUserPlan(userId) {
             state.user.plan = plan;
             state.user.planExpiresAt = data.plan_expires_at || null;
             saveState();
-            console.log('? Plano do usu�rio carregado:', plan);
+            console.log('? Plano do usuϿ½rio carregado:', plan);
             // Atualizar UI de forma centralizada sempre que o plano for carregado
             if (typeof _syncPlanUI !== 'undefined') _syncPlanUI();
         }
@@ -518,8 +518,8 @@ async function loadUserPlan(userId) {
     }
 }
 
-// Verificar acesso premium do usu�rio atual
-// Lan�a erro se o usu�rio n�o for premium ou o plano estiver expirado.
+// Verificar acesso premium do usuϿ½rio atual
+// LanϿ½a erro se o usuϿ½rio nϿ½o for premium ou o plano estiver expirado.
 async function checkPremiumAccess(userId) {
     const { data, error } = await supabase
         .from('users')
@@ -540,10 +540,10 @@ async function checkPremiumAccess(userId) {
     return { isPremium: true, premiumUntil };
 }
 
-// Resgatar c�digo de ativa��o Premium
+// Resgatar cϿ½digo de ativaϿ½Ͽ½o Premium
 async function redeemActivationCode(code, userId) {
     try {
-        // Buscar c�digo v�lido e n�o utilizado
+        // Buscar cϿ½digo vϿ½lido e nϿ½o utilizado
         const { data, error } = await supabase
             .from('activation_codes')
             .select('*')
@@ -552,7 +552,7 @@ async function redeemActivationCode(code, userId) {
             .single();
 
         if (error || !data) {
-            return { success: false, error: 'C�digo inv�lido ou j� utilizado.' };
+            return { success: false, error: 'CϿ½digo invϿ½lido ou jϿ½ utilizado.' };
         }
 
         // Marcar como utilizado
@@ -567,7 +567,7 @@ async function redeemActivationCode(code, userId) {
 
         if (updateErr) throw updateErr;
 
-        // Atualizar plano do usu�rio
+        // Atualizar plano do usuϿ½rio
         const plan = data.plan || 'premium';
         const durationDays = data.duration_days || 30;
         const expiresAt = new Date();
@@ -588,11 +588,11 @@ async function redeemActivationCode(code, userId) {
         state.user.planExpiresAt = expiresAt.toISOString();
         saveState();
 
-        console.log('? C�digo resgatado! Plano ativado:', plan);
+        console.log('? CϿ½digo resgatado! Plano ativado:', plan);
         return { success: true, plan, durationDays: data.duration_days };
     } catch (err) {
-        console.error('? Erro ao resgatar c�digo:', err.message);
-        return { success: false, error: 'Erro ao validar c�digo. Tente novamente.' };
+        console.error('? Erro ao resgatar cϿ½digo:', err.message);
+        return { success: false, error: 'Erro ao validar cϿ½digo. Tente novamente.' };
     }
 }
 
@@ -600,7 +600,7 @@ async function redeemActivationCode(code, userId) {
 // ANALYTICS - rastrear eventos para analytics_events
 // =====================================================
 
-// Registrar evento anal�tico (quiz_completed, login, essay_submitted, etc.)
+// Registrar evento analϿ½tico (quiz_completed, login, essay_submitted, etc.)
 async function trackEvent(eventName, properties = {}) {
     try {
         if (!supabase) return;
@@ -612,28 +612,28 @@ async function trackEvent(eventName, properties = {}) {
                 properties: JSON.stringify(properties),
                 created_at: new Date().toISOString(),
             });
-        if (error && error.code !== '42P01') { // 42P01 = tabela n�o existe ainda
+        if (error && error.code !== '42P01') { // 42P01 = tabela nϿ½o existe ainda
             console.warn('?? Analytics insert error:', error.message);
         }
     } catch (err) {
-        // Falha silenciosa - analytics n�o deve bloquear a aplica��o
+        // Falha silenciosa - analytics nϿ½o deve bloquear a aplicaϿ½Ͽ½o
     }
 }
 
 // =====================================================
-// INICIALIZA��O
+// INICIALIZAϿ½Ͽ½O
 // =====================================================
 
 // Inicializar Supabase - tenta imediatamente e, como fallback, aguarda DOMContentLoaded
 function _initSupabase() {
-    // Se window.supabase j� � o cliente inicializado (tem .auth), n�o refaz
+    // Se window.supabase jϿ½ Ͽ½ o cliente inicializado (tem .auth), nϿ½o refaz
     if (window.supabase && window.supabase.auth) return;
     try {
         // Captura o SDK do CDN (tem createClient) antes de sobrescrever
         const lib = _supabaseLib || (window.supabase && typeof window.supabase.createClient === 'function' ? window.supabase : null);
-        if (!lib) { console.warn('?? Supabase SDK n�o encontrado.'); return; }
+        if (!lib) { console.warn('?? Supabase SDK nϿ½o encontrado.'); return; }
         _supabaseLib = lib; // salva para reutilizar
-        // Sobrescreve window.supabase com o CLIENTE (inst�ncia criada)
+        // Sobrescreve window.supabase com o CLIENTE (instϿ½ncia criada)
         window.supabase = lib.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
             auth: {
                 persistSession: true,
@@ -641,14 +641,14 @@ function _initSupabase() {
                 detectSessionInUrl: true,
                 storageKey: 'sb-nkuiwdolkluetsadauwb-auth-token',
                 // PKCE: mais seguro, suportado pelo Google e recomendado pelo Supabase v2.
-                // O code_verifier fica no sessionStorage do mesmo tab — sobrevive
+                // O code_verifier fica no sessionStorage do mesmo tab ” sobrevive
                 // a redirects de OAuth dentro da mesma aba do navegador.
                 flowType: 'pkce',
             }
         });
         console.log('? Supabase conectado!');
         initializeSupabaseListeners();
-        // Verificar assinaturas expiradas na inicializa��o do app
+        // Verificar assinaturas expiradas na inicializaϿ½Ͽ½o do app
         setTimeout(() => checkExpiredPremium().catch(() => {}), 1500);
     } catch(e) {
         console.error('? _initSupabase:', e.message);
@@ -659,14 +659,14 @@ _initSupabase();
 document.addEventListener('DOMContentLoaded', _initSupabase);
 
 // =====================================================
-// EXPIRA��O DE PREMIUM - VERIFICA��O AUTOM�TICA
+// EXPIRAϿ½Ͽ½O DE PREMIUM - VERIFICAϿ½Ͽ½O AUTOMϿ½TICA
 // =====================================================
 
 /**
  * checkExpiredPremium()
- * Executa a fun��o SQL auto_deactivate_expired_premium() no banco,
+ * Executa a funϿ½Ͽ½o SQL auto_deactivate_expired_premium() no banco,
  * que reverte para 'free' qualquer assinatura com data expirada.
- * Deve ser chamada na inicializa��o do app e a cada login.
+ * Deve ser chamada na inicializaϿ½Ͽ½o do app e a cada login.
  */
 async function checkExpiredPremium() {
     try {
@@ -679,7 +679,7 @@ async function checkExpiredPremium() {
 
         console.log('? checkExpiredPremium: assinaturas expiradas verificadas.');
 
-        // Re-sincronizar o plano local ap�s a RPC - o banco pode ter revertido para free
+        // Re-sincronizar o plano local apϿ½s a RPC - o banco pode ter revertido para free
         const userId = state?.user?.id;
         if (userId && typeof loadUserPlan !== 'undefined') {
             await loadUserPlan(userId).catch(() => {});
@@ -690,13 +690,13 @@ async function checkExpiredPremium() {
 }
 
 // =====================================================
-// INTEGRA��O PREMIUM - FUN��ES DE PRODU��O
+// INTEGRAϿ½Ͽ½O PREMIUM - FUNϿ½Ͽ½ES DE PRODUϿ½Ͽ½O
 // =====================================================
 
 /**
  * checkPremium()
  * Chama a RPC get_my_premium e retorna { isPremium: boolean }.
- * Mant�m o state local sincronizado com o banco.
+ * MantϿ½m o state local sincronizado com o banco.
  */
 async function checkPremium() {
     try {
@@ -738,7 +738,7 @@ async function checkPremium() {
  */
 async function simulatePurchase(email) {
     if (!email || !email.includes('@')) {
-        return { success: false, error: 'E-mail inv�lido.' };
+        return { success: false, error: 'E-mail invϿ½lido.' };
     }
 
     try {
@@ -771,15 +771,15 @@ async function simulatePurchase(email) {
 
 /**
  * requirePremium()
- * Middleware: verifica se o usu�rio autenticado possui plano premium.
+ * Middleware: verifica se o usuϿ½rio autenticado possui plano premium.
  * Retorna { allowed: boolean }.
- * Se n�o permitido, exibe o paywall e registra aviso no console.
+ * Se nϿ½o permitido, exibe o paywall e registra aviso no console.
  */
 async function requirePremium() {
     const { isPremium } = await checkPremium();
 
     if (!isPremium) {
-        console.warn('? requirePremium: acesso bloqueado - usu�rio n�o � premium.');
+        console.warn('? requirePremium: acesso bloqueado - usuϿ½rio nϿ½o Ͽ½ premium.');
         if (typeof showPaywall !== 'undefined') {
             showPaywall(
                 'Recurso exclusivo Premium ??',
@@ -794,14 +794,14 @@ async function requirePremium() {
 
 /**
  * getUserData()
- * Busca os dados completos do usu�rio autenticado na tabela users.
+ * Busca os dados completos do usuϿ½rio autenticado na tabela users.
  * Retorna { success: boolean, data?: object, error?: string }.
  */
 async function getUserData() {
     try {
         const { data: authData, error: authError } = await supabase.auth.getUser();
         if (authError || !authData?.user) {
-            return { success: false, error: 'Usu�rio n�o autenticado.' };
+            return { success: false, error: 'UsuϿ½rio nϿ½o autenticado.' };
         }
 
         const { data, error } = await supabase
@@ -832,15 +832,15 @@ async function getUserData() {
 /**
  * _handleBackendError(error)
  * Centraliza o tratamento de erros vindos do backend Supabase:
- * - "Limite di�rio atingido" ? exibe paywall de limite di�rio
+ * - "Limite diϿ½rio atingido" ? exibe paywall de limite diϿ½rio
  * - "Acesso negado: requer premium" ? exibe paywall de feature
- * Retorna o c�digo do erro: 'DAILY_LIMIT' | 'PREMIUM_REQUIRED' | 'UNKNOWN'
+ * Retorna o cϿ½digo do erro: 'DAILY_LIMIT' | 'PREMIUM_REQUIRED' | 'UNKNOWN'
  */
 function _handleBackendError(error) {
     const msg = (error?.message || error || '').toString();
 
-    if (msg.includes('Limite di�rio atingido')) {
-        console.warn('? _handleBackendError: limite di�rio atingido.');
+    if (msg.includes('Limite diϿ½rio atingido')) {
+        console.warn('? _handleBackendError: limite diϿ½rio atingido.');
         if (typeof showPaywall !== 'undefined' && typeof PAYWALL_MESSAGES !== 'undefined') {
             showPaywall(PAYWALL_MESSAGES.dailyLimit.title, PAYWALL_MESSAGES.dailyLimit.body);
         }
@@ -859,13 +859,13 @@ function _handleBackendError(error) {
 
 /**
  * answerQuestionSecure(userId, questionId, isCorrect)
- * Registra a resposta do usu�rio via RPC "answer_question_secure".
+ * Registra a resposta do usuϿ½rio via RPC "answer_question_secure".
  * Evita qualquer insert direto na tabela question_attempts.
- * Trata erros de limite di�rio e acesso premium retornados pelo backend.
+ * Trata erros de limite diϿ½rio e acesso premium retornados pelo backend.
  * Retorna { success: boolean, errorCode?: string, data?: any }
  */
 async function answerQuestionSecure(userId, questionId, isCorrect) {
-    if (!userId) return { success: false, error: 'Usu�rio n�o autenticado.' };
+    if (!userId) return { success: false, error: 'UsuϿ½rio nϿ½o autenticado.' };
 
     try {
         const { data, error } = await supabase.rpc('answer_question_secure', {
