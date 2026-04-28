@@ -31,7 +31,7 @@ function _showPaymentSuccessBanner() {
     banner.setAttribute('role', 'status');
     banner.setAttribute('aria-live', 'polite');
     banner.style.cssText = [
-        'position:fixed', 'bottom:80px', 'left:12px', 'right:12px', 'z-index:9990',
+        'position:fixed', 'bottom:calc(var(--nav-height, 64px) + 12px)', 'left:12px', 'right:12px', 'z-index:9990',
         'background:linear-gradient(135deg,#022a1e,#022040)',
         'border:1.5px solid rgba(0,180,166,.45)',
         'border-radius:14px', 'padding:14px 16px',
@@ -134,16 +134,26 @@ function selectPaymentMethod(method) {
 }
 
 function goToCaktoCheckout(method) {
-    const url = CAKTO_CHECKOUT_URLS[_checkoutPlan] || CAKTO_CHECKOUT_URLS.mensal;
+    let url = CAKTO_CHECKOUT_URLS[_checkoutPlan] || CAKTO_CHECKOUT_URLS.mensal;
+    // Pré-preencher e-mail do usuário no checkout Cakto para reduzir atrito
+    const userEmail = state.user?.email || '';
+    if (userEmail && userEmail.includes('@')) {
+        url += (url.includes('?') ? '&' : '?') + 'email=' + encodeURIComponent(userEmail);
+    }
+    try {
+        const pendingEmail = userEmail || '';
+        if (pendingEmail) sessionStorage.setItem('_pendingEmail', pendingEmail);
+        sessionStorage.setItem('_pendingPayment', _checkoutPlan);
+    } catch { /* noop */ }
     if (typeof _trackEvent !== 'undefined') _trackEvent('checkout_started', { plan: _checkoutPlan, method });
     window.open(url, '_blank', 'noopener,noreferrer');
-    try { sessionStorage.setItem('_pendingPayment', _checkoutPlan); } catch { /* noop */ }
+    // Exibir botão "Já paguei" — polling só começa quando usuário clicar nele
     const verifyBtn = document.getElementById(`${method}-verify-btn`);
     if (verifyBtn) verifyBtn.style.display = '';
-    _startPlanPolling(method, false);
 }
 
 function verifyPayment() {
+    // Inicia polling apenas quando o usuário confirma que pagou
     showPaymentWaiting(_checkoutMethod);
 }
 
@@ -353,6 +363,9 @@ function _showPremiumSuccess() {
     _launchConfetti();
     document.querySelectorAll('.plan-badge, .user-plan-label')
         .forEach(el => { el.textContent = 'Premium 👑'; el.classList.add('premium'); });
+    // Sincronizar UI de plano em toda a aplicação
+    if (typeof _syncPlanUI !== 'undefined') _syncPlanUI();
+    if (typeof renderDashboard !== 'undefined') renderDashboard();
 }
 
 function closePremiumSuccess() {
@@ -427,10 +440,10 @@ function _showCodeFeedback(type, msg) {
 }
 
 // ── Verificação de acesso premium ─────────────────────────────────────────────
-async function checkPremiumAccess() {
+async function checkPremiumAccess(featureName) {
     const user = await getCurrentUser();
     if (!user) {
-        alert('Faça login primeiro para acessar esta funcionalidade.');
+        showPaywall('Faça login para continuar 🔒', 'Crie sua conta gratuita para acessar este recurso.');
         return false;
     }
     const { data } = await supabase
@@ -439,7 +452,8 @@ async function checkPremiumAccess() {
         .eq('id', user.id)
         .single();
     if (data?.plan !== 'premium') {
-        alert('Esta funcionalidade é exclusiva para usuários Premium. Assine o plano Premium para continuar.');
+        const title = featureName ? `${featureName} é Premium 👑` : 'Recurso exclusivo Premium 👑';
+        showPaywall(title, 'Assine o Premium para desbloquear este recurso e estudar sem limites!');
         return false;
     }
     return true;

@@ -365,6 +365,8 @@ function initializeSupabaseListeners() {
                 })
                 .then(() => {
                     if (typeof renderDashboard !== 'undefined') renderDashboard();
+                    // Retomar polling se havia pagamento pendente antes do login
+                    if (typeof _resumePendingPayment !== 'undefined') _resumePendingPayment();
                 })
                 .catch(() => {});
             saveState();
