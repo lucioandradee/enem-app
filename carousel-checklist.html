@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>ENEM Master — Checklist do Estudante Inteligente</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: #050d18;
+  font-family: 'Inter', 'Segoe UI', -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  width: 1080px;
+}
+
+.slide {
+  width: 1080px;
+  height: 1080px;
+  position: relative;
+  overflow: hidden;
+  background: #070f1e;
+  display: flex;
+  flex-direction: column;
+}
+
+.glow {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.wm {
+  position: absolute;
+  top: 52px; left: 64px;
+  display: flex; align-items: center; gap: 11px;
+  z-index: 10;
+}
+.wm-brand { font-size: 15px; font-weight: 800; color: #00b4a6; letter-spacing: .4px; }
+
+.nav-dots {
+  position: absolute;
+  bottom: 52px; right: 64px;
+  display: flex; gap: 8px; align-items: center;
+  z-index: 10;
+}
+.nav-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,.15); }
+.nav-dot.on { background: #22c55e; width: 28px; border-radius: 4px; }
+
+.logo-sm { width: 36px; height: 36px; }
+.logo-lg { width: 96px; height: 96px; }
+
+.inner {
+  position: relative; z-index: 2;
+  display: flex; flex-direction: column;
+  height: 100%; padding: 60px 68px;
+}
+
+
+/* ══════════════════════════════════════════
+   SLIDE 1 — COVER
+   ══════════════════════════════════════════ */
+#s1 { background: linear-gradient(148deg, #070f1e 0%, #071a14 100%); }
+
+#s1 .gg {
+  width: 860px; height: 860px;
+  background: radial-gradient(circle, rgba(34,197,94,.15) 0%, transparent 58%);
+  top: -280px; right: -240px;
+}
+#s1 .gt {
+  width: 580px; height: 580px;
+  background: radial-gradient(circle, rgba(0,180,166,.12) 0%, transparent 58%);
+  bottom: -140px; left: -100px;
+}
+#s1 .gp {
+  width: 360px; height: 360px;
+  background: radial-gradient(circle, rgba(124,58,237,.10) 0%, transparent 58%);
+  bottom: 120px; right: 60px;
+}
+
+/* Big decorative checkmark */
+.deco-check {
+  position: absolute;
+  right: 60px; top: 50%;
+  transform: translateY(-50%);
+  font-size: 420px; line-height: 1;
+  color: rgba(34,197,94,.05);
+  z-index: 1; pointer-events: none;
+  font-weight: 900;
+}
+
+.cover-tag-green {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(34,197,94,.10);
+  border: 1px solid rgba(34,197,94,.28);
+  border-radius: 40px; padding: 8px 20px;
+  font-size: 12px; font-weight: 800;
+  color: #22c55e; letter-spacing: 2.5px;
+  text-transform: uppercase; width: fit-content;
+  margin-bottom: 36px;
+}
+
+.cover-headline {
+  font-size: 80px; font-weight: 900;
+  color: #e8f4f8; line-height: 1.03;
+  letter-spacing: -3.5px;
+}
+.cover-headline .green {
+  background: linear-gradient(135deg, #22c55e 0%, #00b4a6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.cover-sub {
+  font-size: 21px; color: #7a9ab0; line-height: 1.65;
+  margin-top: 24px; max-width: 720px; font-weight: 400;
+}
+.cover-sub strong { color: #e8f4f8; font-weight: 700; }
+
+/* Preview score */
+.score-preview {
+  margin-top: 36px;
+  display: inline-flex; align-items: center; gap: 16px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 16px; padding: 18px 28px;
+}
+.score-q { font-size: 14px; color: #7a9ab0; font-weight: 500; }
+.score-num {
+  font-size: 42px; font-weight: 900;
+  background: linear-gradient(135deg, #22c55e, #00b4a6);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text; line-height: 1;
+}
+.score-total { font-size: 22px; color: rgba(232,244,248,.35); font-weight: 700; }
+.score-sep { width: 1px; height: 48px; background: rgba(255,255,255,.08); }
+
+.cover-categories {
+  margin-top: 28px;
+  display: flex; gap: 10px; flex-wrap: wrap;
+}
+.cat-pill {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 40px; padding: 7px 16px;
+  font-size: 14px; font-weight: 600; color: #7a9ab0;
+}
+
+.swipe-hint {
+  margin-top: 36px;
+  display: flex; align-items: center; gap: 12px;
+  font-size: 17px; font-weight: 700; color: #22c55e;
+}
+
+
+/* ══════════════════════════════════════════
+   CHECK SLIDES (2–6) — BASE STYLES
+   ══════════════════════════════════════════ */
+.check-slide { background: linear-gradient(148deg, #070f1e 0%, #081a10 100%); }
+
+.check-slide .gg {
+  width: 700px; height: 700px;
+  background: radial-gradient(circle, rgba(34,197,94,.11) 0%, transparent 58%);
+  top: -200px; right: -180px;
+}
+.check-slide .gt {
+  width: 460px; height: 460px;
+  background: radial-gradient(circle, rgba(0,180,166,.09) 0%, transparent 58%);
+  bottom: -100px; left: -80px;
+}
+
+/* Category header */
+.cat-header {
+  display: flex; align-items: center; gap: 16px;
+  margin-top: 92px; margin-bottom: 32px;
+}
+.cat-icon {
+  width: 56px; height: 56px; border-radius: 16px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 26px; flex-shrink: 0;
+}
+.cat-icon.green  { background: rgba(34,197,94,.12);  border: 1px solid rgba(34,197,94,.25); }
+.cat-icon.teal   { background: rgba(0,180,166,.12);  border: 1px solid rgba(0,180,166,.25); }
+.cat-icon.purple { background: rgba(124,58,237,.12); border: 1px solid rgba(124,58,237,.25); }
+.cat-icon.gold   { background: rgba(245,197,24,.10); border: 1px solid rgba(245,197,24,.25); }
+.cat-icon.blue   { background: rgba(59,130,246,.12); border: 1px solid rgba(59,130,246,.25); }
+
+.cat-title {
+  font-size: 15px; font-weight: 800;
+  letter-spacing: 3px; text-transform: uppercase;
+}
+.cat-title.green  { color: #22c55e; }
+.cat-title.teal   { color: #00b4a6; }
+.cat-title.purple { color: #a78bfa; }
+.cat-title.gold   { color: #f5c518; }
+.cat-title.blue   { color: #60a5fa; }
+
+.cat-subtitle {
+  font-size: 42px; font-weight: 900; color: #e8f4f8;
+  letter-spacing: -1.5px; line-height: 1.1; margin-bottom: 32px;
+}
+
+/* Check item */
+.check-list { display: flex; flex-direction: column; gap: 18px; }
+.check-item {
+  display: flex; align-items: flex-start; gap: 18px;
+  font-size: 20px; font-weight: 500; color: #e8f4f8;
+  line-height: 1.45;
+}
+.check-item.dimmed { color: rgba(232,244,248,.40); }
+
+.check-box {
+  width: 34px; height: 34px; border-radius: 10px;
+  flex-shrink: 0; margin-top: 2px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 17px; font-weight: 900;
+}
+.check-box.on {
+  background: rgba(34,197,94,.18);
+  border: 2px solid rgba(34,197,94,.55);
+  color: #22c55e;
+}
+.check-box.off {
+  background: rgba(255,255,255,.04);
+  border: 2px solid rgba(255,255,255,.12);
+  color: transparent;
+}
+
+.check-item .check-text strong { color: #e8f4f8; }
+.check-item.dimmed .check-text strong { color: rgba(232,244,248,.5); }
+
+/* Divider */
+.cat-divider {
+  height: 1px;
+  background: linear-gradient(90deg, rgba(34,197,94,.25), transparent);
+  margin-bottom: 28px;
+}
+
+/* Score counter in corner */
+.slide-score {
+  position: absolute;
+  bottom: 52px; left: 68px;
+  display: flex; align-items: center; gap: 8px;
+  font-size: 14px; color: #4a6a80; font-weight: 600; z-index: 10;
+}
+.slide-score .s-count {
+  font-size: 15px; font-weight: 800; color: #22c55e;
+}
+
+
+/* ══════════════════════════════════════════
+   SLIDE 7 — CTA
+   ══════════════════════════════════════════ */
+#s7 { background: linear-gradient(155deg, #070f1e 0%, #0d2137 100%); }
+#s7 .gc {
+  width: 860px; height: 860px;
+  background: radial-gradient(circle, rgba(34,197,94,.10) 0%, transparent 55%);
+  top: 50%; left: 50%; transform: translate(-50%, -52%);
+}
+#s7 .gp {
+  width: 480px; height: 480px;
+  background: radial-gradient(circle, rgba(0,180,166,.10) 0%, transparent 55%);
+  bottom: -100px; right: -80px;
+}
+
+.final-score-box {
+  background: rgba(34,197,94,.06);
+  border: 1px solid rgba(34,197,94,.20);
+  border-radius: 20px; padding: 24px 32px;
+  display: flex; align-items: center; gap: 24px;
+  margin-bottom: 28px; max-width: 820px; width: 100%;
+}
+.final-score-num {
+  font-size: 72px; font-weight: 900;
+  background: linear-gradient(135deg, #22c55e, #00b4a6);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text; line-height: 1; flex-shrink: 0;
+}
+.final-score-text strong { display: block; font-size: 20px; font-weight: 800; color: #e8f4f8; }
+.final-score-text span { font-size: 16px; color: #7a9ab0; }
+
+.cta-feat-list { display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 820px; }
+.cta-feat {
+  display: flex; align-items: center; gap: 16px;
+  font-size: 17px; font-weight: 500; color: #e8f4f8;
+}
+.cta-feat-ic {
+  width: 44px; height: 44px; border-radius: 12px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 20px;
+}
+.ic-green  { background: rgba(34,197,94,.12);  border: 1px solid rgba(34,197,94,.25); }
+.ic-teal   { background: rgba(0,180,166,.12);  border: 1px solid rgba(0,180,166,.25); }
+.ic-purple { background: rgba(124,58,237,.12); border: 1px solid rgba(124,58,237,.25); }
+.ic-gold   { background: rgba(245,197,24,.10); border: 1px solid rgba(245,197,24,.25); }
+
+.cta-btn {
+  display: inline-flex; align-items: center; gap: 12px;
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  color: #fff; font-size: 21px; font-weight: 800;
+  padding: 22px 60px; border-radius: 16px;
+  box-shadow: 0 8px 36px rgba(34,197,94,.35);
+  letter-spacing: .3px; margin-top: 10px;
+}
+
+.app-name-cta {
+  font-size: 48px; font-weight: 900; color: #e8f4f8;
+  letter-spacing: -1.5px; margin: 14px 0 6px;
+}
+.app-sub-cta {
+  font-size: 12px; font-weight: 700; color: #22c55e;
+  letter-spacing: 4px; text-transform: uppercase; margin-bottom: 24px;
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════
+     SLIDE 1 — COVER / HOOK
+     ══════════════════════════════════════════════════════ -->
+<section class="slide" id="s1">
+  <div class="glow gg"></div>
+  <div class="glow gt"></div>
+  <div class="glow gp"></div>
+  <div class="deco-check">✓</div>
+
+  <div class="wm">
+    <svg class="logo-sm" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+      <rect width="512" height="512" rx="96" fill="#112840"/>
+      <polygon points="256,90 395,158 256,226 117,158" fill="#00b4a6"/>
+      <polygon points="256,90 395,158 256,158" fill="#008f84" opacity=".4"/>
+      <path d="M146,172 L146,272 C146,320 196,354 256,354 C316,354 366,320 366,272 L366,172 L256,226 Z" fill="#00b4a6" opacity=".92"/>
+      <path d="M256,226 L366,172 L366,272 C366,320 316,354 256,354 Z" fill="#008f84" opacity=".3"/>
+      <line x1="395" y1="158" x2="395" y2="268" stroke="#f5c518" stroke-width="12" stroke-linecap="round"/>
+      <circle cx="395" cy="284" r="20" fill="#f5c518"/>
+      <circle cx="395" cy="284" r="11" fill="#c9a000"/>
+    </svg>
+    <span class="wm-brand">ENEM Master</span>
+  </div>
+
+  <div class="nav-dots">
+    <div class="nav-dot on"></div>
+    <div class="nav-dot"></div><div class="nav-dot"></div>
+    <div class="nav-dot"></div><div class="nav-dot"></div>
+    <div class="nav-dot"></div><div class="nav-dot"></div>
+  </div>
+
+  <div class="inner" style="justify-content:center; padding-top:80px;">
+    <div class="cover-tag-green">📌 Salva esse post</div>
+
+    <h1 class="cover-headline">
+      Checklist do<br>
+      estudante que<br>
+      vai bem no <span class="green">ENEM</span>
+    </h1>
+
+    <p class="cover-sub">
+      Responda honestamente cada item.
+      <strong>Quantos você consegue marcar?</strong>
+    </p>
+
+    <div class="cover-categories">
+      <div class="cat-pill">📅 Semana de Estudos</div>
+      <div class="cat-pill">🧠 Hábitos de Estudo</div>
+      <div class="cat-pill">🎯 Estratégia de Prova</div>
+      <div class="cat-pill">✍️ Redação</div>
+      <div class="cat-pill">💪 Mindset</div>
+    </div>
+
+    <div class="swipe-hint">
+      <span>Deslize e descubra sua pontuação</span>
+      <span style="font-size:22px;">→</span>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════
+     SLIDE 2 — SEMANA DE ESTUDOS
+     ══════════════════════════════════════════════════════ -->
+<section class="slide check-slide" id="s2">
+  <div class="glow gg"></div>
+  <div class="glow gt"></div>
+
+  <div class="wm">
+    <svg class="logo-sm" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+      <rect width="512" height="512" rx="96" fill="#112840"/>
+      <polygon points="256,90 395,158 256,226 117,158" fill="#00b4a6"/>
+      <polygon points="256,90 395,158 256,158" fill="#008f84" opacity=".4"/>
+      <path d="M146,172 L146,272 C146,320 196,354 256,354 C316,354 366,320 366,272 L366,172 L256,226 Z" fill="#00b4a6" opacity=".92"/>
+      <path d="M256,226 L366,172 L366,272 C366,320 316,354 256,354 Z" fill="#008f84" opacity=".3"/>
+      <line x1="395" y1="158" x2="395" y2="268" stroke="#f5c518" stroke-width="12" stroke-linecap="round"/>
+      <circle cx="395" cy="284" r="20" fill="#f5c518"/>
+      <circle cx="395" cy="284" r="11" fill="#c9a000"/>
+    </svg>
+    <span class="wm-brand">ENEM Master</span>
+  </div>
+
+  <div class="nav-dots">
+    <div class="nav-dot"></div>
+    <div class="nav-dot on"></div>
+    <div class="nav-dot"></div><div class="nav-dot"></div>
+    <div class="nav-dot"></div><div class="nav-dot"></div><div class="nav-dot"></div>
+  </div>
+
+  <div class="slide-score">Semana · <span class="s-count">5 itens</span></div>
+
+  <div class="inner">
+    <div class="cat-header">
+      <div class="cat-icon green">📅</div>
+      <div>
+        <div class="cat-title green">Semana de Estudos</div>
+      </div>
+    </div>
+
+    <h2 class="cat-subtitle" style="margin-top:-8px;">O que você fez<br>essa semana?</h2>
+
+    <div class="cat-divider"></div>
+
+    <div class="check-list">
+      <div class="check-item">
+        <div class="check-box on">✓</div>
+        <div class="check-text">Resolvi questões <strong>todos os dias</strong> da semana</div>
+      </div>
+      <div class="check-item">
+        <div class="check-box on">✓</div>
+        <div class="check-text">Revisei e entendi <strong>todos os erros</strong> que cometi</div>
+      </div>
+      <div class="check-item dimmed">
+        <div class="check-box off"> </div>
+        <div class="check-text">Treinei <strong>redação</strong> pelo menos uma vez</div>
+      </div>
+      <div class="check-item dimmed">
+        <div class="check-box off"> </div>
+        <div class="check-text">Fiz pelo menos <strong>um simulado completo</strong></div>
+      </div>
+      <div class="check-item dimmed">
+        <div class="check-box off"> </div>
+        <div class="check-text">Cumpri <strong>minha meta</strong> de horas ou questões</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════
+     SLIDE 3 — HÁBITOS
+     ══════════════════════════════════════════════════════ -->
+<section class="slide check-slide" id="s3">
+  <div class="glow gg"></div>
+  <div class="glow gt"></div>
+
+  <div class="wm">
+    <svg class="logo-sm" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+      <rect width="512" height="512" rx="96" fill="#112840"/>
+      <polygon points="256,90 395,158 256,226 117,158" fill="#00b4a6"/>
+      <polygon points="256,90 395,158 256,158" fill="#008f84" opacity=".4"/>
+      <path d="M146,172 L146,272 C146,320 196,354 256,354 C316,354 366,320 366,272 L366,172 L256,226 Z" fill="#00b4a6" opacity=".92"/>
+      <path d="M256,226 L366,172 L366,272 C366,320 316,354 256,354 Z" fill="#008f84" opacity=".3"/>
+      <line x1="395" y1="158" x2="395" y2="268" stroke="#f5c518" stroke-width="12" stroke-linecap="round"/>
+      <circle cx="395" cy="284" r="20" fill="#f5c518"/>
+      <circle cx="395" cy="284" r="11" fill="#c9a000"/>
+    </svg>
+    <span class="wm-brand">ENEM Master</span>
+  </div>
+
+  <div class="nav-dots">
+    <div class="nav-dot"></div><div class="nav-dot"></div>
+    <div class="nav-dot on"></div>
+    <div class="nav-dot"></div><div class="nav-dot"></div>
+    <div class="nav-dot"></div><div class="nav-dot"></div>
+  </div>
+
+  <div class="slide-score">Hábitos · <span class="s-count">5 itens</span></div>
+
+  <div class="inner">
+    <div class="cat-header">
+      <div class="cat-icon teal">🧠</div>
+      <div>
+        <div class="cat-title teal">Hábitos de Estudo</div>
+      </div>
+    </div>
+
+    <h2 class="cat-subtitle" style="margin-top:-8px;">Como você<br>estuda?</h2>
+
+    <div class="cat-divider" style="background:linear-gradient(90deg,rgba(0,180,166,.25),transparent);"></div>
+
+    <div class="check-list">
+      <div class="check-item">
+        <div class="check-box on">✓</div>
+        <div class="check-text">Estudo em <strong>blocos de 25–50 minutos</strong> com pausas</div>
+      </div>
+      <div class="check-item">
+        <div class="check-box on">✓</div>
+        <div class="check-text">Tenho um <strong>horário fixo</strong> de estudo todo dia</div>
+      </div>
+      <div class="check-item dimmed">
+        <div class="check-box off"> </div>
+        <div class="check-text">Desligo o celular e <strong>elimino distrações</strong> durante o estudo</div>
+      </div>
+      <div class="check-item dimmed">
+        <div class="check-box off"> </div>
+        <div class="check-text">Tenho <strong>meta de acertos</strong> por matéria, não só de horas</div>
+      </div>
+      <div class="check-item dimmed">
+        <div class="check-box off"> </div>
+        <div class="check-text">Durmo <strong>bem e regularmente</strong> (consolidação de memória)</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════
+     SLIDE 4 — ESTRATÉGIA
+     ══════════════════════════════════════════════════════ -->
+<section class="slide check-slide" id="s4">
+  <div class="glow gg"></div>
+  <div class="glow gt"></div>
+
+  <div class="wm">
+    <svg class="logo-sm" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+      <rect width="512" height="512" rx="96" fill="#112840"/>
+      <polygon points="256,90 395,158 256,226 117,158" fill="#00b4a6"/>
+      <polygon points="256,90 395,158 256,158" fill="#008f84" opacity=".4"/>
+      <path d="M146,172 L146,272 C146,320 196,354 256,354 C316,354 366,320 366,272 L366,172 L256,226 Z" fill="#00b4a6" opacity=".92"/>
+      <path d="M256,226 L366,172 L366,272 C366,320 316,354 256,354 Z" fill="#008f84" opacity=".3"/>
+      <line x1="395" y1="158" x2="395" y2="268" stroke="#f5c518" stroke-width="12" stroke-linecap="round"/>
+      <circle cx="395" cy="284" r="20" fill="#f5c518"/>
+      <circle cx="395" cy="284" r="11" fill="#c9a000"/>
+    </svg>
+    <span class="wm-brand">ENEM Master</span>
+  </div>
+
+  <div class="nav-dots">
+    <div class="nav-dot"></div><div class="nav-dot"></div><div class="nav-dot"></div>
+    <div class="nav-dot on"></div>
+    <div class="nav-dot"></div><div class="nav-dot"></div><div class="nav-dot"></div>
+  </div>
+
+  <div class="slide-score">Estratégia · <span class="s-count">5 itens</span></div>
+
+  <div class="inner">
+    <div class="cat-header">
+      <div class="cat-icon gold">🎯</div>
+      <div>
+        <div class="cat-title gold">Estratégia de Prova</div>
+      </div>
+    </div>
+
+    <h2 class="cat-subtitle" style="margin-top:-8px;">Você tem<br>estratégia?</h2>
+
+    <div class="cat-divider" style="background:linear-gradient(90deg,rgba(245,197,24,.25),transparent);"></div>
+
+    <div class="check-list">
+      <div class="check-item">
+        <div class="check-box on" style="background:rgba(245,197,24,.15);border-color:rgba(245,197,24,.45);color:#f5c518;">✓</div>
+        <div class="check-text">Sei quais são minhas <strong>matérias prioritárias</strong></div>
+      </div>
+      <div class="check-item">
+        <div class="check-box on" style="background:rgba(245,197,24,.15);border-color:rgba(245,197,24,.45);color:#f5c518;">✓</div>
+        <div class="check-text">Conheço minha <strong>taxa de acerto por área</strong> e tópico</div>
+      </div>
+      <div class="check-item dimmed">
+        <div class="check-box off"> </div>
+        <div class="check-text">Entendo como a <strong>TRI funciona</strong> e adapto minha estratégia</div>
+      </div>
+      <div class="check-item dimmed">
+        <div class="check-box off"> </div>
+        <div class="check-text"><strong>Nunca deixo</strong> questão em branco</div>
+      </div>
+      <div class="check-item dimmed">
+        <div class="check-box off"> </div>
+        <div class="check-text">Priorizo questões fáceis <strong>antes das difíceis</strong></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════
+     SLIDE 5 — REDAÇÃO
+     ══════════════════════════════════════════════════════ -->
+<section class="slide check-slide" id="s5">
+  <div class="glow gg"></div>
+  <div class="glow gt"></div>
+
+  <div class="wm">
+    <svg class="logo-sm" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+      <rect width="512" height="512" rx="96" fill="#112840"/>
+      <polygon points="256,90 395,158 256,226 117,158" fill="#00b4a6"/>
+      <polygon points="256,90 395,158 256,158" fill="#008f84" opacity=".4"/>
+      <path d="M146,172 L146,272 C146,320 196,354 256,354 C316,354 366,320 366,272 L366,172 L256,226 Z" fill="#00b4a6" opacity=".92"/>
+      <path d="M256,226 L366,172 L366,272 C366,320 316,354 256,354 Z" fill="#008f84" opacity=".3"/>
+      <line x1="395" y1="158" x2="395" y2="268" stroke="#f5c518" stroke-width="12" stroke-linecap="round"/>
+      <circle cx="395" cy="284" r="20" fill="#f5c518"/>
+      <circle cx="395" cy="284" r="11" fill="#c9a000"/>
+    </svg>
+    <span class="wm-brand">ENEM Master</span>
+  </div>
+
+  <div class="nav-dots">
+    <div class="nav-dot"></div><div class="nav-dot"></div>
+    <div class="nav-dot"></div><div class="nav-dot"></div>
+    <div class="nav-dot on"></div>
+    <div class="nav-dot"></div><div class="nav-dot"></div>
+  </div>
+
+  <div class="slide-score">Redação · <span class="s-count">5 itens</span></div>
+
+  <div class="inner">
+    <div class="cat-header">
+      <div class="cat-icon purple">✍️</div>
+      <div>
+        <div class="cat-title purple">Redação</div>
+      </div>
+    </div>
+
+    <h2 class="cat-subtitle" style="margin-top:-8px;">20% da sua nota.<br>Você está treinando?</h2>
+
+    <div class="cat-divider" style="background:linear-gradient(90deg,rgba(124,58,237,.25),transparent);"></div>
+
+    <div class="check-list">
+      <div class="check-item">
+        <div class="check-box on" style="background:rgba(124,58,237,.15);border-color:rgba(124,58,237,.45);color:#a78bfa;">✓</div>
+        <div class="check-text">Treino redação <strong>pelo menos 1x por semana</strong></div>
+      </div>
+      <div class="check-item dimmed">
+        <div class="check-box off"> </div>
+        <div class="check-text">Recebo <strong>feedback das 5 competências</strong> do ENEM</div>
+      </div>
+      <div class="check-item dimmed">
+        <div class="check-box off"> </div>
+        <div class="check-text">Leio sobre <strong>temas atuais</strong> para ter repertório</div>
+      </div>
+      <div class="check-item dimmed">
+        <div class="check-box off"> </div>
+        <div class="check-text">Sei escrever uma <strong>proposta de intervenção</strong> completa</div>
+      </div>
+      <div class="check-item dimmed">
+        <div class="check-box off"> </div>
+        <div class="check-text">Reescrevo parágrafos <strong>após receber correção</strong></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════
+     SLIDE 6 — MINDSET
+     ══════════════════════════════════════════════════════ -->
+<section class="slide check-slide" id="s6">
+  <div class="glow gg"></div>
+  <div class="glow gt"></div>
+
+  <div class="wm">
+    <svg class="logo-sm" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+      <rect width="512" height="512" rx="96" fill="#112840"/>
+      <polygon points="256,90 395,158 256,226 117,158" fill="#00b4a6"/>
+      <polygon points="256,90 395,158 256,158" fill="#008f84" opacity=".4"/>
+      <path d="M146,172 L146,272 C146,320 196,354 256,354 C316,354 366,320 366,272 L366,172 L256,226 Z" fill="#00b4a6" opacity=".92"/>
+      <path d="M256,226 L366,172 L366,272 C366,320 316,354 256,354 Z" fill="#008f84" opacity=".3"/>
+      <line x1="395" y1="158" x2="395" y2="268" stroke="#f5c518" stroke-width="12" stroke-linecap="round"/>
+      <circle cx="395" cy="284" r="20" fill="#f5c518"/>
+      <circle cx="395" cy="284" r="11" fill="#c9a000"/>
+    </svg>
+    <span class="wm-brand">ENEM Master</span>
+  </div>
+
+  <div class="nav-dots">
+    <div class="nav-dot"></div><div class="nav-dot"></div>
+    <div class="nav-dot"></div><div class="nav-dot"></div>
+    <div class="nav-dot"></div>
+    <div class="nav-dot on"></div>
+    <div class="nav-dot"></div>
+  </div>
+
+  <div class="slide-score">Mindset · <span class="s-count">5 itens</span></div>
+
+  <div class="inner">
+    <div class="cat-header">
+      <div class="cat-icon blue">💪</div>
+      <div>
+        <div class="cat-title blue">Mindset e Consistência</div>
+      </div>
+    </div>
+
+    <h2 class="cat-subtitle" style="margin-top:-8px;">A parte mais difícil<br>é essa aqui.</h2>
+
+    <div class="cat-divider" style="background:linear-gradient(90deg,rgba(59,130,246,.25),transparent);"></div>
+
+    <div class="check-list">
+      <div class="check-item">
+        <div class="check-box on" style="background:rgba(59,130,246,.15);border-color:rgba(59,130,246,.45);color:#60a5fa;">✓</div>
+        <div class="check-text">Comparo meu desempenho com <strong>o meu de ontem</strong>, não com o dos outros</div>
+      </div>
+      <div class="check-item">
+        <div class="check-box on" style="background:rgba(59,130,246,.15);border-color:rgba(59,130,246,.45);color:#60a5fa;">✓</div>
+        <div class="check-text">Mantenho consistência <strong>mesmo nos dias sem motivação</strong></div>
+      </div>
+      <div class="check-item dimmed">
+        <div class="check-box off"> </div>
+        <div class="check-text">Tenho uma <strong>meta clara</strong> de nota e universidade</div>
+      </div>
+      <div class="check-item dimmed">
+        <div class="check-box off"> </div>
+        <div class="check-text">Trato erro como <strong>aprendizado</strong>, não como fracasso</div>
+      </div>
+      <div class="check-item dimmed">
+        <div class="check-box off"> </div>
+        <div class="check-text">Celebro cada <strong>pequena evolução</strong> no processo</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════
+     SLIDE 7 — CTA FINAL
+     ══════════════════════════════════════════════════════ -->
+<section class="slide" id="s7">
+  <div class="glow gc"></div>
+  <div class="glow gp"></div>
+
+  <div class="wm">
+    <svg class="logo-sm" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+      <rect width="512" height="512" rx="96" fill="#112840"/>
+      <polygon points="256,90 395,158 256,226 117,158" fill="#00b4a6"/>
+      <polygon points="256,90 395,158 256,158" fill="#008f84" opacity=".4"/>
+      <path d="M146,172 L146,272 C146,320 196,354 256,354 C316,354 366,320 366,272 L366,172 L256,226 Z" fill="#00b4a6" opacity=".92"/>
+      <path d="M256,226 L366,172 L366,272 C366,320 316,354 256,354 Z" fill="#008f84" opacity=".3"/>
+      <line x1="395" y1="158" x2="395" y2="268" stroke="#f5c518" stroke-width="12" stroke-linecap="round"/>
+      <circle cx="395" cy="284" r="20" fill="#f5c518"/>
+      <circle cx="395" cy="284" r="11" fill="#c9a000"/>
+    </svg>
+    <span class="wm-brand">ENEM Master</span>
+  </div>
+
+  <div class="nav-dots">
+    <div class="nav-dot"></div><div class="nav-dot"></div>
+    <div class="nav-dot"></div><div class="nav-dot"></div>
+    <div class="nav-dot"></div><div class="nav-dot"></div>
+    <div class="nav-dot on"></div>
+  </div>
+
+  <div class="inner" style="align-items:center;justify-content:center;text-align:center;">
+
+    <svg class="logo-lg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+      <rect width="512" height="512" rx="96" fill="#112840"/>
+      <circle cx="256" cy="210" r="140" fill="#22c55e" opacity=".06"/>
+      <polygon points="256,90 395,158 256,226 117,158" fill="#00b4a6"/>
+      <polygon points="256,90 395,158 256,158" fill="#008f84" opacity=".4"/>
+      <path d="M146,172 L146,272 C146,320 196,354 256,354 C316,354 366,320 366,272 L366,172 L256,226 Z" fill="#00b4a6" opacity=".92"/>
+      <path d="M256,226 L366,172 L366,272 C366,320 316,354 256,354 Z" fill="#008f84" opacity=".3"/>
+      <line x1="395" y1="158" x2="395" y2="268" stroke="#f5c518" stroke-width="12" stroke-linecap="round"/>
+      <circle cx="395" cy="284" r="20" fill="#f5c518"/>
+      <circle cx="395" cy="284" r="11" fill="#c9a000"/>
+      <text x="256" y="448" text-anchor="middle" font-family="Arial Black,Arial,sans-serif" font-weight="900" font-size="70" fill="#00b4a6" letter-spacing="3">MASTER</text>
+    </svg>
+
+    <p class="app-name-cta">ENEM Master</p>
+    <p class="app-sub-cta">Tudo nesse checklist, em um só lugar</p>
+
+    <div class="cta-feat-list" style="text-align:left;margin-bottom:28px;">
+      <div class="cta-feat">
+        <div class="cta-feat-ic ic-teal">📊</div>
+        <span><strong>Análise de desempenho</strong> — descubra seus pontos fracos</span>
+      </div>
+      <div class="cta-feat">
+        <div class="cta-feat-ic ic-purple">✍️</div>
+        <span><strong>Redação corrigida por IA</strong> nas 5 competências do ENEM</span>
+      </div>
+      <div class="cta-feat">
+        <div class="cta-feat-ic ic-gold">🎯</div>
+        <span><strong>TRI simulada</strong> nos treinos — aprenda a estratégia certa</span>
+      </div>
+      <div class="cta-feat">
+        <div class="cta-feat-ic ic-green">🔥</div>
+        <span><strong>Ofensiva diária</strong> para você nunca quebrar a sequência</span>
+      </div>
+    </div>
+
+    <div class="cta-btn">
+      Começar Grátis Agora  <span style="font-size:22px;">→</span>
+    </div>
+
+    <p style="margin-top:18px;font-size:17px;font-weight:700;color:#22c55e;">www.enemmaster.com.br</p>
+    <p style="margin-top:10px;font-size:14px;color:#4a6a80;font-weight:500;">Sem cartão. Sem download. Acesso imediato.</p>
+  </div>
+</section>
+
+</body>
+</html>

@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>ENEM Master — Carrossel v2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Inter', -apple-system, sans-serif; background: #020d18; width: 1080px; -webkit-font-smoothing: antialiased; }
+
+/* ─── SLIDE BASE ─────────────────────────────────────────── */
+.slide { width: 1080px; height: 1080px; position: relative; overflow: hidden; background: #0a1929; display: block; }
+.blob { position: absolute; border-radius: 50%; pointer-events: none; }
+
+/* ─── WATERMARK ──────────────────────────────────────────── */
+.wm {
+  position: absolute; top: 44px; left: 56px;
+  display: flex; align-items: center; gap: 10px; z-index: 30;
+}
+.wm-name { font-size: 15px; font-weight: 800; color: #00b4a6; letter-spacing: 0.4px; }
+
+/* ─── DOTS ───────────────────────────────────────────────── */
+.nav { position: absolute; bottom: 44px; right: 56px; display: flex; gap: 7px; align-items: center; z-index: 30; }
+.nd { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.12); }
+.nd.on { background: #00b4a6; width: 30px; border-radius: 5px; }
+
+/* ─── PILL ───────────────────────────────────────────────── */
+.pill {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 11px; font-weight: 700; letter-spacing: 3px;
+  text-transform: uppercase; border-radius: 40px; padding: 9px 22px;
+  width: fit-content;
+}
+.pill-t { color: #00b4a6; background: rgba(0,180,166,.09); border: 1px solid rgba(0,180,166,.28); }
+.pill-p { color: #a78bfa; background: rgba(124,58,237,.09); border: 1px solid rgba(124,58,237,.28); }
+.pill-g { color: #f5c518; background: rgba(245,197,24,.09); border: 1px solid rgba(245,197,24,.28); }
+
+/* ─── PHONE FRAME ────────────────────────────────────────── */
+.phone {
+  width: 336px; height: 720px;
+  background: #0c1e35;
+  border-radius: 54px;
+  border: 2px solid rgba(0,180,166,0.40);
+  box-shadow:
+    0 0 0 1px rgba(0,180,166,.06),
+    0 60px 140px rgba(0,0,0,.98),
+    0 12px 48px rgba(0,180,166,.12),
+    inset 0 0 0 5px #09192a;
+  position: relative; flex-shrink: 0;
+}
+.phone::before {
+  content: ''; position: absolute;
+  top: 0; left: 50%; transform: translateX(-50%);
+  width: 88px; height: 13px;
+  background: #0c1e35;
+  border-radius: 0 0 10px 10px; z-index: 5;
+}
+.phone::after {
+  content: ''; position: absolute;
+  bottom: 10px; left: 50%; transform: translateX(-50%);
+  width: 80px; height: 5px;
+  background: rgba(255,255,255,0.20); border-radius: 3px;
+}
+.pscreen {
+  position: absolute; inset: 0;
+  background: #0a1929;
+  border-radius: 54px;
+  overflow: hidden; padding: 18px 9px 14px;
+}
+.pst {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 0 10px 7px;
+  font-size: 9.5px; font-weight: 700; color: #4a6a80;
+}
+
+/* ─── MINI CARD INSIDE PHONE ─────────────────────────────── */
+.mc {
+  background: #112840;
+  border: 1px solid rgba(0,180,166,.13);
+  border-radius: 11px; padding: 11px 13px;
+  margin: 0 9px 9px;
+}
+.mc.teal { background: linear-gradient(135deg,rgba(0,180,166,.08),rgba(124,58,237,.04)); border-color: rgba(0,180,166,.22); }
+.mc.pur  { background: rgba(124,58,237,.06); border-color: rgba(124,58,237,.20); }
+.mbar    { height: 6px; background: rgba(255,255,255,.07); border-radius: 3px; overflow: hidden; }
+.mfill   { height: 100%; border-radius: 3px; }
+
+/* ─── ACCENT LINE ────────────────────────────────────────── */
+.aline { width: 64px; height: 5px; border-radius: 3px; background: linear-gradient(90deg,#00b4a6,#7c3aed); }
+
+/* ─── CTA BUTTON ─────────────────────────────────────────── */
+.cta {
+  display: inline-flex; align-items: center; gap: 16px;
+  background: linear-gradient(135deg, #00b4a6 0%, #007a73 100%);
+  color: #fff; font-size: 26px; font-weight: 900;
+  padding: 28px 80px; border-radius: 22px;
+  box-shadow: 0 14px 52px rgba(0,180,166,.48), 0 2px 0 rgba(0,255,224,.16) inset;
+  letter-spacing: 0.2px;
+}
+</style>
+</head>
+<body>
+
+<!-- SVG SPRITE -->
+<svg style="display:none" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="logo-icon" viewBox="0 0 512 512">
+    <rect width="512" height="512" rx="96" fill="#112840"/>
+    <circle cx="256" cy="210" r="145" fill="#00b4a6" opacity=".06"/>
+    <polygon points="256,88 398,158 256,228 114,158" fill="#00b4a6"/>
+    <polygon points="256,88 398,158 256,158" fill="#007a73" opacity=".5"/>
+    <path d="M143,172 L143,276 C143,326 195,358 256,358 C317,358 369,326 369,276 L369,172 L256,228Z" fill="#00b4a6" opacity=".93"/>
+    <path d="M256,228 L369,172 L369,276 C369,326 317,358 256,358Z" fill="#007a73" opacity=".28"/>
+    <line x1="398" y1="158" x2="398" y2="270" stroke="#f5c518" stroke-width="13" stroke-linecap="round"/>
+    <circle cx="398" cy="288" r="22" fill="#f5c518"/>
+    <circle cx="398" cy="288" r="12" fill="#c09800"/>
+    <text x="256" y="452" text-anchor="middle" font-family="Arial Black,Arial,sans-serif" font-weight="900" font-size="72" fill="#00b4a6" letter-spacing="3">MASTER</text>
+  </symbol>
+</svg>
+
+<!-- ════════════════════════════════════════════════════════
+     SLIDE 1 — HOOK
+     ════════════════════════════════════════════════════════ -->
+<section class="slide" id="s1" style="background:linear-gradient(150deg,#07111e 0%,#0c2035 55%,#0a1929 100%);">
+  <div class="blob" style="width:1100px;height:1100px;background:radial-gradient(circle,rgba(0,180,166,.13) 0%,transparent 58%);top:-380px;left:-340px;"></div>
+  <div class="blob" style="width:720px;height:720px;background:radial-gradient(circle,rgba(124,58,237,.22) 0%,transparent 58%);bottom:-200px;right:-160px;"></div>
+  <div class="blob" style="width:300px;height:300px;background:radial-gradient(circle,rgba(0,180,166,.12) 0%,transparent 60%);bottom:160px;right:510px;"></div>
+
+  <div class="wm">
+    <svg width="36" height="36" viewBox="0 0 512 512"><use href="#logo-icon"/></svg>
+    <span class="wm-name">ENEM Master</span>
+  </div>
+  <div class="nav"><div class="nd on"></div><div class="nd"></div><div class="nd"></div><div class="nd"></div><div class="nd"></div><div class="nd"></div></div>
+
+  <div style="position:relative;z-index:2;display:flex;align-items:stretch;height:100%;">
+    <!-- LEFT -->
+    <div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:0 0 0 56px;">
+      <div class="pill pill-t" style="margin-bottom:30px;">Para candidatos ao ENEM 2025</div>
+
+      <h1 style="font-size:100px;font-weight:900;color:#e8f4f8;line-height:.98;letter-spacing:-4px;margin-bottom:20px;">
+        Você<br>estuda<br>horas.
+      </h1>
+      <h2 style="font-size:72px;font-weight:900;line-height:.98;letter-spacing:-3px;margin-bottom:26px;background:linear-gradient(120deg,#00b4a6,#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">
+        Mas onde<br>está<br>errando?
+      </h2>
+
+      <div class="aline" style="margin-bottom:22px;"></div>
+
+      <p style="font-size:20px;color:#7a9ab0;line-height:1.6;max-width:430px;font-weight:500;margin-bottom:34px;">
+        A maioria perde pontos nas <strong style="color:#e8f4f8;">mesmas disciplinas</strong> — repetidamente — sem perceber.
+      </p>
+
+      <div style="display:flex;gap:18px;">
+        <div style="background:rgba(0,180,166,.07);border:1px solid rgba(0,180,166,.18);border-radius:14px;padding:14px 20px;min-width:114px;">
+          <div style="font-size:30px;font-weight:900;color:#00b4a6;line-height:1;">+50k</div>
+          <div style="font-size:12px;color:#4a6a80;margin-top:3px;font-weight:600;">estudantes</div>
+        </div>
+        <div style="background:rgba(245,197,24,.06);border:1px solid rgba(245,197,24,.18);border-radius:14px;padding:14px 20px;min-width:114px;">
+          <div style="font-size:30px;font-weight:900;color:#f5c518;line-height:1;">4.9★</div>
+          <div style="font-size:12px;color:#4a6a80;margin-top:3px;font-weight:600;">avaliação</div>
+        </div>
+        <div style="background:rgba(124,58,237,.06);border:1px solid rgba(124,58,237,.18);border-radius:14px;padding:14px 20px;min-width:114px;">
+          <div style="font-size:30px;font-weight:900;color:#a78bfa;line-height:1;">100%</div>
+          <div style="font-size:12px;color:#4a6a80;margin-top:3px;font-weight:600;">gratuito</div>
+        </div>
+      </div>
+
+      <div style="margin-top:28px;display:flex;align-items:center;gap:8px;font-size:15px;font-weight:700;color:rgba(0,180,166,.6);">
+        Deslize para descobrir →
+      </div>
+    </div>
+
+    <!-- RIGHT: PHONE -->
+    <div style="flex-shrink:0;display:flex;align-items:center;justify-content:center;width:460px;position:relative;">
+      <div style="position:absolute;inset:-20px;background:radial-gradient(circle,rgba(0,180,166,.20) 0%,transparent 62%);border-radius:50%;"></div>
+      <div class="phone" style="transform:rotate(2deg);">
+        <div class="pscreen">
+          <div class="pst"><span style="font-weight:900;">9:41</span><span style="font-size:8px;">●●●● ■</span></div>
+          <div style="padding:2px 12px 8px;">
+            <div style="font-size:13.5px;font-weight:800;color:#e8f4f8;">Bom dia, Alex 👋</div>
+            <div style="font-size:9.5px;color:#7a9ab0;margin-top:2px;">Ofensiva de 28 dias 🔥 · Nível 7</div>
+          </div>
+          <div class="mc">
+            <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+              <span style="font-size:10px;color:#7a9ab0;font-weight:600;">Nível 7 → 8</span>
+              <span style="font-size:10px;font-weight:900;color:#f5c518;">3.450 XP</span>
+            </div>
+            <div class="mbar"><div class="mfill" style="width:68%;background:linear-gradient(90deg,#7c3aed,#00b4a6);"></div></div>
+          </div>
+          <div class="mc teal">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;">
+              <span style="font-size:11px;font-weight:900;color:#e8f4f8;">⚔️ Desafio do Dia</span>
+              <span style="font-size:9.5px;font-weight:900;color:#f5c518;background:rgba(245,197,24,.12);padding:3px 9px;border-radius:12px;">+100 XP</span>
+            </div>
+            <div style="font-size:9px;color:#7a9ab0;margin-bottom:9px;">🔬 Ciências da Natureza · Treino 🎯</div>
+            <div style="background:linear-gradient(135deg,#00b4a6,#007a73);border-radius:8px;padding:9px;text-align:center;font-size:10px;font-weight:900;color:#fff;">⚔️ Aceitar Desafio</div>
+          </div>
+          <div style="display:flex;gap:6px;margin:0 9px;">
+            <div class="mc" style="flex:1;margin:0;padding:10px;">
+              <div style="font-size:8px;color:#7a9ab0;margin-bottom:3px;">Ofensiva</div>
+              <div style="font-size:26px;font-weight:900;color:#f97316;line-height:1;">28</div>
+              <div style="font-size:8px;color:#f97316;">dias 🔥</div>
+            </div>
+            <div class="mc" style="flex:1;margin:0;padding:10px;">
+              <div style="font-size:8px;color:#7a9ab0;margin-bottom:3px;">Ranking</div>
+              <div style="font-size:26px;font-weight:900;color:#e8f4f8;line-height:1;">#12</div>
+              <div style="font-size:8px;color:#7a9ab0;">nacional</div>
+            </div>
+            <div class="mc" style="flex:1;margin:0;padding:10px;">
+              <div style="font-size:8px;color:#7a9ab0;margin-bottom:3px;">Hoje</div>
+              <div style="font-size:26px;font-weight:900;color:#00b4a6;line-height:1;">+350</div>
+              <div style="font-size:8px;color:#00b4a6;">XP</div>
+            </div>
+          </div>
+          <div class="mc pur" style="margin-top:9px;">
+            <div style="font-size:9px;font-weight:700;color:#a78bfa;margin-bottom:7px;">🏆 Ranking Semanal</div>
+            <div style="font-size:9px;color:#7a9ab0;margin-bottom:3px;">🥇 João — 8.200 XP</div>
+            <div style="font-size:9px;color:#7a9ab0;margin-bottom:3px;">🥈 Maria — 6.850 XP</div>
+            <div style="font-size:9.5px;font-weight:800;color:#00b4a6;margin-top:4px;">12. Alex — 3.450 XP ← você</div>
+          </div>
+          <div style="display:flex;gap:6px;margin:9px 9px 0;">
+            <div style="flex:1;background:rgba(0,180,166,.07);border:1px solid rgba(0,180,166,.16);border-radius:9px;padding:9px 0;text-align:center;font-size:9px;font-weight:700;color:#00b4a6;">📚 Estudar</div>
+            <div style="flex:1;background:rgba(245,197,24,.06);border:1px solid rgba(245,197,24,.16);border-radius:9px;padding:9px 0;text-align:center;font-size:9px;font-weight:700;color:#f5c518;">✍️ Redação</div>
+            <div style="flex:1;background:rgba(124,58,237,.07);border:1px solid rgba(124,58,237,.16);border-radius:9px;padding:9px 0;text-align:center;font-size:9px;font-weight:700;color:#a78bfa;">🤖 Tutor IA</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════════════════════
+     SLIDE 2 — APP OVERVIEW
+     ════════════════════════════════════════════════════════ -->
+<section class="slide" id="s2" style="background:linear-gradient(155deg,#08131e 0%,#0e1f35 60%,#0a1929 100%);">
+  <div class="blob" style="width:1100px;height:1100px;background:radial-gradient(circle,rgba(0,180,166,.08) 0%,transparent 55%);top:50%;left:50%;transform:translate(-50%,-50%);"></div>
+  <div class="blob" style="width:600px;height:600px;background:radial-gradient(circle,rgba(124,58,237,.14) 0%,transparent 58%);bottom:-160px;right:-120px;"></div>
+
+  <div class="wm">
+    <svg width="36" height="36" viewBox="0 0 512 512"><use href="#logo-icon"/></svg>
+    <span class="wm-name">ENEM Master</span>
+  </div>
+  <div class="nav"><div class="nd"></div><div class="nd on"></div><div class="nd"></div><div class="nd"></div><div class="nd"></div><div class="nd"></div></div>
+
+  <div style="position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:56px 64px;">
+    <div style="display:flex;flex-direction:column;align-items:center;margin-bottom:44px;">
+      <svg width="100" height="100" viewBox="0 0 512 512" style="margin-bottom:18px;filter:drop-shadow(0 0 36px rgba(0,180,166,.38));"><use href="#logo-icon"/></svg>
+      <h1 style="font-size:58px;font-weight:900;color:#e8f4f8;letter-spacing:-2px;margin-bottom:6px;">ENEM Master</h1>
+      <p style="font-size:13px;font-weight:700;color:#00b4a6;letter-spacing:5px;text-transform:uppercase;margin-bottom:12px;">Estude · Evolua · Conquiste</p>
+      <p style="font-size:20px;color:#7a9ab0;text-align:center;max-width:700px;line-height:1.55;font-weight:500;">
+        A plataforma <strong style="color:#e8f4f8;">gamificada</strong> que usa <strong style="color:#e8f4f8;">IA</strong> para encontrar suas fraquezas e te levar à aprovação.
+      </p>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;width:100%;">
+      <div style="background:rgba(0,180,166,.06);border:1.5px solid rgba(0,180,166,.20);border-radius:22px;padding:28px 32px;display:flex;align-items:center;gap:22px;">
+        <div style="width:72px;height:72px;background:rgba(0,180,166,.12);border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:36px;flex-shrink:0;">⚔️</div>
+        <div>
+          <div style="font-size:21px;font-weight:900;color:#e8f4f8;margin-bottom:5px;">Desafios Diários</div>
+          <div style="font-size:15px;color:#7a9ab0;line-height:1.45;">XP bônus · Streak · Ranking nacional em tempo real</div>
+        </div>
+      </div>
+      <div style="background:rgba(124,58,237,.06);border:1.5px solid rgba(124,58,237,.22);border-radius:22px;padding:28px 32px;display:flex;align-items:center;gap:22px;">
+        <div style="width:72px;height:72px;background:rgba(124,58,237,.12);border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:36px;flex-shrink:0;">🤖</div>
+        <div>
+          <div style="font-size:21px;font-weight:900;color:#e8f4f8;margin-bottom:5px;">Tutor IA</div>
+          <div style="font-size:15px;color:#7a9ab0;line-height:1.45;">Explicações personalizadas para qualquer dúvida</div>
+        </div>
+      </div>
+      <div style="background:rgba(245,197,24,.05);border:1.5px solid rgba(245,197,24,.20);border-radius:22px;padding:28px 32px;display:flex;align-items:center;gap:22px;">
+        <div style="width:72px;height:72px;background:rgba(245,197,24,.10);border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:36px;flex-shrink:0;">✍️</div>
+        <div>
+          <div style="font-size:21px;font-weight:900;color:#e8f4f8;margin-bottom:5px;">Redação com IA</div>
+          <div style="font-size:15px;color:#7a9ab0;line-height:1.45;">Nota + análise das 5 competências em segundos</div>
+        </div>
+      </div>
+      <div style="background:rgba(34,197,94,.05);border:1.5px solid rgba(34,197,94,.20);border-radius:22px;padding:28px 32px;display:flex;align-items:center;gap:22px;">
+        <div style="width:72px;height:72px;background:rgba(34,197,94,.10);border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:36px;flex-shrink:0;">📊</div>
+        <div>
+          <div style="font-size:21px;font-weight:900;color:#e8f4f8;margin-bottom:5px;">Análise Inteligente</div>
+          <div style="font-size:15px;color:#7a9ab0;line-height:1.45;">Mapa exato das disciplinas onde você perde pontos</div>
+        </div>
+      </div>
+    </div>
+
+    <p style="font-size:16px;color:#4a6a80;font-weight:600;margin-top:28px;">100% grátis para começar · <span style="color:#00b4a6;font-weight:800;">www.enemmaster.com.br</span></p>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════════════════════
+     SLIDE 3 — GAMIFICAÇÃO
+     ════════════════════════════════════════════════════════ -->
+<section class="slide" id="s3" style="background:linear-gradient(145deg,#09101e 0%,#0e0e2a 55%,#0a1929 100%);">
+  <div class="blob" style="width:900px;height:900px;background:radial-gradient(circle,rgba(124,58,237,.24) 0%,transparent 56%);top:-280px;right:-240px;"></div>
+  <div class="blob" style="width:600px;height:600px;background:radial-gradient(circle,rgba(249,115,22,.08) 0%,transparent 60%);bottom:-100px;left:-100px;"></div>
+
+  <div class="wm">
+    <svg width="36" height="36" viewBox="0 0 512 512"><use href="#logo-icon"/></svg>
+    <span class="wm-name">ENEM Master</span>
+  </div>
+  <div class="nav"><div class="nd"></div><div class="nd"></div><div class="nd on"></div><div class="nd"></div><div class="nd"></div><div class="nd"></div></div>
+
+  <div style="position:relative;z-index:2;display:flex;align-items:stretch;height:100%;">
+    <!-- LEFT -->
+    <div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:56px 32px 56px 56px;">
+      <div class="pill pill-p" style="margin-bottom:28px;">🎮 Gamificação</div>
+      <h1 style="font-size:92px;font-weight:900;color:#e8f4f8;line-height:.96;letter-spacing:-3.5px;margin-bottom:12px;">
+        Estudar<br>nunca foi
+      </h1>
+      <h2 style="font-size:80px;font-weight:900;color:#f5c518;line-height:.96;letter-spacing:-3px;margin-bottom:24px;">
+        tão viciante.
+      </h2>
+      <div class="aline" style="background:linear-gradient(90deg,#7c3aed,#f5c518);margin-bottom:24px;"></div>
+      <p style="font-size:19px;color:#7a9ab0;line-height:1.55;max-width:420px;margin-bottom:30px;font-weight:500;">
+        Cada questão gera <strong style="color:#e8f4f8;">XP</strong>. Cada dia de estudo alimenta sua <strong style="color:#e8f4f8;">ofensiva</strong>. Cada ponto sobe no <strong style="color:#e8f4f8;">ranking nacional</strong>.
+      </p>
+      <div style="display:flex;flex-direction:column;gap:15px;">
+        <div style="display:flex;align-items:center;gap:16px;font-size:18px;font-weight:600;color:#e8f4f8;">
+          <div style="width:48px;height:48px;background:rgba(249,115,22,.14);border:1.5px solid rgba(249,115,22,.28);border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">🔥</div>
+          Ofensiva diária com bônus de XP
+        </div>
+        <div style="display:flex;align-items:center;gap:16px;font-size:18px;font-weight:600;color:#e8f4f8;">
+          <div style="width:48px;height:48px;background:rgba(245,197,24,.12);border:1.5px solid rgba(245,197,24,.28);border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">🏆</div>
+          Ranking nacional ao vivo
+        </div>
+        <div style="display:flex;align-items:center;gap:16px;font-size:18px;font-weight:600;color:#e8f4f8;">
+          <div style="width:48px;height:48px;background:rgba(124,58,237,.14);border:1.5px solid rgba(124,58,237,.28);border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">🏅</div>
+          Conquistas e badges exclusivos
+        </div>
+        <div style="display:flex;align-items:center;gap:16px;font-size:18px;font-weight:600;color:#e8f4f8;">
+          <div style="width:48px;height:48px;background:rgba(0,180,166,.12);border:1.5px solid rgba(0,180,166,.28);border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">⚔️</div>
+          Desafios: Relâmpago, Treino, Maratona
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: phone -->
+    <div style="width:440px;display:flex;align-items:center;justify-content:center;position:relative;flex-shrink:0;">
+      <div style="position:absolute;inset:-20px;background:radial-gradient(circle,rgba(124,58,237,.22) 0%,transparent 62%);border-radius:50%;"></div>
+      <div class="phone" style="transform:rotate(-2deg);">
+        <div class="pscreen">
+          <div class="pst"><span style="font-weight:900;">9:41</span><span>★★★★</span></div>
+          <div style="text-align:center;padding:6px 12px 8px;">
+            <div style="font-size:10px;font-weight:700;color:#7a9ab0;letter-spacing:2.5px;text-transform:uppercase;margin-bottom:4px;">Nível 7</div>
+            <div style="font-size:44px;font-weight:900;color:#f5c518;line-height:1;letter-spacing:-1.5px;">3.450 XP</div>
+            <div style="font-size:9px;color:#7a9ab0;margin:4px 0 9px;">170 XP para o Nível 8</div>
+            <div class="mbar" style="margin:0 12px;"><div class="mfill" style="width:68%;background:linear-gradient(90deg,#7c3aed,#00b4a6);"></div></div>
+          </div>
+          <div style="display:flex;gap:7px;margin:7px 9px 9px;">
+            <div style="flex:1;background:linear-gradient(135deg,rgba(249,115,22,.12),rgba(249,115,22,.05));border:1.5px solid rgba(249,115,22,.28);border-radius:11px;padding:12px 8px;text-align:center;">
+              <div style="font-size:36px;font-weight:900;color:#f97316;line-height:1;">28</div>
+              <div style="font-size:8.5px;color:#7a9ab0;margin-top:3px;">dias ofensiva</div>
+              <div style="font-size:14px;margin-top:2px;">🔥</div>
+            </div>
+            <div style="flex:1;background:linear-gradient(135deg,rgba(245,197,24,.09),rgba(245,197,24,.04));border:1.5px solid rgba(245,197,24,.24);border-radius:11px;padding:12px 8px;text-align:center;">
+              <div style="font-size:36px;font-weight:900;color:#f5c518;line-height:1;">#12</div>
+              <div style="font-size:8.5px;color:#7a9ab0;margin-top:3px;">nacional</div>
+              <div style="font-size:14px;margin-top:2px;">🏆</div>
+            </div>
+          </div>
+          <div class="mc pur">
+            <div style="font-size:9px;font-weight:700;color:#a78bfa;margin-bottom:8px;">🏅 Conquistas Desbloqueadas</div>
+            <div style="display:flex;gap:5px;flex-wrap:wrap;">
+              <span style="font-size:8px;font-weight:700;background:rgba(249,115,22,.12);color:#f97316;padding:3px 8px;border-radius:6px;border:1px solid rgba(249,115,22,.22);">🔥 7 Dias</span>
+              <span style="font-size:8px;font-weight:700;background:rgba(249,115,22,.12);color:#f97316;padding:3px 8px;border-radius:6px;border:1px solid rgba(249,115,22,.22);">🔥 15 Dias</span>
+              <span style="font-size:8px;font-weight:700;background:rgba(245,197,24,.10);color:#f5c518;padding:3px 8px;border-radius:6px;border:1px solid rgba(245,197,24,.22);">🏆 Top 20</span>
+              <span style="font-size:8px;font-weight:700;background:rgba(124,58,237,.12);color:#a78bfa;padding:3px 8px;border-radius:6px;border:1px solid rgba(124,58,237,.22);">🌍 Humanista</span>
+              <span style="font-size:8px;font-weight:700;background:rgba(0,180,166,.10);color:#00b4a6;padding:3px 8px;border-radius:6px;border:1px solid rgba(0,180,166,.22);">💎 Maratonista</span>
+            </div>
+          </div>
+          <div class="mc" style="margin-top:7px;">
+            <div style="font-size:9px;font-weight:700;color:#7a9ab0;margin-bottom:8px;">Atividade — 7 dias</div>
+            <div style="display:flex;gap:4px;">
+              <div style="flex:1;height:26px;background:rgba(34,197,94,.14);border:1px solid rgba(34,197,94,.30);border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:7px;color:#22c55e;font-weight:700;">D</div>
+              <div style="flex:1;height:26px;background:rgba(34,197,94,.14);border:1px solid rgba(34,197,94,.30);border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:7px;color:#22c55e;font-weight:700;">S</div>
+              <div style="flex:1;height:26px;background:rgba(34,197,94,.14);border:1px solid rgba(34,197,94,.30);border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:7px;color:#22c55e;font-weight:700;">T</div>
+              <div style="flex:1;height:26px;background:rgba(34,197,94,.14);border:1px solid rgba(34,197,94,.30);border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:7px;color:#22c55e;font-weight:700;">Q</div>
+              <div style="flex:1;height:26px;background:rgba(34,197,94,.14);border:1px solid rgba(34,197,94,.30);border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:7px;color:#22c55e;font-weight:700;">Q</div>
+              <div style="flex:1;height:26px;background:rgba(34,197,94,.14);border:1px solid rgba(34,197,94,.30);border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:7px;color:#22c55e;font-weight:700;">S</div>
+              <div style="flex:1;height:26px;background:rgba(0,180,166,.12);border:1.5px solid #00b4a6;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:7px;color:#00b4a6;font-weight:700;">S</div>
+            </div>
+          </div>
+          <div class="mc teal" style="margin-top:7px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+              <span style="font-size:9px;font-weight:700;color:#e8f4f8;">Progresso Semanal</span>
+              <span style="font-size:9px;font-weight:900;color:#00b4a6;">+1.240 XP</span>
+            </div>
+            <div class="mbar"><div class="mfill" style="width:52%;background:linear-gradient(90deg,#00b4a6,#7c3aed);"></div></div>
+            <div style="font-size:7.5px;color:#7a9ab0;margin-top:4px;">Meta semanal: 2.400 XP</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════════════════════
+     SLIDE 4 — TUTOR IA
+     ════════════════════════════════════════════════════════ -->
+<section class="slide" id="s4" style="background:linear-gradient(148deg,#09101e 0%,#0e0d28 60%,#0a1929 100%);">
+  <div class="blob" style="width:800px;height:800px;background:radial-gradient(circle,rgba(124,58,237,.22) 0%,transparent 56%);top:-220px;right:-200px;"></div>
+  <div class="blob" style="width:560px;height:560px;background:radial-gradient(circle,rgba(0,180,166,.10) 0%,transparent 58%);bottom:-120px;left:-80px;"></div>
+
+  <div class="wm">
+    <svg width="36" height="36" viewBox="0 0 512 512"><use href="#logo-icon"/></svg>
+    <span class="wm-name">ENEM Master</span>
+  </div>
+  <div class="nav"><div class="nd"></div><div class="nd"></div><div class="nd"></div><div class="nd on"></div><div class="nd"></div><div class="nd"></div></div>
+
+  <div style="position:relative;z-index:2;display:flex;align-items:stretch;height:100%;">
+    <!-- LEFT: phone (chat) -->
+    <div style="width:440px;display:flex;align-items:center;justify-content:center;position:relative;flex-shrink:0;">
+      <div style="position:absolute;inset:-20px;background:radial-gradient(circle,rgba(124,58,237,.20) 0%,transparent 62%);border-radius:50%;"></div>
+      <div class="phone" style="transform:rotate(-2deg);">
+        <div class="pscreen">
+          <div class="pst"><span style="font-weight:900;">9:41</span><span style="font-size:8px;">●●●● ■</span></div>
+          <div style="display:flex;align-items:center;gap:9px;padding:0 12px 10px;border-bottom:1px solid rgba(255,255,255,.06);margin-bottom:10px;">
+            <div style="width:36px;height:36px;background:linear-gradient(135deg,#7c3aed,#00b4a6);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">🤖</div>
+            <div>
+              <div style="font-size:11.5px;font-weight:900;color:#e8f4f8;">Tutor IA</div>
+              <div style="font-size:8.5px;color:#22c55e;font-weight:600;">● Online agora</div>
+            </div>
+            <div style="margin-left:auto;font-size:8px;color:#7a9ab0;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:4px 9px;font-weight:600;">Grátis</div>
+          </div>
+          <div style="padding:0 9px;display:flex;flex-direction:column;gap:10px;">
+            <div style="background:rgba(124,58,237,.16);border:1px solid rgba(124,58,237,.22);border-radius:12px 12px 3px 12px;padding:9px 11px;margin-left:36px;">
+              <div style="font-size:10px;color:#e8f4f8;line-height:1.5;">Por que devo usar proporção em vez de regra de 3 no ENEM?</div>
+            </div>
+            <div style="background:rgba(0,180,166,.10);border:1px solid rgba(0,180,166,.20);border-radius:12px 12px 12px 3px;padding:10px 11px;">
+              <div style="font-size:7.5px;font-weight:700;color:#00b4a6;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:5px;">✦ Tutor IA</div>
+              <div style="font-size:10px;color:#e8f4f8;line-height:1.55;">O ENEM valoriza raciocínio lógico. Proporção mostra que você entende a relação entre as grandezas — e os corretores identificam isso! Veja com um exemplo de 2023 →</div>
+            </div>
+            <div style="background:rgba(124,58,237,.16);border:1px solid rgba(124,58,237,.22);border-radius:12px 12px 3px 12px;padding:9px 11px;margin-left:36px;">
+              <div style="font-size:10px;color:#e8f4f8;line-height:1.5;">Me explica a Lei de Lavoisier!</div>
+            </div>
+            <div style="background:rgba(0,180,166,.10);border:1px solid rgba(0,180,166,.20);border-radius:12px 12px 12px 3px;padding:10px 11px;">
+              <div style="font-size:7.5px;font-weight:700;color:#00b4a6;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:5px;">✦ Tutor IA</div>
+              <div style="font-size:10px;color:#e8f4f8;line-height:1.55;">"Na natureza, nada se cria, nada se perde, tudo se transforma." Massa dos reagentes = massa dos produtos. Quer praticar com questões reais?</div>
+            </div>
+            <div style="background:rgba(124,58,237,.16);border:1px solid rgba(124,58,237,.22);border-radius:12px 12px 3px 12px;padding:9px 11px;margin-left:36px;">
+              <div style="font-size:10px;color:#e8f4f8;line-height:1.5;">Sim! Me manda umas questões 🔥</div>
+            </div>
+          </div>
+          <div style="position:absolute;bottom:18px;left:9px;right:9px;background:#112840;border:1.5px solid rgba(0,180,166,.22);border-radius:11px;padding:10px 12px;display:flex;align-items:center;gap:8px;">
+            <span style="font-size:9.5px;color:#4a6a80;flex:1;">Pergunte qualquer coisa...</span>
+            <div style="width:26px;height:26px;background:linear-gradient(135deg,#00b4a6,#007a73);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;">→</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: text -->
+    <div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:56px 56px 56px 40px;">
+      <div class="pill pill-p" style="margin-bottom:28px;">🤖 Inteligência Artificial</div>
+      <h1 style="font-size:82px;font-weight:900;color:#e8f4f8;line-height:.97;letter-spacing:-3px;margin-bottom:14px;">
+        Professor<br>particular
+      </h1>
+      <h2 style="font-size:72px;font-weight:900;line-height:.97;letter-spacing:-2.5px;margin-bottom:24px;background:linear-gradient(135deg,#7c3aed,#00b4a6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">
+        disponível<br>24h por dia.
+      </h2>
+      <div class="aline" style="background:linear-gradient(90deg,#7c3aed,#00b4a6);margin-bottom:22px;"></div>
+      <p style="font-size:19px;color:#7a9ab0;line-height:1.55;max-width:420px;margin-bottom:30px;font-weight:500;">
+        Sem mensalidade de cursinho.<br>Sem hora marcada. Sem julgamento.
+      </p>
+      <div style="display:flex;flex-direction:column;gap:16px;">
+        <div style="display:flex;align-items:flex-start;gap:14px;font-size:18px;font-weight:500;color:#e8f4f8;line-height:1.5;">
+          <div style="width:9px;height:9px;background:#7c3aed;border-radius:50%;flex-shrink:0;margin-top:8px;"></div>
+          <span><strong style="font-weight:800;">Tutor IA</strong> explica cada questão no seu ritmo</span>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:14px;font-size:18px;font-weight:500;color:#e8f4f8;line-height:1.5;">
+          <div style="width:9px;height:9px;background:#00b4a6;border-radius:50%;flex-shrink:0;margin-top:8px;"></div>
+          <span><strong style="font-weight:800;">Redação corrigida</strong> com nota e análise das 5 competências</span>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:14px;font-size:18px;font-weight:500;color:#e8f4f8;line-height:1.5;">
+          <div style="width:9px;height:9px;background:#f5c518;border-radius:50%;flex-shrink:0;margin-top:8px;"></div>
+          <span><strong style="font-weight:800;">Sugestões individuais</strong> para melhorar cada competência</span>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:14px;font-size:18px;font-weight:500;color:#e8f4f8;line-height:1.5;">
+          <div style="width:9px;height:9px;background:#f97316;border-radius:50%;flex-shrink:0;margin-top:8px;"></div>
+          <span><strong style="font-weight:800;">Disponível agora</strong> — sem cadastro elaborado, sem espera</span>
+        </div>
+      </div>
+      <div style="margin-top:32px;display:inline-flex;align-items:center;gap:10px;background:rgba(124,58,237,.10);border:1.5px solid rgba(124,58,237,.28);border-radius:14px;padding:16px 24px;width:fit-content;">
+        <span style="font-size:22px;">🤖</span>
+        <div>
+          <div style="font-size:15px;font-weight:800;color:#e8f4f8;">Converse com o Tutor agora</div>
+          <div style="font-size:13px;color:#a78bfa;font-weight:600;">www.enemmaster.com.br</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════════════════════
+     SLIDE 5 — ANÁLISE INTELIGENTE
+     ════════════════════════════════════════════════════════ -->
+<section class="slide" id="s5" style="background:linear-gradient(148deg,#07131e 0%,#0c1d2e 60%,#0a1929 100%);">
+  <div class="blob" style="width:900px;height:900px;background:radial-gradient(circle,rgba(0,180,166,.13) 0%,transparent 56%);top:-260px;left:-240px;"></div>
+  <div class="blob" style="width:500px;height:500px;background:radial-gradient(circle,rgba(124,58,237,.10) 0%,transparent 58%);bottom:-80px;right:-60px;"></div>
+
+  <div class="wm">
+    <svg width="36" height="36" viewBox="0 0 512 512"><use href="#logo-icon"/></svg>
+    <span class="wm-name">ENEM Master</span>
+  </div>
+  <div class="nav"><div class="nd"></div><div class="nd"></div><div class="nd"></div><div class="nd"></div><div class="nd on"></div><div class="nd"></div></div>
+
+  <div style="position:relative;z-index:2;display:flex;flex-direction:column;justify-content:center;height:100%;padding:56px 64px;">
+    <div class="pill pill-t" style="margin-bottom:24px;">📊 Quiz Inteligente</div>
+    <h1 style="font-size:78px;font-weight:900;color:#e8f4f8;line-height:.98;letter-spacing:-3px;margin-bottom:8px;">
+      Descubra exatamente<br>onde você está
+    </h1>
+    <h2 style="font-size:78px;font-weight:900;color:#00b4a6;line-height:.98;letter-spacing:-3px;margin-bottom:16px;">
+      perdendo pontos.
+    </h2>
+    <p style="font-size:20px;color:#7a9ab0;margin-bottom:36px;max-width:760px;line-height:1.5;font-weight:500;">
+      O app analisa <strong style="color:#e8f4f8;">cada erro</strong> que você comete e monta um <strong style="color:#e8f4f8;">plano de ataque</strong> nas suas fraquezas reais. Sem achismo.
+    </p>
+    <div style="background:rgba(255,255,255,.03);border:1.5px solid rgba(0,180,166,.14);border-radius:26px;padding:38px 44px;position:relative;overflow:hidden;">
+      <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#00b4a6,#7c3aed);"></div>
+      <div style="display:flex;align-items:center;gap:22px;margin-bottom:28px;">
+        <div style="display:flex;align-items:center;gap:11px;width:240px;font-size:20px;font-weight:700;color:#e8f4f8;flex-shrink:0;"><span>🌍</span>Humanas</div>
+        <div style="flex:1;height:20px;background:rgba(255,255,255,.07);border-radius:11px;overflow:hidden;"><div style="width:78%;height:100%;border-radius:11px;background:linear-gradient(90deg,#7c3aed,rgba(124,58,237,.55));"></div></div>
+        <span style="font-size:20px;font-weight:900;color:#e8f4f8;width:64px;text-align:right;">78%</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:22px;margin-bottom:28px;">
+        <div style="display:flex;align-items:center;gap:11px;width:240px;font-size:20px;font-weight:700;color:#e8f4f8;flex-shrink:0;"><span>🔬</span>Natureza</div>
+        <div style="flex:1;height:20px;background:rgba(255,255,255,.07);border-radius:11px;overflow:hidden;"><div style="width:62%;height:100%;border-radius:11px;background:linear-gradient(90deg,#00b4a6,rgba(0,180,166,.55));"></div></div>
+        <span style="font-size:20px;font-weight:900;color:#e8f4f8;width:64px;text-align:right;">62%</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:22px;margin-bottom:28px;">
+        <div style="display:flex;align-items:center;gap:11px;width:240px;font-size:20px;font-weight:700;color:#e8f4f8;flex-shrink:0;"><span>📝</span>Linguagens</div>
+        <div style="flex:1;height:20px;background:rgba(255,255,255,.07);border-radius:11px;overflow:hidden;"><div style="width:88%;height:100%;border-radius:11px;background:linear-gradient(90deg,#f5c518,rgba(245,197,24,.55));"></div></div>
+        <span style="font-size:20px;font-weight:900;color:#e8f4f8;width:64px;text-align:right;">88%</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:22px;">
+        <div style="display:flex;align-items:center;gap:11px;width:240px;font-size:20px;font-weight:700;color:#e8f4f8;flex-shrink:0;"><span>➗</span>Matemática</div>
+        <div style="flex:1;height:20px;background:rgba(255,255,255,.07);border-radius:11px;overflow:hidden;"><div style="width:44%;height:100%;border-radius:11px;background:linear-gradient(90deg,#ef4444,rgba(239,68,68,.55));"></div></div>
+        <span style="font-size:20px;font-weight:900;color:#ef4444;width:90px;text-align:right;">44% ⚠️</span>
+      </div>
+    </div>
+    <div style="display:flex;gap:16px;margin-top:28px;">
+      <div style="flex:1;display:flex;align-items:center;gap:10px;font-size:16px;color:#e8f4f8;font-weight:700;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:16px 22px;">
+        <span style="color:#00b4a6;font-size:18px;font-weight:900;">✓</span> +500 questões reais do ENEM
+      </div>
+      <div style="flex:1;display:flex;align-items:center;gap:10px;font-size:16px;color:#e8f4f8;font-weight:700;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:16px 22px;">
+        <span style="color:#00b4a6;font-size:18px;font-weight:900;">✓</span> Cronograma personalizado
+      </div>
+      <div style="flex:1;display:flex;align-items:center;gap:10px;font-size:16px;color:#e8f4f8;font-weight:700;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:16px 22px;">
+        <span style="color:#00b4a6;font-size:18px;font-weight:900;">✓</span> Mapa de fraquezas com IA
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════════════════════
+     SLIDE 6 — CTA MÁXIMA
+     ════════════════════════════════════════════════════════ -->
+<section class="slide" id="s6" style="background:linear-gradient(155deg,#06101a 0%,#0c1c2c 50%,#0a1929 100%);">
+  <div class="blob" style="width:1000px;height:1000px;background:radial-gradient(circle,rgba(0,180,166,.09) 0%,rgba(124,58,237,.05) 42%,transparent 62%);top:50%;left:50%;transform:translate(-50%,-50%);"></div>
+  <div class="blob" style="width:600px;height:600px;background:radial-gradient(circle,rgba(245,197,24,.05) 0%,transparent 62%);top:50%;left:50%;transform:translate(-50%,-55%);"></div>
+  <div style="position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#00b4a6,#7c3aed,#f5c518);z-index:30;"></div>
+
+  <div class="wm">
+    <svg width="36" height="36" viewBox="0 0 512 512"><use href="#logo-icon"/></svg>
+    <span class="wm-name">ENEM Master</span>
+  </div>
+  <div class="nav"><div class="nd"></div><div class="nd"></div><div class="nd"></div><div class="nd"></div><div class="nd"></div><div class="nd on"></div></div>
+
+  <div style="position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:56px 80px;text-align:center;">
+    <svg width="110" height="110" viewBox="0 0 512 512" style="margin-bottom:20px;filter:drop-shadow(0 0 40px rgba(0,180,166,.42)) drop-shadow(0 0 80px rgba(0,180,166,.15));"><use href="#logo-icon"/></svg>
+
+    <h1 style="font-size:60px;font-weight:900;color:#e8f4f8;line-height:1.1;letter-spacing:-1.5px;max-width:880px;margin-bottom:8px;">
+      Mais de <span style="color:#f5c518;">50 mil estudantes</span> já<br>estudam com IA todo dia.
+    </h1>
+    <h2 style="font-size:42px;font-weight:900;line-height:1.1;letter-spacing:-1px;margin-bottom:24px;background:linear-gradient(120deg,#ef4444,#f97316);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">
+      Você vai ficar pra trás?
+    </h2>
+
+    <p style="font-size:20px;color:#7a9ab0;margin-bottom:36px;max-width:680px;line-height:1.6;font-weight:500;">
+      Crie sua conta <strong style="color:#e8f4f8;">grátis agora</strong> e descubra em minutos<br>onde você está perdendo pontos no ENEM.
+    </p>
+
+    <div style="display:flex;align-items:center;gap:0;margin-bottom:36px;background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.08);border-radius:22px;overflow:hidden;width:100%;max-width:800px;">
+      <div style="flex:1;padding:22px 0;display:flex;flex-direction:column;align-items:center;gap:5px;border-right:1px solid rgba(255,255,255,.07);">
+        <span style="font-size:40px;font-weight:900;color:#e8f4f8;line-height:1;">+50k</span>
+        <span style="font-size:14px;color:#7a9ab0;font-weight:600;">estudantes ativos</span>
+      </div>
+      <div style="flex:1;padding:22px 0;display:flex;flex-direction:column;align-items:center;gap:5px;border-right:1px solid rgba(255,255,255,.07);">
+        <span style="font-size:22px;color:#f5c518;letter-spacing:4px;">★★★★★</span>
+        <span style="font-size:14px;color:#7a9ab0;font-weight:600;">4.9 · melhor da categoria</span>
+      </div>
+      <div style="flex:1;padding:22px 0;display:flex;flex-direction:column;align-items:center;gap:5px;">
+        <span style="font-size:40px;font-weight:900;color:#e8f4f8;line-height:1;">+500</span>
+        <span style="font-size:14px;color:#7a9ab0;font-weight:600;">questões reais do ENEM</span>
+      </div>
+    </div>
+
+    <div class="cta">
+      Entrar Grátis Agora &nbsp;→
+    </div>
+
+    <p style="margin-top:20px;font-size:21px;font-weight:900;color:#00b4a6;letter-spacing:.3px;">www.enemmaster.com.br</p>
+
+    <div style="margin-top:14px;display:inline-flex;align-items:center;gap:10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:40px;padding:12px 28px;font-size:15px;font-weight:600;color:#7a9ab0;">
+      📱 Sem download · Sem cartão · Acesso imediato no navegador
+    </div>
+  </div>
+</section>
+
+</body>
+</html>

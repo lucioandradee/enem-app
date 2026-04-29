@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>ENEM Master — 5 Erros que Derrubam sua Nota</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: #050d18;
+  font-family: 'Inter', 'Segoe UI', -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  width: 1080px;
+}
+
+.slide {
+  width: 1080px;
+  height: 1080px;
+  position: relative;
+  overflow: hidden;
+  background: #070f1e;
+  display: flex;
+  flex-direction: column;
+}
+
+.glow {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+/* Watermark */
+.wm {
+  position: absolute;
+  top: 52px; left: 64px;
+  display: flex; align-items: center; gap: 11px;
+  z-index: 10;
+}
+.wm-brand { font-size: 15px; font-weight: 800; color: #00b4a6; letter-spacing: .4px; }
+
+/* Nav dots */
+.nav-dots {
+  position: absolute;
+  bottom: 52px; right: 64px;
+  display: flex; gap: 8px; align-items: center;
+  z-index: 10;
+}
+.nav-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,.15); }
+.nav-dot.on { background: #ef4444; width: 28px; border-radius: 4px; }
+
+.logo-sm { width: 36px; height: 36px; }
+.logo-lg { width: 96px; height: 96px; }
+
+.inner {
+  position: relative; z-index: 2;
+  display: flex; flex-direction: column;
+  height: 100%; padding: 60px 68px;
+}
+
+/* ══════════════════════════════════════════
+   SLIDE 1 — COVER
+   ══════════════════════════════════════════ */
+#s1 { background: linear-gradient(148deg, #070f1e 0%, #0f0a1e 100%); }
+
+#s1 .gr {
+  width: 900px; height: 900px;
+  background: radial-gradient(circle, rgba(239,68,68,.18) 0%, transparent 58%);
+  top: -300px; right: -260px;
+}
+#s1 .gt {
+  width: 600px; height: 600px;
+  background: radial-gradient(circle, rgba(0,180,166,.13) 0%, transparent 58%);
+  bottom: -160px; left: -120px;
+}
+#s1 .gp {
+  width: 400px; height: 400px;
+  background: radial-gradient(circle, rgba(124,58,237,.12) 0%, transparent 58%);
+  bottom: 80px; right: 80px;
+}
+
+.deco-five {
+  position: absolute;
+  right: -40px; bottom: -40px;
+  font-size: 580px; font-weight: 900;
+  color: rgba(239,68,68,.055);
+  line-height: 1; z-index: 1;
+  pointer-events: none;
+  letter-spacing: -20px;
+  font-variant-numeric: tabular-nums;
+}
+
+.cover-tag {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(239,68,68,.12);
+  border: 1px solid rgba(239,68,68,.30);
+  border-radius: 40px; padding: 8px 20px;
+  font-size: 12px; font-weight: 800;
+  color: #ef4444; letter-spacing: 2.5px;
+  text-transform: uppercase; width: fit-content;
+  margin-bottom: 40px;
+}
+
+.cover-headline {
+  font-size: 88px; font-weight: 900;
+  color: #e8f4f8; line-height: 1.01;
+  letter-spacing: -4px;
+}
+.cover-headline .red { color: #ef4444; }
+.cover-headline .grad {
+  background: linear-gradient(135deg, #00b4a6 0%, #7c3aed 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.cover-sub {
+  font-size: 22px; color: #7a9ab0; line-height: 1.6;
+  margin-top: 28px; max-width: 720px; font-weight: 400;
+}
+.cover-sub strong { color: #e8f4f8; font-weight: 700; }
+
+.swipe-hint {
+  margin-top: 48px;
+  display: flex; align-items: center; gap: 12px;
+  font-size: 17px; font-weight: 700; color: #00b4a6;
+}
+
+/* Preview list on cover */
+.preview-list {
+  display: flex; flex-direction: column; gap: 10px;
+  margin-top: 42px;
+}
+.preview-item {
+  display: flex; align-items: center; gap: 14px;
+  font-size: 16px; color: rgba(232,244,248,.55); font-weight: 500;
+}
+.preview-num {
+  width: 28px; height: 28px; border-radius: 8px;
+  background: rgba(239,68,68,.15); border: 1px solid rgba(239,68,68,.25);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 900; color: #ef4444; flex-shrink: 0;
+}
+
+
+/* ══════════════════════════════════════════
+   ERROR SLIDES (2–6)
+   ══════════════════════════════════════════ */
+.err-slide { background: linear-gradient(148deg, #070f1e 0%, #090d1c 100%); }
+
+.err-slide .glow-r {
+  width: 720px; height: 720px;
+  background: radial-gradient(circle, rgba(239,68,68,.13) 0%, transparent 58%);
+  top: -200px; right: -200px;
+}
+.err-slide .glow-b {
+  width: 480px; height: 480px;
+  background: radial-gradient(circle, rgba(0,180,166,.10) 0%, transparent 58%);
+  bottom: -120px; left: -80px;
+}
+
+/* Huge decorative number */
+.err-num-deco {
+  position: absolute;
+  right: 40px; bottom: 70px;
+  font-size: 380px; font-weight: 900;
+  line-height: 1; z-index: 1;
+  pointer-events: none;
+  letter-spacing: -15px;
+  color: rgba(239,68,68,.05);
+}
+
+/* Error counter badge */
+.err-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(239,68,68,.12);
+  border: 1px solid rgba(239,68,68,.30);
+  border-radius: 40px; padding: 8px 20px;
+  font-size: 12px; font-weight: 800;
+  color: #ef4444; letter-spacing: 2.5px;
+  text-transform: uppercase; width: fit-content;
+  margin-top: 92px; margin-bottom: 28px;
+}
+
+/* Error title */
+.err-title {
+  font-size: 64px; font-weight: 900;
+  color: #e8f4f8; line-height: 1.04;
+  letter-spacing: -2.5px; margin-bottom: 22px;
+}
+.err-title .hl-red   { color: #ef4444; }
+.err-title .hl-gold  { color: #f5c518; }
+.err-title .hl-teal  { color: #00b4a6; }
+
+/* Error description */
+.err-body {
+  font-size: 19px; color: #7a9ab0; line-height: 1.68;
+  font-weight: 400; margin-bottom: 30px; max-width: 880px;
+}
+.err-body strong { color: #c4dae6; font-weight: 700; }
+
+/* Solution box */
+.solution-box {
+  background: rgba(0,180,166,.06);
+  border: 1px solid rgba(0,180,166,.22);
+  border-radius: 20px; padding: 26px 30px;
+  position: relative; overflow: hidden;
+  max-width: 900px;
+}
+.solution-box::before {
+  content: '';
+  position: absolute; top: 0; left: 0; bottom: 0; width: 3px;
+  background: linear-gradient(180deg, #00b4a6, #7c3aed);
+}
+.sol-label {
+  font-size: 11px; font-weight: 800;
+  color: #00b4a6; letter-spacing: 2.5px;
+  text-transform: uppercase; margin-bottom: 10px;
+  display: flex; align-items: center; gap: 8px;
+}
+.sol-text {
+  font-size: 18px; color: #e8f4f8;
+  line-height: 1.58; font-weight: 500;
+}
+.sol-text strong { color: #00b4a6; font-weight: 700; }
+
+/* Divider */
+.divider {
+  height: 1px;
+  background: linear-gradient(90deg, rgba(239,68,68,.3), transparent);
+  margin: 28px 0;
+}
+
+
+/* ══════════════════════════════════════════
+   SLIDE 7 — CTA
+   ══════════════════════════════════════════ */
+#s7 { background: linear-gradient(155deg, #070f1e 0%, #0d2137 100%); }
+#s7 .gc {
+  width: 860px; height: 860px;
+  background: radial-gradient(circle, rgba(0,180,166,.12) 0%, transparent 55%);
+  top: 50%; left: 50%; transform: translate(-50%, -52%);
+}
+#s7 .gp2 {
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, rgba(239,68,68,.08) 0%, transparent 55%);
+  bottom: -100px; right: -80px;
+}
+
+.cta-feat-list { display: flex; flex-direction: column; gap: 14px; width: 100%; max-width: 800px; }
+.cta-feat {
+  display: flex; align-items: center; gap: 16px;
+  font-size: 18px; font-weight: 500; color: #e8f4f8;
+}
+.cta-feat-ic {
+  width: 46px; height: 46px; border-radius: 12px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 22px;
+}
+.ic-teal   { background: rgba(0,180,166,.12); border: 1px solid rgba(0,180,166,.25); }
+.ic-purple { background: rgba(124,58,237,.12); border: 1px solid rgba(124,58,237,.25); }
+.ic-red    { background: rgba(239,68,68,.12);  border: 1px solid rgba(239,68,68,.25); }
+.ic-gold   { background: rgba(245,197,24,.10); border: 1px solid rgba(245,197,24,.25); }
+
+.cta-btn {
+  display: inline-flex; align-items: center; gap: 12px;
+  background: linear-gradient(135deg, #00b4a6 0%, #008f84 100%);
+  color: #fff; font-size: 21px; font-weight: 800;
+  padding: 22px 60px; border-radius: 16px;
+  box-shadow: 0 8px 36px rgba(0,180,166,.40);
+  letter-spacing: .3px; margin-top: 8px;
+}
+
+.app-name-cta {
+  font-size: 52px; font-weight: 900; color: #e8f4f8;
+  letter-spacing: -1.5px; margin: 16px 0 6px;
+}
+.app-sub-cta {
+  font-size: 12px; font-weight: 700; color: #00b4a6;
+  letter-spacing: 4px; text-transform: uppercase; margin-bottom: 28px;
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════
+     SLIDE 1 — COVER / HOOK
+     ══════════════════════════════════════════════════════ -->
+<section class="slide" id="s1">
+  <div class="glow gr"></div>
+  <div class="glow gt"></div>
+  <div class="glow gp"></div>
+  <div class="deco-five">5</div>
+
+  <div class="wm">
+    <svg class="logo-sm" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+      <rect width="512" height="512" rx="96" fill="#112840"/>
+      <polygon points="256,90 395,158 256,226 117,158" fill="#00b4a6"/>
+      <polygon points="256,90 395,158 256,158" fill="#008f84" opacity=".4"/>
+      <path d="M146,172 L146,272 C146,320 196,354 256,354 C316,354 366,320 366,272 L366,172 L256,226 Z" fill="#00b4a6" opacity=".92"/>
+      <path d="M256,226 L366,172 L366,272 C366,320 316,354 256,354 Z" fill="#008f84" opacity=".3"/>
+      <line x1="395" y1="158" x2="395" y2="268" stroke="#f5c518" stroke-width="12" stroke-linecap="round"/>
+      <circle cx="395" cy="284" r="20" fill="#f5c518"/>
+      <circle cx="395" cy="284" r="11" fill="#c9a000"/>
+    </svg>
+    <span class="wm-brand">ENEM Master</span>
+  </div>
+
+  <div class="nav-dots">
+    <div class="nav-dot on"></div>
+    <div class="nav-dot"></div><div class="nav-dot"></div>
+    <div class="nav-dot"></div><div class="nav-dot"></div>
+    <div class="nav-dot"></div><div class="nav-dot"></div>
+  </div>
+
+  <div class="inner" style="justify-content:center; padding-top:80px;">
+    <div class="cover-tag">⚠️ Atenção vestibulandos</div>
+
+    <h1 class="cover-headline">
+      <span class="red">5 erros</span> que<br>
+      derrubam sua nota<br>
+      no <span class="grad">ENEM</span>
+    </h1>
+
+    <p class="cover-sub">
+      e você provavelmente está cometendo
+      <strong>pelo menos 3 deles</strong> agora.
+    </p>
+
+    <div class="preview-list">
+      <div class="preview-item"><div class="preview-num">01</div>Estudar o que você já sabe</div>
+      <div class="preview-item"><div class="preview-num">02</div>Acreditar que precisa acertar tudo</div>
+      <div class="preview-item"><div class="preview-num">03</div>Estudar sem medir seu desempenho</div>
+      <div class="preview-item"><div class="preview-num">04</div>Deixar a redação para o último mês</div>
+      <div class="preview-item"><div class="preview-num">05</div>Maratonas de estudo sem consistência</div>
+    </div>
+
+    <div class="swipe-hint">
+      <span>Deslize e descubra cada erro</span>
+      <span style="font-size:22px;">→</span>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════
+     SLIDE 2 — ERRO 01
+     ══════════════════════════════════════════════════════ -->
+<section class="slide err-slide" id="s2">
+  <div class="glow glow-r"></div>
+  <div class="glow glow-b"></div>
+  <div class="err-num-deco">01</div>
+
+  <div class="wm">
+    <svg class="logo-sm" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+      <rect width="512" height="512" rx="96" fill="#112840"/>
+      <polygon points="256,90 395,158 256,226 117,158" fill="#00b4a6"/>
+      <polygon points="256,90 395,158 256,158" fill="#008f84" opacity=".4"/>
+      <path d="M146,172 L146,272 C146,320 196,354 256,354 C316,354 366,320 366,272 L366,172 L256,226 Z" fill="#00b4a6" opacity=".92"/>
+      <path d="M256,226 L366,172 L366,272 C366,320 316,354 256,354 Z" fill="#008f84" opacity=".3"/>
+      <line x1="395" y1="158" x2="395" y2="268" stroke="#f5c518" stroke-width="12" stroke-linecap="round"/>
+      <circle cx="395" cy="284" r="20" fill="#f5c518"/>
+      <circle cx="395" cy="284" r="11" fill="#c9a000"/>
+    </svg>
+    <span class="wm-brand">ENEM Master</span>
+  </div>
+
+  <div class="nav-dots">
+    <div class="nav-dot"></div>
+    <div class="nav-dot on"></div>
+    <div class="nav-dot"></div><div class="nav-dot"></div>
+    <div class="nav-dot"></div><div class="nav-dot"></div><div class="nav-dot"></div>
+  </div>
+
+  <div class="inner">
+    <div class="err-badge">⚠️ Erro 01 de 05</div>
+
+    <h2 class="err-title">
+      Estudar o que<br>
+      você <span class="hl-red">JÁ SABE</span>
+    </h2>
+
+    <p class="err-body">
+      Nossa mente prefere o que já domina — parece produtivo, mas é
+      <strong>uma ilusão perigosa.</strong> Se você já acerta 90% das questões de uma matéria,
+      estudar mais ela gera retorno quase zero. Você ganha confiança, mas não ganha nota.
+    </p>
+
+    <div class="solution-box">
+      <div class="sol-label">✅ Como corrigir</div>
+      <p class="sol-text">
+        Mapeie sua taxa de acerto por matéria e tópico. Invista seu tempo onde você
+        <strong>erra mais</strong>, não onde se sente mais confortável.
+        Dados, não sensação, devem guiar seu estudo.
+      </p>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════
+     SLIDE 3 — ERRO 02
+     ══════════════════════════════════════════════════════ -->
+<section class="slide err-slide" id="s3">
+  <div class="glow glow-r"></div>
+  <div class="glow glow-b"></div>
+  <div class="err-num-deco">02</div>
+
+  <div class="wm">
+    <svg class="logo-sm" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+      <rect width="512" height="512" rx="96" fill="#112840"/>
+      <polygon points="256,90 395,158 256,226 117,158" fill="#00b4a6"/>
+      <polygon points="256,90 395,158 256,158" fill="#008f84" opacity=".4"/>
+      <path d="M146,172 L146,272 C146,320 196,354 256,354 C316,354 366,320 366,272 L366,172 L256,226 Z" fill="#00b4a6" opacity=".92"/>
+      <path d="M256,226 L366,172 L366,272 C366,320 316,354 256,354 Z" fill="#008f84" opacity=".3"/>
+      <line x1="395" y1="158" x2="395" y2="268" stroke="#f5c518" stroke-width="12" stroke-linecap="round"/>
+      <circle cx="395" cy="284" r="20" fill="#f5c518"/>
+      <circle cx="395" cy="284" r="11" fill="#c9a000"/>
+    </svg>
+    <span class="wm-brand">ENEM Master</span>
+  </div>
+
+  <div class="nav-dots">
+    <div class="nav-dot"></div><div class="nav-dot"></div>
+    <div class="nav-dot on"></div>
+    <div class="nav-dot"></div><div class="nav-dot"></div>
+    <div class="nav-dot"></div><div class="nav-dot"></div>
+  </div>
+
+  <div class="inner">
+    <div class="err-badge">⚠️ Erro 02 de 05</div>
+
+    <h2 class="err-title">
+      Achar que precisa<br>
+      acertar <span class="hl-red">TUDO</span>
+    </h2>
+
+    <p class="err-body">
+      A TRI (Teoria de Resposta ao Item) <strong>penaliza inconsistência.</strong>
+      Errar uma questão fácil e acertar uma difícil gera suspeita de chute —
+      e derruba sua nota mais do que deixar em branco. A prova não é sobre
+      quantidade: é sobre <strong>estratégia.</strong>
+    </p>
+
+    <div class="solution-box">
+      <div class="sol-label">✅ Como corrigir</div>
+      <p class="sol-text">
+        <strong>Nunca deixe em branco.</strong> Priorize questões fáceis primeiro.
+        Evite chutes aleatórios nas difíceis. Treinar a TRI com simulados
+        que simulam esse comportamento muda o resultado real.
+      </p>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════
+     SLIDE 4 — ERRO 03
+     ══════════════════════════════════════════════════════ -->
+<section class="slide err-slide" id="s4">
+  <div class="glow glow-r"></div>
+  <div class="glow glow-b"></div>
+  <div class="err-num-deco">03</div>
+
+  <div class="wm">
+    <svg class="logo-sm" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+      <rect width="512" height="512" rx="96" fill="#112840"/>
+      <polygon points="256,90 395,158 256,226 117,158" fill="#00b4a6"/>
+      <polygon points="256,90 395,158 256,158" fill="#008f84" opacity=".4"/>
+      <path d="M146,172 L146,272 C146,320 196,354 256,354 C316,354 366,320 366,272 L366,172 L256,226 Z" fill="#00b4a6" opacity=".92"/>
+      <path d="M256,226 L366,172 L366,272 C366,320 316,354 256,354 Z" fill="#008f84" opacity=".3"/>
+      <line x1="395" y1="158" x2="395" y2="268" stroke="#f5c518" stroke-width="12" stroke-linecap="round"/>
+      <circle cx="395" cy="284" r="20" fill="#f5c518"/>
+      <circle cx="395" cy="284" r="11" fill="#c9a000"/>
+    </svg>
+    <span class="wm-brand">ENEM Master</span>
+  </div>
+
+  <div class="nav-dots">
+    <div class="nav-dot"></div><div class="nav-dot"></div><div class="nav-dot"></div>
+    <div class="nav-dot on"></div>
+    <div class="nav-dot"></div><div class="nav-dot"></div><div class="nav-dot"></div>
+  </div>
+
+  <div class="inner">
+    <div class="err-badge">⚠️ Erro 03 de 05</div>
+
+    <h2 class="err-title">
+      Estudar sem<br>
+      <span class="hl-red">medir</span> o desempenho
+    </h2>
+
+    <p class="err-body">
+      Horas de estudo <strong>sem análise de erro</strong> é esforço desperdiçado.
+      Você repete os mesmos erros sem perceber, acha que está avançando
+      e chega na prova com as mesmas lacunas de sempre.
+      <strong>Sem dados, não existe direção.</strong>
+    </p>
+
+    <div class="solution-box">
+      <div class="sol-label">✅ Como corrigir</div>
+      <p class="sol-text">
+        Analise <strong>cada questão errada</strong> logo após resolver.
+        Identifique padrões: o que você erra repetidamente é o que precisa de
+        atenção — não o que você acha que precisa.
+      </p>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════
+     SLIDE 5 — ERRO 04
+     ══════════════════════════════════════════════════════ -->
+<section class="slide err-slide" id="s5">
+  <div class="glow glow-r"></div>
+  <div class="glow glow-b"></div>
+  <div class="err-num-deco">04</div>
+
+  <div class="wm">
+    <svg class="logo-sm" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+      <rect width="512" height="512" rx="96" fill="#112840"/>
+      <polygon points="256,90 395,158 256,226 117,158" fill="#00b4a6"/>
+      <polygon points="256,90 395,158 256,158" fill="#008f84" opacity=".4"/>
+      <path d="M146,172 L146,272 C146,320 196,354 256,354 C316,354 366,320 366,272 L366,172 L256,226 Z" fill="#00b4a6" opacity=".92"/>
+      <path d="M256,226 L366,172 L366,272 C366,320 316,354 256,354 Z" fill="#008f84" opacity=".3"/>
+      <line x1="395" y1="158" x2="395" y2="268" stroke="#f5c518" stroke-width="12" stroke-linecap="round"/>
+      <circle cx="395" cy="284" r="20" fill="#f5c518"/>
+      <circle cx="395" cy="284" r="11" fill="#c9a000"/>
+    </svg>
+    <span class="wm-brand">ENEM Master</span>
+  </div>
+
+  <div class="nav-dots">
+    <div class="nav-dot"></div><div class="nav-dot"></div>
+    <div class="nav-dot"></div><div class="nav-dot"></div>
+    <div class="nav-dot on"></div>
+    <div class="nav-dot"></div><div class="nav-dot"></div>
+  </div>
+
+  <div class="inner">
+    <div class="err-badge">⚠️ Erro 04 de 05</div>
+
+    <h2 class="err-title">
+      Deixar a <span class="hl-red">redação</span><br>
+      para o último mês
+    </h2>
+
+    <p class="err-body">
+      A redação vale até <strong>1.000 pontos</strong> — 20% da nota total.
+      É a competência que mais demora para desenvolver.
+      Quem começa a treinar na última semana nunca consegue atingir o potencial máximo.
+      <strong>É a maior fonte de pontos desperdiçados</strong> no ENEM.
+    </p>
+
+    <div class="solution-box">
+      <div class="sol-label">✅ Como corrigir</div>
+      <p class="sol-text">
+        Escreva <strong>pelo menos uma redação por semana.</strong>
+        Receba correção com análise das 5 competências.
+        Evolução em redação é lenta — mas consistente. Comece agora.
+      </p>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════
+     SLIDE 6 — ERRO 05
+     ══════════════════════════════════════════════════════ -->
+<section class="slide err-slide" id="s6">
+  <div class="glow glow-r"></div>
+  <div class="glow glow-b"></div>
+  <div class="err-num-deco">05</div>
+
+  <div class="wm">
+    <svg class="logo-sm" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+      <rect width="512" height="512" rx="96" fill="#112840"/>
+      <polygon points="256,90 395,158 256,226 117,158" fill="#00b4a6"/>
+      <polygon points="256,90 395,158 256,158" fill="#008f84" opacity=".4"/>
+      <path d="M146,172 L146,272 C146,320 196,354 256,354 C316,354 366,320 366,272 L366,172 L256,226 Z" fill="#00b4a6" opacity=".92"/>
+      <path d="M256,226 L366,172 L366,272 C366,320 316,354 256,354 Z" fill="#008f84" opacity=".3"/>
+      <line x1="395" y1="158" x2="395" y2="268" stroke="#f5c518" stroke-width="12" stroke-linecap="round"/>
+      <circle cx="395" cy="284" r="20" fill="#f5c518"/>
+      <circle cx="395" cy="284" r="11" fill="#c9a000"/>
+    </svg>
+    <span class="wm-brand">ENEM Master</span>
+  </div>
+
+  <div class="nav-dots">
+    <div class="nav-dot"></div><div class="nav-dot"></div>
+    <div class="nav-dot"></div><div class="nav-dot"></div>
+    <div class="nav-dot"></div>
+    <div class="nav-dot on"></div>
+    <div class="nav-dot"></div>
+  </div>
+
+  <div class="inner">
+    <div class="err-badge">⚠️ Erro 05 de 05</div>
+
+    <h2 class="err-title">
+      Maratonas de estudo<br>
+      <span class="hl-red">sem consistência</span>
+    </h2>
+
+    <p class="err-body">
+      Seu cérebro consolida memória <strong>durante o sono</strong> e nos dias seguintes
+      ao aprendizado. 5 horas de estudo em um único dia valem
+      <strong>muito menos</strong> do que 30 minutos por dia durante uma semana.
+      Volume não substitui cadência.
+    </p>
+
+    <div class="solution-box">
+      <div class="sol-label">✅ Como corrigir</div>
+      <p class="sol-text">
+        Crie um <strong>hábito diário pequeno e sustentável.</strong>
+        Consistência de 6 meses supera intensidade de 2 semanas.
+        Use gamificação e ofensivas de estudo para manter a sequência nos dias difíceis.
+      </p>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════
+     SLIDE 7 — CTA FINAL
+     ══════════════════════════════════════════════════════ -->
+<section class="slide" id="s7">
+  <div class="glow gc"></div>
+  <div class="glow gp2"></div>
+
+  <div class="wm">
+    <svg class="logo-sm" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+      <rect width="512" height="512" rx="96" fill="#112840"/>
+      <polygon points="256,90 395,158 256,226 117,158" fill="#00b4a6"/>
+      <polygon points="256,90 395,158 256,158" fill="#008f84" opacity=".4"/>
+      <path d="M146,172 L146,272 C146,320 196,354 256,354 C316,354 366,320 366,272 L366,172 L256,226 Z" fill="#00b4a6" opacity=".92"/>
+      <path d="M256,226 L366,172 L366,272 C366,320 316,354 256,354 Z" fill="#008f84" opacity=".3"/>
+      <line x1="395" y1="158" x2="395" y2="268" stroke="#f5c518" stroke-width="12" stroke-linecap="round"/>
+      <circle cx="395" cy="284" r="20" fill="#f5c518"/>
+      <circle cx="395" cy="284" r="11" fill="#c9a000"/>
+    </svg>
+    <span class="wm-brand">ENEM Master</span>
+  </div>
+
+  <div class="nav-dots">
+    <div class="nav-dot"></div><div class="nav-dot"></div>
+    <div class="nav-dot"></div><div class="nav-dot"></div>
+    <div class="nav-dot"></div><div class="nav-dot"></div>
+    <div class="nav-dot on"></div>
+  </div>
+
+  <div class="inner" style="align-items:center;justify-content:center;text-align:center;">
+
+    <svg class="logo-lg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+      <rect width="512" height="512" rx="96" fill="#112840"/>
+      <circle cx="256" cy="210" r="140" fill="#00b4a6" opacity=".08"/>
+      <polygon points="256,90 395,158 256,226 117,158" fill="#00b4a6"/>
+      <polygon points="256,90 395,158 256,158" fill="#008f84" opacity=".4"/>
+      <path d="M146,172 L146,272 C146,320 196,354 256,354 C316,354 366,320 366,272 L366,172 L256,226 Z" fill="#00b4a6" opacity=".92"/>
+      <path d="M256,226 L366,172 L366,272 C366,320 316,354 256,354 Z" fill="#008f84" opacity=".3"/>
+      <line x1="395" y1="158" x2="395" y2="268" stroke="#f5c518" stroke-width="12" stroke-linecap="round"/>
+      <circle cx="395" cy="284" r="20" fill="#f5c518"/>
+      <circle cx="395" cy="284" r="11" fill="#c9a000"/>
+      <text x="256" y="448" text-anchor="middle" font-family="Arial Black,Arial,sans-serif" font-weight="900" font-size="70" fill="#00b4a6" letter-spacing="3">MASTER</text>
+    </svg>
+
+    <p class="app-name-cta">ENEM Master</p>
+    <p class="app-sub-cta">Resolve todos esses erros</p>
+
+    <div class="cta-feat-list" style="text-align:left;margin-bottom:32px;">
+      <div class="cta-feat">
+        <div class="cta-feat-ic ic-teal">📊</div>
+        <span><strong>Análise automática</strong> dos seus pontos fracos por matéria</span>
+      </div>
+      <div class="cta-feat">
+        <div class="cta-feat-ic ic-purple">🤖</div>
+        <span><strong>TRI simulada</strong> nos treinos — aprenda a estratégia certa</span>
+      </div>
+      <div class="cta-feat">
+        <div class="cta-feat-ic ic-gold">✍️</div>
+        <span><strong>Redação corrigida por IA</strong> nas 5 competências do ENEM</span>
+      </div>
+      <div class="cta-feat">
+        <div class="cta-feat-ic ic-red">🔥</div>
+        <span><strong>Gamificação</strong> para manter sua consistência diária</span>
+      </div>
+    </div>
+
+    <div class="cta-btn">
+      Começar Grátis Agora  <span style="font-size:22px;">→</span>
+    </div>
+
+    <p style="margin-top:18px;font-size:17px;font-weight:700;color:#00b4a6;">www.enemmaster.com.br</p>
+    <p style="margin-top:10px;font-size:14px;color:#4a6a80;font-weight:500;">Sem cartão. Sem download. Acesso imediato.</p>
+  </div>
+</section>
+
+</body>
+</html>
