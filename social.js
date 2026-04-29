@@ -188,14 +188,14 @@ function closeShareModal() {
 
 function shareViaWhatsapp() {
     const d = _shareData;
-    const text = `🎓 *ENEM Master* — Resultado do Simulado\n\n` +
-        `📊 *${d.pct}* de acerto em ${d.disc}\n` +
-        `✅ ${d.stats}\n` +
-        `⚡ ${d.xp} XP ganhos\n` +
-        (d.tri ? `🎯 ${d.tri}\n` : '') +
-        `\nEstudando no ENEM Master 🚀 — enem.app`;
-
-    window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank', 'noopener,noreferrer');
+    const canvas = _generateQuizStoryCanvas(d);
+    _downloadCanvas(canvas, 'enem-resultado.png');
+    const txt = encodeURIComponent(
+        '🎓 Fiz um simulado no *ENEM Master* e tirei *' + d.pct + '* de acerto!\n' +
+        '📲 Estude grátis também → enem.app'
+    );
+    setTimeout(() => window.open('https://wa.me/?text=' + txt, '_blank', 'noopener,noreferrer'), 380);
+    _showQuickToast('📲 Arte salva! Anexe a imagem no WhatsApp');
     closeShareModal();
 }
 
@@ -210,158 +210,393 @@ function copyShareText() {
     }).catch(() => _showQuickToast('❌ Não foi possível copiar'));
 }
 
-// ── Geração de card visual via Canvas ────────────────────────────────────────
-function downloadShareCard() {
-    const d = _shareData;
-    const canvas = document.createElement('canvas');
-    const W = 1080, H = 1080;
-    canvas.width  = W;
-    canvas.height = H;
-    const ctx = canvas.getContext('2d');
+// ── Helpers utilitários de Canvas ───────────────────────────────────────────
 
-    // Fundo gradiente
-    const grad = ctx.createLinearGradient(0, 0, W, H);
-    grad.addColorStop(0, '#0b0e1a');
-    grad.addColorStop(1, '#0d2333');
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, W, H);
+function _dataURLtoBlob(dataURL) {
+    const parts = dataURL.split(',');
+    const mime  = parts[0].match(/:(.*?);/)[1];
+    const raw   = atob(parts[1]);
+    const arr   = new Uint8Array(raw.length);
+    for (let i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
+    return new Blob([arr], { type: mime });
+}
 
-    // Grid sutil de pontos
-    ctx.fillStyle = 'rgba(0,180,166,0.06)';
-    for (let x = 40; x < W; x += 60) {
-        for (let y = 40; y < H; y += 60) {
-            ctx.beginPath();
-            ctx.arc(x, y, 2, 0, Math.PI * 2);
-            ctx.fill();
-        }
-    }
-
-    // Borda teal arredondada
-    const r = 40;
-    ctx.strokeStyle = 'rgba(0,180,166,0.5)';
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    ctx.moveTo(r, 2); ctx.lineTo(W-r, 2);
-    ctx.arcTo(W-2, 2, W-2, r, r);
-    ctx.lineTo(W-2, H-r);
-    ctx.arcTo(W-2, H-2, W-r, H-2, r);
-    ctx.lineTo(r, H-2);
-    ctx.arcTo(2, H-2, 2, H-r, r);
-    ctx.lineTo(2, r);
-    ctx.arcTo(2, 2, r, 2, r);
-    ctx.stroke();
-
-    // Logo
-    ctx.font = 'bold 36px Inter, Arial, sans-serif';
-    ctx.fillStyle = '#00b4a6';
-    ctx.textAlign = 'center';
-    ctx.fillText('🎓 ENEM MASTER', W/2, 100);
-
-    // Linha separadora
-    ctx.strokeStyle = 'rgba(0,180,166,0.3)';
-    ctx.lineWidth = 1.5;
-    ctx.beginPath(); ctx.moveTo(120, 125); ctx.lineTo(W-120, 125); ctx.stroke();
-
-    // Percentual de acerto
-    ctx.font = 'bold 200px Inter, Arial, sans-serif';
-    ctx.fillStyle = '#00e5d4';
-    ctx.textAlign = 'center';
-    ctx.fillText(d.pct || '—', W/2, 380);
-
-    // DE ACERTO
-    ctx.font = 'bold 32px Inter, Arial, sans-serif';
-    ctx.fillStyle = 'rgba(255,255,255,0.5)';
-    ctx.fillText('DE ACERTO', W/2, 430);
-
-    // Disciplina
-    ctx.font = 'bold 48px Inter, Arial, sans-serif';
-    ctx.fillStyle = '#ffffff';
-    ctx.fillText(d.disc || 'Simulado', W/2, 510);
-
-    // Stats
-    ctx.font = '34px Inter, Arial, sans-serif';
-    ctx.fillStyle = 'rgba(255,255,255,0.7)';
-    ctx.fillText(d.stats || '', W/2, 570);
-
-    // TRI se existir
-    if (d.tri) {
-        ctx.font = 'bold 34px Inter, Arial, sans-serif';
-        ctx.fillStyle = '#fbbf24';
-        ctx.fillText(d.tri, W/2, 626);
-    }
-
-    // XP Badge
-    const xpY = d.tri ? 700 : 660;
-    ctx.fillStyle = 'rgba(0,180,166,0.2)';
-    _roundRect(ctx, W/2 - 130, xpY - 44, 260, 58, 30);
-    ctx.fill();
-    ctx.strokeStyle = 'rgba(0,180,166,0.6)';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-    ctx.font = 'bold 32px Inter, Arial, sans-serif';
-    ctx.fillStyle = '#00b4a6';
-    ctx.fillText(`⚡ +${d.xp} XP`, W/2, xpY);
-
-    // Linha separadora inferior
-    const lineY = xpY + 80;
-    ctx.strokeStyle = 'rgba(255,255,255,0.1)';
-    ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(120, lineY); ctx.lineTo(W-120, lineY); ctx.stroke();
-
-    // Nome do usuário
-    ctx.font = 'bold 36px Inter, Arial, sans-serif';
-    ctx.fillStyle = 'rgba(255,255,255,0.9)';
-    ctx.textAlign = 'left';
-    ctx.fillText(d.user || 'Estudante', 120, lineY + 60);
-
-    // URL
-    ctx.font = '28px Inter, Arial, sans-serif';
-    ctx.fillStyle = 'rgba(0,180,166,0.8)';
-    ctx.textAlign = 'right';
-    ctx.fillText('enem.app', W - 120, lineY + 60);
-
-    // Data
-    ctx.font = '24px Inter, Arial, sans-serif';
-    ctx.fillStyle = 'rgba(255,255,255,0.3)';
-    ctx.textAlign = 'center';
-    ctx.fillText(new Date().toLocaleDateString('pt-BR', { day:'2-digit', month:'long', year:'numeric' }), W/2, lineY + 115);
-
-    // Download
+function _downloadCanvas(canvas, filename) {
     try {
         const link = document.createElement('a');
-        link.download = 'enem-master-resultado.png';
+        link.download = filename;
         link.href = canvas.toDataURL('image/png');
         link.click();
-        _showQuickToast('🖼️ Card salvo como imagem!');
-        closeShareModal();
-    } catch {
-        _showQuickToast('❌ Não foi possível salvar a imagem');
-    }
+    } catch { /* silently ignore */ }
 }
 
-// Compartilhar card via Web Share API (mobile)
+function _drawSep(ctx, x1, y, x2, midColor) {
+    const g = ctx.createLinearGradient(x1, 0, x2, 0);
+    g.addColorStop(0, 'transparent');
+    g.addColorStop(0.5, midColor);
+    g.addColorStop(1, 'transparent');
+    ctx.strokeStyle = g; ctx.lineWidth = 1.8;
+    ctx.beginPath(); ctx.moveTo(x1, y); ctx.lineTo(x2, y); ctx.stroke();
+}
+
+// ── Geração de Story (1080×1920) — Resultado de Simulado ─────────────────────
+
+function _generateQuizStoryCanvas(d) {
+    const canvas = document.createElement('canvas');
+    const W = 1080, H = 1920;
+    canvas.width = W; canvas.height = H;
+    const ctx = canvas.getContext('2d');
+
+    // Fundo gradiente escuro premium
+    const bg = ctx.createLinearGradient(0, 0, 0, H);
+    bg.addColorStop(0,    '#060c18');
+    bg.addColorStop(0.45, '#0a1628');
+    bg.addColorStop(1,    '#07101f');
+    ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+
+    // Glow teal superior
+    const gT = ctx.createRadialGradient(W/2, 80, 0, W/2, 80, 820);
+    gT.addColorStop(0, 'rgba(0,180,166,0.30)'); gT.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = gT; ctx.fillRect(0, 0, W, 900);
+
+    // Glow violeta inferior
+    const gB = ctx.createRadialGradient(W/2, H, 0, W/2, H, 680);
+    gB.addColorStop(0, 'rgba(99,102,241,0.24)'); gB.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = gB; ctx.fillRect(0, H - 720, W, 720);
+
+    // Pontos decorativos
+    ctx.fillStyle = 'rgba(0,180,166,0.055)';
+    for (let x = 70; x < W; x += 90)
+        for (let y = 70; y < H; y += 90) {
+            ctx.beginPath(); ctx.arc(x, y, 2.8, 0, Math.PI * 2); ctx.fill();
+        }
+
+    // Borda gradiente
+    const brd = ctx.createLinearGradient(0, 0, W, H);
+    brd.addColorStop(0,   'rgba(0,229,212,0.85)');
+    brd.addColorStop(0.5, 'rgba(99,102,241,0.35)');
+    brd.addColorStop(1,   'rgba(0,229,212,0.85)');
+    ctx.strokeStyle = brd; ctx.lineWidth = 3.5;
+    _roundRect(ctx, 14, 14, W - 28, H - 28, 55); ctx.stroke();
+
+    // Logo pill
+    ctx.fillStyle = 'rgba(0,180,166,0.14)';
+    _roundRect(ctx, W/2 - 218, 72, 436, 90, 45); ctx.fill();
+    ctx.strokeStyle = 'rgba(0,180,166,0.48)'; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.font = 'bold 40px Inter, Arial, sans-serif';
+    ctx.fillStyle = '#00e5d4'; ctx.textAlign = 'center';
+    ctx.fillText('🎓 ENEM MASTER', W/2, 132);
+
+    // Data
+    ctx.font = '29px Inter, Arial, sans-serif';
+    ctx.fillStyle = 'rgba(255,255,255,0.32)';
+    ctx.fillText(new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }), W/2, 207);
+
+    // Título da seção
+    ctx.font = 'bold 50px Inter, Arial, sans-serif';
+    ctx.fillStyle = 'rgba(255,255,255,0.50)';
+    ctx.fillText('RESULTADO DO SIMULADO', W/2, 295);
+
+    _drawSep(ctx, 80, 330, W - 80, 'rgba(0,180,166,0.55)');
+
+    // Percentual gigante com gradiente
+    const pG = ctx.createLinearGradient(0, 380, 0, 760);
+    pG.addColorStop(0, '#00e5d4'); pG.addColorStop(1, '#00a896');
+    ctx.fillStyle = pG;
+    ctx.font = 'bold 240px Inter, Arial, sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(d.pct || '—', W/2, 745);
+
+    ctx.font = 'bold 44px Inter, Arial, sans-serif';
+    ctx.fillStyle = 'rgba(255,255,255,0.42)';
+    ctx.fillText('DE ACERTO', W/2, 803);
+
+    // Disciplina (auto-resize para texto longo)
+    const discText = d.disc || 'Simulado';
+    ctx.font = 'bold 58px Inter, Arial, sans-serif';
+    if (ctx.measureText(discText).width > 920) ctx.font = 'bold 46px Inter, Arial, sans-serif';
+    ctx.fillStyle = '#ffffff'; ctx.textAlign = 'center';
+    ctx.fillText(discText, W/2, 900);
+
+    // Stats (acertos · erros)
+    ctx.font = '42px Inter, Arial, sans-serif';
+    ctx.fillStyle = 'rgba(255,255,255,0.60)';
+    ctx.fillText(d.stats || '', W/2, 968);
+
+    // TRI (condicional)
+    let nextY = 1050;
+    if (d.tri) {
+        ctx.fillStyle = 'rgba(251,191,36,0.13)';
+        _roundRect(ctx, W/2 - 340, nextY - 56, 680, 82, 41); ctx.fill();
+        ctx.strokeStyle = 'rgba(251,191,36,0.44)'; ctx.lineWidth = 1.5; ctx.stroke();
+        ctx.font = 'bold 40px Inter, Arial, sans-serif'; ctx.fillStyle = '#fbbf24';
+        ctx.fillText(d.tri, W/2, nextY + 5);
+        nextY += 124;
+    }
+
+    // XP badge
+    ctx.fillStyle = 'rgba(0,180,166,0.18)';
+    _roundRect(ctx, W/2 - 210, nextY - 58, 420, 86, 43); ctx.fill();
+    ctx.strokeStyle = 'rgba(0,180,166,0.55)'; ctx.lineWidth = 2; ctx.stroke();
+    ctx.font = 'bold 46px Inter, Arial, sans-serif'; ctx.fillStyle = '#00b4a6';
+    ctx.fillText('⚡ +' + d.xp + ' XP', W/2, nextY + 5);
+
+    // Nome do usuário
+    ctx.font = 'bold 42px Inter, Arial, sans-serif';
+    ctx.fillStyle = 'rgba(255,255,255,0.78)';
+    ctx.fillText(d.user || 'Estudante', W/2, nextY + 170);
+
+    // Separador CTA
+    const divY = 1598;
+    _drawSep(ctx, 80, divY, W - 80, 'rgba(255,255,255,0.10)');
+
+    // Bloco CTA com fundo
+    ctx.fillStyle = 'rgba(0,180,166,0.09)';
+    _roundRect(ctx, 55, divY + 22, W - 110, 280, 42); ctx.fill();
+    ctx.strokeStyle = 'rgba(0,180,166,0.22)'; ctx.lineWidth = 1.5; ctx.stroke();
+
+    ctx.font = 'bold 50px Inter, Arial, sans-serif'; ctx.fillStyle = '#ffffff';
+    ctx.fillText('Você também consegue! 🚀', W/2, divY + 108);
+
+    ctx.font = '38px Inter, Arial, sans-serif';
+    ctx.fillStyle = 'rgba(255,255,255,0.62)';
+    ctx.fillText('Estude para o ENEM com IA — grátis', W/2, divY + 164);
+
+    // Botão CTA
+    const ctaG = ctx.createLinearGradient(W/2 - 275, 0, W/2 + 275, 0);
+    ctaG.addColorStop(0, '#00b4a6'); ctaG.addColorStop(1, '#007d87');
+    ctx.fillStyle = ctaG;
+    _roundRect(ctx, W/2 - 275, divY + 193, 550, 90, 45); ctx.fill();
+    ctx.font = 'bold 40px Inter, Arial, sans-serif'; ctx.fillStyle = '#ffffff';
+    ctx.fillText('Começar GRÁTIS → enem.app', W/2, divY + 251);
+
+    return canvas;
+}
+
+// ── Geração de Story (1080×1920) — Retrospectiva Mensal ──────────────────────
+
+function _generateRetroStoryCanvas(retro, monthLabel, userName, streak) {
+    const canvas = document.createElement('canvas');
+    const W = 1080, H = 1920;
+    canvas.width = W; canvas.height = H;
+    const ctx = canvas.getContext('2d');
+
+    // Fundo
+    const bg = ctx.createLinearGradient(0, 0, 0, H);
+    bg.addColorStop(0,    '#060c18');
+    bg.addColorStop(0.45, '#0a1220');
+    bg.addColorStop(1,    '#070d1c');
+    ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+
+    const gT = ctx.createRadialGradient(W/2, 60, 0, W/2, 60, 840);
+    gT.addColorStop(0, 'rgba(0,180,166,0.30)'); gT.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = gT; ctx.fillRect(0, 0, W, 920);
+
+    const gB = ctx.createRadialGradient(W/2, H, 0, W/2, H, 680);
+    gB.addColorStop(0, 'rgba(99,102,241,0.24)'); gB.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = gB; ctx.fillRect(0, H - 720, W, 720);
+
+    ctx.fillStyle = 'rgba(0,180,166,0.055)';
+    for (let x = 70; x < W; x += 90)
+        for (let y = 70; y < H; y += 90) {
+            ctx.beginPath(); ctx.arc(x, y, 2.8, 0, Math.PI * 2); ctx.fill();
+        }
+
+    const brd = ctx.createLinearGradient(0, 0, W, H);
+    brd.addColorStop(0, 'rgba(0,229,212,0.85)');
+    brd.addColorStop(0.5, 'rgba(99,102,241,0.35)');
+    brd.addColorStop(1, 'rgba(0,229,212,0.85)');
+    ctx.strokeStyle = brd; ctx.lineWidth = 3.5;
+    _roundRect(ctx, 14, 14, W - 28, H - 28, 55); ctx.stroke();
+
+    // Logo
+    ctx.fillStyle = 'rgba(0,180,166,0.14)';
+    _roundRect(ctx, W/2 - 218, 72, 436, 90, 45); ctx.fill();
+    ctx.strokeStyle = 'rgba(0,180,166,0.48)'; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.font = 'bold 40px Inter, Arial, sans-serif';
+    ctx.fillStyle = '#00e5d4'; ctx.textAlign = 'center';
+    ctx.fillText('🎓 ENEM MASTER', W/2, 132);
+
+    // Título Wrapped
+    ctx.font = 'bold 50px Inter, Arial, sans-serif';
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText('ENEM Master Wrapped ✨', W/2, 225);
+
+    // Mês/Ano
+    ctx.font = 'bold 44px Inter, Arial, sans-serif';
+    ctx.fillStyle = '#00e5d4';
+    ctx.fillText(monthLabel, W/2, 285);
+
+    _drawSep(ctx, 80, 320, W - 80, 'rgba(0,180,166,0.55)');
+
+    // Grade 2×2 de stats principais
+    const gX = 60, gY = 348, cW = (W - gX * 2 - 16) / 2, cH = 240;
+    const cells = [
+        { icon: '📚', value: retro.totalQuestoes.toLocaleString('pt-BR'), label: 'Questões'      },
+        { icon: '🎯', value: retro.accuracy + '%',                         label: 'Taxa de Acerto' },
+        { icon: '⚡', value: retro.totalXP.toLocaleString('pt-BR'),        label: 'XP Ganho'      },
+        { icon: '📅', value: String(retro.uniqueDays),                     label: 'Dias Estudados' },
+    ];
+
+    cells.forEach((cell, i) => {
+        const col = i % 2, row = Math.floor(i / 2);
+        const cx = gX + col * (cW + 16);
+        const cy = gY + row * (cH + 16);
+
+        ctx.fillStyle = 'rgba(255,255,255,0.05)';
+        _roundRect(ctx, cx, cy, cW, cH, 28); ctx.fill();
+        ctx.strokeStyle = 'rgba(0,180,166,0.22)'; ctx.lineWidth = 1.5; ctx.stroke();
+
+        ctx.font = '54px Inter, Arial, sans-serif'; ctx.textAlign = 'center';
+        ctx.fillStyle = '#ffffff'; ctx.fillText(cell.icon, cx + cW / 2, cy + 72);
+
+        ctx.font = (cell.value.length > 7 ? 'bold 50px' : 'bold 66px') + ' Inter, Arial, sans-serif';
+        const vG = ctx.createLinearGradient(cx, cy + 90, cx, cy + 175);
+        vG.addColorStop(0, '#00e5d4'); vG.addColorStop(1, '#00a896');
+        ctx.fillStyle = vG;
+        ctx.fillText(cell.value, cx + cW / 2, cy + 160);
+
+        ctx.font = '30px Inter, Arial, sans-serif';
+        ctx.fillStyle = 'rgba(255,255,255,0.48)';
+        ctx.fillText(cell.label, cx + cW / 2, cy + 207);
+    });
+
+    // Separador pós-grade
+    const hl1Y = gY + 2 * (cH + 16) + 28;
+    _drawSep(ctx, 80, hl1Y, W - 80, 'rgba(255,255,255,0.12)');
+
+    // Highlights (tempo, simulados, melhor, foco)
+    const aN = retro.areaNames || { humanas:'Humanas', natureza:'Natureza', linguagens:'Linguagens', matematica:'Mat.', misto:'Misto' };
+    const aI = retro.areaIcons || { humanas:'📚', natureza:'🔬', linguagens:'📝', matematica:'➗', misto:'🎯' };
+
+    const highlights = [];
+    if (retro.studyHours) highlights.push({ icon: '🕐', label: 'Tempo de estudo', value: retro.studyHours });
+    if (retro.simulados)  highlights.push({ icon: '📋', label: 'Simulados feitos', value: retro.simulados + (retro.simulados !== 1 ? ' simulados' : ' simulado') });
+    if (retro.bestArea)   highlights.push({ icon: '🏆', label: 'Melhor matéria',   value: aI[retro.bestArea.disc] + ' ' + aN[retro.bestArea.disc] + ' (' + retro.bestArea.pct + '%)' });
+    if (retro.worstArea)  highlights.push({ icon: '⚔️',  label: 'Focar mais em',    value: aI[retro.worstArea.disc] + ' ' + aN[retro.worstArea.disc] });
+
+    let hlY = hl1Y + 38;
+    const hlH = 100;
+    highlights.forEach(hl => {
+        ctx.fillStyle = 'rgba(255,255,255,0.04)';
+        _roundRect(ctx, 60, hlY, W - 120, hlH - 12, 22); ctx.fill();
+
+        ctx.font = '38px Inter, Arial, sans-serif'; ctx.textAlign = 'left';
+        ctx.fillStyle = '#ffffff'; ctx.fillText(hl.icon, 100, hlY + 60);
+
+        ctx.font = '32px Inter, Arial, sans-serif'; ctx.fillStyle = 'rgba(255,255,255,0.45)';
+        ctx.fillText(hl.label, 162, hlY + 53);
+
+        ctx.font = 'bold 32px Inter, Arial, sans-serif'; ctx.fillStyle = '#00e5d4';
+        ctx.textAlign = 'right'; ctx.fillText(hl.value, W - 100, hlY + 62);
+
+        ctx.textAlign = 'center';
+        hlY += hlH;
+    });
+
+    // Streak pill
+    hlY += 8;
+    ctx.fillStyle = 'rgba(251,113,133,0.13)';
+    _roundRect(ctx, W/2 - 240, hlY, 480, 76, 38); ctx.fill();
+    ctx.strokeStyle = 'rgba(251,113,133,0.38)'; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.font = 'bold 34px Inter, Arial, sans-serif'; ctx.fillStyle = '#fb7185';
+    ctx.fillText('🔥 Sequência: ' + streak + ' dia' + (streak !== 1 ? 's' : ''), W/2, hlY + 46);
+
+    // Nome
+    ctx.font = 'bold 40px Inter, Arial, sans-serif';
+    ctx.fillStyle = 'rgba(255,255,255,0.75)';
+    ctx.fillText(userName, W/2, hlY + 148);
+
+    // Separador CTA
+    const divY = 1598;
+    _drawSep(ctx, 80, divY, W - 80, 'rgba(255,255,255,0.10)');
+
+    // Bloco CTA
+    ctx.fillStyle = 'rgba(0,180,166,0.09)';
+    _roundRect(ctx, 55, divY + 22, W - 110, 280, 42); ctx.fill();
+    ctx.strokeStyle = 'rgba(0,180,166,0.22)'; ctx.lineWidth = 1.5; ctx.stroke();
+
+    ctx.font = 'bold 50px Inter, Arial, sans-serif'; ctx.fillStyle = '#ffffff';
+    ctx.fillText('Seu progresso é real! 🚀', W/2, divY + 108);
+
+    ctx.font = '38px Inter, Arial, sans-serif'; ctx.fillStyle = 'rgba(255,255,255,0.62)';
+    ctx.fillText('Estude para o ENEM com IA — grátis', W/2, divY + 164);
+
+    const ctaG = ctx.createLinearGradient(W/2 - 275, 0, W/2 + 275, 0);
+    ctaG.addColorStop(0, '#00b4a6'); ctaG.addColorStop(1, '#007d87');
+    ctx.fillStyle = ctaG;
+    _roundRect(ctx, W/2 - 275, divY + 193, 550, 90, 45); ctx.fill();
+    ctx.font = 'bold 40px Inter, Arial, sans-serif'; ctx.fillStyle = '#ffffff';
+    ctx.fillText('Começar GRÁTIS → enem.app', W/2, divY + 251);
+
+    return canvas;
+}
+
+// ── Download e Compartilhamento — Quiz Result ────────────────────────────────
+
+function downloadShareCard() {
+    const canvas = _generateQuizStoryCanvas(_shareData);
+    _downloadCanvas(canvas, 'enem-resultado.png');
+    _showQuickToast('🖼️ Arte salva! Compartilhe nos Stories');
+    closeShareModal();
+}
+
 async function shareCardNative() {
-    if (!navigator.share) {
-        downloadShareCard();
-        return;
+    await document.fonts.ready;
+    const canvas = _generateQuizStoryCanvas(_shareData);
+    const dataURL = canvas.toDataURL('image/png');
+
+    if (navigator.share) {
+        try {
+            const blob = _dataURLtoBlob(dataURL);
+            const file = new File([blob], 'enem-resultado.png', { type: 'image/png' });
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                await navigator.share({ files: [file], title: 'ENEM Master — Resultado' });
+            } else {
+                await navigator.share({ title: 'ENEM Master', url: 'https://enem.app' });
+            }
+        } catch { /* usuário cancelou */ }
+    } else {
+        _downloadCanvas(canvas, 'enem-resultado.png');
+        _showQuickToast('🖼️ Arte salva! Compartilhe nos Stories');
     }
-    const d = _shareData;
-    try {
-        await navigator.share({
-            title: 'ENEM Master — Resultado',
-            text:  `🎓 ${d.pct} de acerto em ${d.disc}! ${d.stats} · +${d.xp} XP\nenem.app`,
-            url:   'https://enem.app',
-        });
-        closeShareModal();
-    } catch {
-        // usuário cancelou — sem toast
-    }
+    closeShareModal();
 }
 
-// Compartilhar para o Instagram (stories): salva como imagem
 function shareToInstagram() {
-    downloadShareCard();
-    _showQuickToast('📸 Salve a imagem e abra o Instagram para postar nos Stories!');
+    const canvas = _generateQuizStoryCanvas(_shareData);
+    _downloadCanvas(canvas, 'enem-resultado.png');
+    _showQuickToast('📸 Arte salva! Abra o Instagram e poste nos Stories');
+    closeShareModal();
+}
+
+// ── Download e Compartilhamento — Retrospectiva ──────────────────────────────
+
+function downloadRetroCard(retro, monthLabel, userName, streak) {
+    const canvas = _generateRetroStoryCanvas(retro, monthLabel, userName, streak);
+    _downloadCanvas(canvas, 'enem-wrapped-' + monthLabel.replace(' ', '-').toLowerCase() + '.png');
+    _showQuickToast('🖼️ Arte do Wrapped salva! Compartilhe nos Stories');
+}
+
+async function shareRetroNative(retro, monthLabel, userName, streak) {
+    await document.fonts.ready;
+    const canvas = _generateRetroStoryCanvas(retro, monthLabel, userName, streak);
+    const dataURL = canvas.toDataURL('image/png');
+
+    if (navigator.share) {
+        try {
+            const blob = _dataURLtoBlob(dataURL);
+            const file = new File([blob], 'enem-wrapped.png', { type: 'image/png' });
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                await navigator.share({ files: [file], title: 'ENEM Master Wrapped — ' + monthLabel });
+            } else {
+                _downloadCanvas(canvas, 'enem-wrapped.png');
+                _showQuickToast('🖼️ Arte salva! Compartilhe nos Stories 🎉');
+            }
+        } catch { /* usuário cancelou */ }
+    } else {
+        _downloadCanvas(canvas, 'enem-wrapped.png');
+        _showQuickToast('🖼️ Arte salva! Compartilhe no Instagram ou WhatsApp 🎉');
+    }
 }
 
 // Compartilha stats do perfil (streak, XP, nível)

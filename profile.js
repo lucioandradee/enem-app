@@ -441,31 +441,11 @@ function shareRetro() {
 
     const MONTH_NAMES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
                          'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-    const bestLabel = retro.bestArea
-        ? `${retro.areaNames[retro.bestArea.disc]} (${retro.bestArea.pct}%)`
-        : '—';
+    const monthLabel = MONTH_NAMES[month] + ' ' + year;
+    const userName   = state.user.name   || 'Estudante';
+    const streak     = state.user.streak || 0;
 
-    const text = [
-        `🎓 Meu ENEM Master Wrapped — ${MONTH_NAMES[month]} ${year}`,
-        ``,
-        `📚 ${retro.totalQuestoes} questões respondidas`,
-        `🎯 ${retro.accuracy}% de taxa de acerto`,
-        `⚡ ${retro.totalXP.toLocaleString('pt-BR')} XP ganho`,
-        `📅 ${retro.uniqueDays} dias estudados`,
-        `🕐 ~${retro.studyHours} de estudo estimado`,
-        `🔥 Sequência atual: ${state.user.streak || 0} dias`,
-        `🏆 Melhor em: ${bestLabel}`,
-        ``,
-        `📲 #ENEMMaster`,
-    ].join('\n');
-
-    if (navigator.share) {
-        navigator.share({ title: 'ENEM Master Wrapped', text }).catch(() => {});
-    } else {
-        navigator.clipboard.writeText(text)
-            .then(() => _showQuickToast('Copiado! Cole no WhatsApp ou Instagram 🎉'))
-            .catch(() => _showQuickToast('Não foi possível copiar. Tente novamente.'));
-    }
+    shareRetroNative(retro, monthLabel, userName, streak);
 }
 
 function renderRecentActivity() {
