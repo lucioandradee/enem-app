@@ -48,7 +48,7 @@ function _renderTutorMessages() {
 
     container.innerHTML = _tutorHistory.map(msg => `
         <div class="tutor-msg tutor-msg-${msg.role}">
-            ${msg.role === 'assistant' ? '<span class="tutor-msg-avatar">🤖</span>' : ''}
+            ${msg.role === 'assistant' ? '<span class="tutor-msg-avatar">IA</span>' : ''}
             <div class="tutor-msg-bubble">${_tutorFormatText(msg.content)}</div>
         </div>
     `).join('');
@@ -64,9 +64,13 @@ function _renderTutorWelcome() {
     const sug  = _getTutorSuggestions();
     return `
         <div class="tutor-welcome">
-            <div class="tutor-welcome-icon">🤖</div>
-            <h3 class="tutor-welcome-title">Olá, ${name}! Sou seu Professor IA</h3>
-            <p class="tutor-welcome-sub">Especialista em todas as disciplinas do ENEM. Tire suas dúvidas, peça explicações ou peça resumos — estou aqui 24h.</p>
+            <div class="tutor-welcome-msg">
+                <span class="tutor-msg-avatar">IA</span>
+                <div class="tutor-welcome-bubble">
+                    <p>Olá, <strong>${name}</strong>! Pode me perguntar qualquer coisa do ENEM.</p>
+                    <p class="tutor-welcome-hint">Matemática, Física, Química, Biologia, Humanas, Linguagens e Redação.</p>
+                </div>
+            </div>
             <div class="tutor-suggestions" id="tutor-suggestions">
                 ${sug.map(s => `<button class="tutor-sug-btn" onclick="sendTutorMessage(${JSON.stringify(s)})">${s}</button>`).join('')}
             </div>
@@ -199,7 +203,7 @@ function _showTutorLoading() {
     loader.id = 'tutor-loading-msg';
     loader.className = 'tutor-msg tutor-msg-assistant';
     loader.innerHTML = `
-        <span class="tutor-msg-avatar">🤖</span>
+        <span class="tutor-msg-avatar">IA</span>
         <div class="tutor-msg-bubble tutor-msg-loading">
             <span class="tutor-dot"></span>
             <span class="tutor-dot"></span>
