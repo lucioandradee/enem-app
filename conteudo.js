@@ -930,13 +930,13 @@ function renderResumosPanel() {
         const allStudied = studiedCount === data.topics.length;
 
         discBtn.innerHTML = `
-            <span class="resumo-disc-icon">${data.icon}</span>
-            <div style="flex:1">
+            <div class="resumo-disc-icon-wrap">${data.icon}</div>
+            <div class="resumo-disc-info">
                 <p class="resumo-disc-name">${data.name}</p>
                 <p class="resumo-disc-sub">${studiedCount > 0 ? `${studiedCount}/${data.topics.length} estudados` : `${data.topics.length} tópicos`}</p>
             </div>
-            ${allStudied ? '<span style="font-size:11px;font-weight:700;color:#4ade80">&#10003; Completo</span>' : ''}
-            <span class="resumo-disc-arrow">›</span>`;
+            ${allStudied ? '<span class="resumo-disc-badge">✓ Completo</span>' : ''}
+            <svg class="resumo-disc-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18"><polyline points="9 18 15 12 9 6"/></svg>`;
         discBtn.onclick = () => _toggleResumoDisc(disc, discBtn);
         listEl.appendChild(discBtn);
 
@@ -990,12 +990,19 @@ function _toggleResumoDisc(disc, btn) {
     const isOpen = content.classList.contains('open');
 
     document.querySelectorAll('.resumo-content').forEach(c => c.classList.remove('open'));
-    document.querySelectorAll('.resumo-disc-arrow').forEach(a => a.textContent = '›');
+    document.querySelectorAll('.resumo-disc-btn').forEach(b => {
+        b.classList.remove('open');
+        const arr = b.querySelector('.resumo-disc-arrow');
+        if (arr) arr.classList.remove('rotated');
+    });
 
     if (!isOpen) {
         content.classList.add('open');
+        btn.classList.add('open');
         const arrow = btn.querySelector('.resumo-disc-arrow');
-        if (arrow) arrow.textContent = '˅';
+        if (arrow) arrow.classList.add('rotated');
+        // scroll suave para o card
+        setTimeout(() => btn.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
     }
 }
 

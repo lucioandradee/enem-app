@@ -167,54 +167,99 @@
 
 /* ---- Resumos Hero ---- */
 .resumos-hero {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 14px 18px 10px; flex-shrink: 0;
-  background: linear-gradient(135deg, rgba(245,197,24,0.06), rgba(249,115,22,0.05));
-  border-bottom: 1px solid rgba(245,197,24,0.15);
+  display: flex; align-items: center;
+  padding: 20px 20px 18px; flex-shrink: 0;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid rgba(255,255,255,0.07);
 }
-.resumos-hero-title { font-size: 14px; font-weight: 800; color: var(--text-primary); margin-bottom: 3px; }
-.resumos-hero-sub { font-size: 11px; color: var(--text-muted); font-weight: 600; }
+.resumos-hero-left { display: flex; align-items: center; gap: 14px; }
+.resumos-hero-icon {
+  width: 44px; height: 44px; border-radius: 14px; flex-shrink: 0;
+  background: linear-gradient(135deg, #f59e0b, #fb923c);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; box-shadow: 0 3px 12px rgba(245,158,11,0.3);
+}
+.resumos-hero-title { font-size: 17px; font-weight: 800; color: var(--text-primary); margin-bottom: 4px; }
+.resumos-hero-sub { font-size: 12px; color: var(--text-muted); font-weight: 500; }
 .resumos-hero-badge { font-size: 30px; }
 
-/* ---- Resumos ---- */
-.resumos-list-inner { padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+/* ---- Resumos lista de disciplinas ---- */
+.resumos-list-inner { padding: 16px 16px 24px; display: flex; flex-direction: column; gap: 10px; }
+
 .resumo-read-bar {
   position: sticky; top: 0; left: 0; height: 3px; width: 0%;
   background: linear-gradient(90deg, var(--teal), #00e5d6);
   border-radius: 0 2px 2px 0; transition: width 0.1s linear; z-index: 10; flex-shrink: 0;
 }
-.resumo-topic-wrap { border-bottom: 1px solid var(--border-subtle); padding-bottom: 14px; margin-bottom: 14px; }
+
+/* Card de disciplina */
+.resumo-disc-btn {
+  display: flex; align-items: center; gap: 14px;
+  background: var(--bg-card);
+  border: 1px solid rgba(255,255,255,0.08); border-radius: 16px;
+  padding: 16px 18px; width: 100%; cursor: pointer;
+  transition: all 0.2s; color: var(--text-primary);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+}
+.resumo-disc-btn:hover { border-color: var(--teal); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,180,166,0.12); }
+.resumo-disc-btn.open  { border-color: rgba(0,180,166,0.4); border-radius: 16px 16px 0 0; }
+
+.resumo-disc-icon-wrap {
+  width: 46px; height: 46px; border-radius: 13px; flex-shrink: 0;
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);
+  display: flex; align-items: center; justify-content: center; font-size: 22px;
+}
+.resumo-disc-info { flex: 1; text-align: left; }
+.resumo-disc-name  { font-size: 15px; font-weight: 700; color: var(--text-primary); }
+.resumo-disc-sub   { font-size: 12px; color: var(--text-muted); margin-top: 3px; font-weight: 500; }
+.resumo-disc-badge { font-size: 11px; font-weight: 700; color: #4ade80; background: rgba(74,222,128,0.12); border: 1px solid rgba(74,222,128,0.25); padding: 2px 8px; border-radius: 20px; flex-shrink: 0; }
+.resumo-disc-arrow { flex-shrink: 0; color: var(--text-muted); transition: transform 0.25s; }
+.resumo-disc-arrow.rotated { transform: rotate(90deg); }
+
+/* Painel de conteúdo do resumo */
+.resumo-content {
+  background: var(--bg-card);
+  border: 1px solid rgba(0,180,166,0.25); border-top: none;
+  border-radius: 0 0 16px 16px;
+  padding: 20px 20px 16px;
+  font-size: 14px; color: var(--text-secondary); line-height: 1.7; display: none;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+}
+.resumo-content.open { display: block; }
+
+/* Tópicos dentro do resumo */
+.resumo-topic-wrap {
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  padding-bottom: 20px; margin-bottom: 20px;
+}
 .resumo-topic-wrap:last-child { border-bottom: none; margin-bottom: 0; }
+
+/* Títulos principais (h3) gerados pelo conteúdo */
+.resumo-content h3 {
+  font-size: 15px; font-weight: 800; color: var(--text-primary);
+  margin: 0 0 10px; padding-bottom: 8px;
+  border-bottom: 1px solid rgba(0,180,166,0.2);
+}
+/* Subtítulos (h4) dentro de cada tópico */
+.resumo-content h4 {
+  font-size: 13px; font-weight: 700; color: var(--teal);
+  margin: 14px 0 6px; text-transform: uppercase; letter-spacing: 0.4px;
+}
+.resumo-content p   { margin: 0 0 10px; }
+.resumo-content ul, .resumo-content ol  { padding-left: 18px; margin: 6px 0 10px; }
+.resumo-content li  { margin-bottom: 5px; }
+.resumo-content strong { color: var(--text-primary); font-weight: 700; }
+
+/* Botão marcar como estudado */
 .resumo-mark-btn {
-  display: inline-flex; align-items: center; gap: 5px;
-  margin-top: 10px; padding: 6px 14px; border-radius: 8px;
-  font-size: 11px; font-weight: 700; cursor: pointer; transition: all 0.2s;
-  border: 1.5px solid var(--border-subtle); background: transparent; color: var(--text-muted);
+  display: inline-flex; align-items: center; gap: 6px;
+  margin-top: 14px; padding: 9px 18px; border-radius: 10px;
+  font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s;
+  border: 1.5px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.04); color: var(--text-muted);
 }
 .resumo-mark-btn:hover { border-color: var(--teal); color: var(--teal); background: rgba(0,180,166,0.07); }
 .resumo-mark-btn.studied { background: rgba(74,222,128,0.1); border-color: rgba(74,222,128,0.35); color: #4ade80; }
 .resumo-mark-btn.studied:hover { background: rgba(74,222,128,0.06); }
-
-.resumo-disc-btn {
-  display: flex; align-items: center; gap: 12px; background: var(--bg-card);
-  border: 1.5px solid var(--border-subtle); border-radius: var(--radius-md);
-  padding: 14px; width: 100%; cursor: pointer; transition: all 0.2s; color: var(--text-primary);
-}
-.resumo-disc-btn:hover { border-color: var(--teal); }
-.resumo-disc-icon  { font-size: 24px; width: 32px; text-align: center; }
-.resumo-disc-name  { font-size: 14px; font-weight: 700; }
-.resumo-disc-sub   { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
-.resumo-disc-arrow { margin-left: auto; font-size: 18px; color: var(--text-muted); }
-.resumo-content {
-  background: rgba(0,180,166,0.04); border-radius: 0 0 var(--radius-md) var(--radius-md);
-  padding: 14px; border: 1px solid var(--border-subtle); border-top: none;
-  font-size: 13px; color: var(--text-secondary); line-height: 1.65; display: none;
-}
-.resumo-content.open { display: block; }
-.resumo-content h4  { font-size: 13px; font-weight: 700; color: var(--teal); margin: 10px 0 6px; }
-.resumo-content p   { margin: 0 0 8px; }
-.resumo-content ul  { padding-left: 16px; }
-.resumo-content li  { margin-bottom: 4px; }
 
 /* ---- Tutor IA ---- */
 .tutor-header {
