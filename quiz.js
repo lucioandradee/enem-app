@@ -1369,3 +1369,7 @@ function showHint() {
     }
 }
 
+function startFoco15() {
+    startQuiz('misto', 10, false, 15 * 60);
+}
+

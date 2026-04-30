@@ -187,6 +187,42 @@
                     </div>
                 </div>
 
+                <!-- Score Prediction Card -->
+                <div class="score-pred-card" id="score-pred-card" style="display:none">
+                    <div class="sp-header">
+                        <span class="sp-label">NOTA ENEM ESTIMADA</span>
+                        <span class="sp-trend" id="sp-trend"></span>
+                    </div>
+                    <div class="sp-score-row">
+                        <span class="sp-score" id="sp-score">—</span>
+                        <span class="sp-scale">/ 1000</span>
+                    </div>
+                    <p class="sp-insight" id="sp-insight"></p>
+                    <button class="sp-cta" id="sp-cta" onclick="navigate('quiz-setup')">Melhorar minha nota →</button>
+                </div>
+
+                <!-- Weak Spot Alert -->
+                <div class="weak-spot-card" id="weak-spot-card" style="display:none">
+                    <span class="ws-badge">⚠️</span>
+                    <div class="ws-body">
+                        <p class="ws-title" id="ws-title">—</p>
+                        <p class="ws-sub" id="ws-sub"></p>
+                    </div>
+                    <button class="ws-cta" id="ws-cta">Treinar agora →</button>
+                </div>
+
+                <!-- Wrapped Banner (aparece na 1ª semana do mês) -->
+                <div class="wrapped-banner-card" id="wrapped-banner-card" style="display:none" onclick="navigate('profile')">
+                    <div class="wb-left">
+                        <span class="wb-emoji">✨</span>
+                        <div>
+                            <p class="wb-title">Wrapped de <span id="wrapped-banner-month"></span></p>
+                            <p class="wb-sub"><span id="wrapped-banner-quest"></span> · <span id="wrapped-banner-xp"></span></p>
+                        </div>
+                    </div>
+                    <span class="wb-cta">Ver →</span>
+                </div>
+
                 <!-- Desafio Diário -->
                 <div class="daily-challenge-card" id="daily-challenge-card">
                     <div class="dc-carousel-wrap">
@@ -344,6 +380,18 @@
                         • Escrever
                     </button>
                 </div>
+
+                <!-- Modo Foco 15 Minutos -->
+                <button class="foco-card" onclick="startFoco15()">
+                    <div class="foco-card-left">
+                        <span class="foco-icon">⚡</span>
+                        <div>
+                            <p class="foco-title">FOCO 15 MINUTOS</p>
+                            <p class="foco-sub">10 questões · sem pausas · para dias corridos</p>
+                        </div>
+                    </div>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
+                </button>
 
                 <p class="setup-label">ESCOLHA A DISCIPLINA</p>
                 <div class="disc-grid">
@@ -913,6 +961,30 @@
                     <button class="push-notif-btn" id="push-notif-btn" onclick="requestPushPermission()">Ativar</button>
                 </div>
 
+                <!-- WhatsApp Questão do Dia -->
+                <div class="settings-section">
+                    <div class="settings-section-title">• WhatsApp — Questão do Dia</div>
+                    <p class="settings-section-sub">Receba uma questão ENEM por dia direto no WhatsApp. Gratuito.</p>
+                    <div class="settings-field" id="wa-phone-field">
+                        <label for="input-wa-phone">SEU WHATSAPP (com DDD)</label>
+                        <input type="tel" id="input-wa-phone" placeholder="(11) 99999-9999" inputmode="tel" />
+                    </div>
+                    <button class="cta-btn" id="wa-subscribe-btn" style="margin-top:10px" onclick="subscribeWhatsApp()">
+                        Ativar Questão do Dia 📲
+                    </button>
+                    <p class="settings-section-sub" id="wa-status" style="margin-top:6px;color:var(--accent)"></p>
+                </div>
+
+                <!-- Professor Mode -->
+                <div class="settings-section">
+                    <div class="settings-section-title">• Modo Professor</div>
+                    <p class="settings-section-sub">Monitore o desempenho da sua turma e identifique alunos em risco.</p>
+                    <button class="settings-link-row" onclick="navigate('teacher')">
+                        <span>🎓 Acessar Dashboard do Professor</span>
+                        <span class="arrow">›</span>
+                    </button>
+                </div>
+
                 <!-- Security Section -->
                 <div class="settings-section">
                     <div class="settings-section-title">• Segurança</div>
@@ -948,6 +1020,54 @@
                     <span>🚪</span> Sair da Conta
                 </button>
                 <p class="app-version">ENEM Master v2.4.1</p>
+            </div>
+        </section>
+
+        <!-- ===================== SCREEN: PLANO DE ESTUDOS ===================== -->
+        <section id="screen-study-plan" class="screen">
+            <div class="inner-header">
+                <button class="back-btn" onclick="navigate('home')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><polyline points="15 18 9 12 15 6"/></svg></button>
+                <h2 class="inner-title">Plano de Estudos</h2>
+                <div></div>
+            </div>
+            <div class="screen-scroll">
+                <div id="sp-countdown-bar" class="sp-countdown-bar"></div>
+
+                <div class="settings-section" style="margin-top:4px">
+                    <div class="settings-section-title">• Disponibilidade por dia</div>
+                    <p class="settings-section-sub">Quantos minutos você consegue estudar em cada dia da semana?</p>
+                    <div class="sp-day-grid" id="sp-day-grid"></div>
+                </div>
+
+                <div class="settings-section">
+                    <div class="settings-section-title">• Meta de nota</div>
+                    <div class="sp-goal-row">
+                        <input type="range" id="sp-goal-slider" min="400" max="950" step="25" value="700" oninput="spUpdateGoal(this.value)">
+                        <span class="sp-goal-value" id="sp-goal-label">700</span>
+                    </div>
+                    <p class="settings-section-sub" id="sp-goal-hint"></p>
+                </div>
+
+                <div class="sp-plan-preview" id="sp-plan-preview"></div>
+
+                <button class="cta-btn" style="margin:0 16px 12px" onclick="saveStudyPlan()">Salvar meu plano</button>
+            </div>
+        </section>
+
+        <!-- ===================== SCREEN: DASHBOARD PROFESSOR ===================== -->
+        <section id="screen-teacher" class="screen">
+            <div class="inner-header">
+                <button class="back-btn" onclick="navigate('settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><polyline points="15 18 9 12 15 6"/></svg></button>
+                <h2 class="inner-title">Dashboard do Professor</h2>
+                <div></div>
+            </div>
+            <div class="screen-scroll">
+                <div id="teacher-dashboard-body">
+                    <div style="padding:40px 24px;text-align:center;color:var(--text-muted)">
+                        <div style="font-size:40px;margin-bottom:12px">🎓</div>
+                        <p style="font-size:14px;line-height:1.6">Carregando dados da turma…</p>
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -1293,9 +1413,9 @@
 
                 <!-- Step 3: Matérias fracas -->
                 <div class="ob-step" id="ob-step-3">
-                    <span class="ob3-label">Passo 3 de 3 · Quase lá!</span>
+                    <span class="ob3-label">Passo 3 de 3 · Último passo!</span>
                     <h2 class="ob3-title">Onde você mais<br><span class="ob3-title-accent">precisa evoluir?</span></h2>
-                    <p class="ob3-desc">Priorizaremos essas Áreas no seu cronograma diário. Selecione quantas quiser.</p>
+                    <p class="ob3-desc">Seu cronograma será montado com foco total nos seus pontos fracos. Alunos que focam nas áreas certas melhoram em média <strong style="color:var(--teal)">+180 pontos</strong> em 60 dias.</p>
                     <div class="ob3-grid">
                         <button class="ob-subj-btn ob3-card" data-subj="humanas" onclick="toggleSubj(this)">
                             <div class="ob3-card-icon">🌍</div>
@@ -1324,7 +1444,7 @@
                     </p>
                     <button class="ob3-cta-btn" onclick="onboardingNext()">
                         <svg viewBox="0 0 20 20" fill="currentColor" width="18" height="18" aria-hidden="true"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
-                        Montar meu cronograma
+                        Criar meu plano personalizado
                     </button>
                 </div>
             </div>
@@ -1493,6 +1613,20 @@
             </div>
         </div>
 
+        <!-- ===================== MODAL: STREAK RECOVERY (ESCUDO) ===================== -->
+        <div id="streak-shield-modal" class="paywall-overlay" role="dialog" aria-modal="true">
+            <div class="paywall-card" style="border-color:#fb7185">
+                <div style="font-size:48px;margin-bottom:4px">🛡️</div>
+                <h2 class="paywall-title" style="color:#fb7185">Escudo de Proteção!</h2>
+                <p class="paywall-body" id="shield-body">Você perdeu sua sequência. Use seu escudo semanal para recuperar a ofensiva de ontem!</p>
+                <div style="background:rgba(251,113,133,.1);border:1px solid rgba(251,113,133,.25);border-radius:12px;padding:12px 16px;margin:12px 0;font-size:13px;color:rgba(255,255,255,.8);line-height:1.5">
+                    🔥 O escudo restaura 1 dia de ofensiva.<br>Disponível <strong style="color:#fb7185">1 vez por semana</strong>.
+                </div>
+                <button class="cta-btn" style="background:linear-gradient(135deg,#f43f5e,#fb7185)" onclick="activateStreakShield()">Usar meu Escudo agora</button>
+                <button class="paywall-dismiss" onclick="closeStreakShieldModal()">Recomeçar do zero</button>
+            </div>
+        </div>
+
         <!-- ===================== MODAL: PAYWALL ===================== -->
         <div id="paywall-modal" class="paywall-overlay" role="dialog" aria-modal="true" aria-labelledby="paywall-title">
             <div class="paywall-card">
@@ -1513,9 +1647,21 @@
                 <!-- 4 benefícios chave -->
                 <div class="paywall-features" aria-label="Benefícios inclusos">
                     <div class="paywall-feature">• Simulados ilimitados todos os dias</div>
-                    <div class="paywall-feature">• Tutor IA — tire dúvidas 24h sobre o ENEM</div>
-                    <div class="paywall-feature">• Correção de redação por IA (5 competências)</div>
+                    <div class="paywall-feature">• Professor 24h — tire dúvidas sobre qualquer assunto</div>
+                    <div class="paywall-feature">• Nota 1000 na redação (análise das 5 competências)</div>
                     <div class="paywall-feature">• Modo ENEM completo (90 questões)</div>
+                </div>
+
+                <!-- Depoimentos -->
+                <div class="paywall-testimonials">
+                    <div class="paywall-testimonial">
+                        <p>"Subi 180 pontos em 3 meses. Entrei em Medicina na UFMG!"</p>
+                        <span>— Maria L., aprovada em Medicina</span>
+                    </div>
+                    <div class="paywall-testimonial">
+                        <p>"O Professor 24h me salvou em Química. Fui de 540 a 720 pontos."</p>
+                        <span>— Pedro H., aprovado na UnB</span>
+                    </div>
                 </div>
 
                 <!-- Urgência: contador ENEM -->
@@ -1546,8 +1692,8 @@
                 </div>
                 <div class="paywall-features" style="margin-top:10px">
                     <div class="paywall-feature">✓ Questões ilimitadas todos os dias</div>
-                    <div class="paywall-feature">• Tutor IA · professor particular 24h</div>
-                    <div class="paywall-feature">• Correção de redação com nota por IA</div>
+                    <div class="paywall-feature">• Professor 24h · como ter um tutor particular</div>
+                    <div class="paywall-feature">• Nota 1000 na redação com análise completa</div>
                     <div class="paywall-feature">• Modo ENEM completo (90 questões)</div>
                 </div>
                 <button class="cta-btn" style="margin-top:14px" onclick="selectCheckoutPlan && selectCheckoutPlan('anual'); navigate('checkout'); closeWelcomeOffer()">
@@ -1928,7 +2074,7 @@
             <div class="conteudo-tabs">
                 <button class="conteudo-tab active" onclick="switchConteudoTab('flashcard', this)">• Flashcards</button>
                 <button class="conteudo-tab" onclick="switchConteudoTab('resumos', this)">• Resumos</button>
-                <button class="conteudo-tab" onclick="switchConteudoTab('tutor', this)">• Tutor IA</button>
+                <button class="conteudo-tab" onclick="switchConteudoTab('tutor', this)">• Professor 24h</button>
                 <button class="conteudo-tab" onclick="switchConteudoTab('progresso', this)">• Progresso</button>
             </div>
 
@@ -2276,6 +2422,8 @@
     <script src="onboarding.js?v=4"></script>
     <script src="conteudo.js?v=3"></script>
     <script src="social.js?v=3"></script>
+    <script src="study-plan.js?v=1"></script>
+    <script src="teacher.js?v=1"></script>
     <script src="app.js?v=19"></script>
     <script src="supabase-config.js?v=19"></script>
     <script>

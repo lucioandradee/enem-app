@@ -281,3 +281,97 @@
 .retro-wrong-count { font-weight: 700; color: #ef4444; font-size: 12px; }
 .retro-empty-card { margin: 0 16px 20px; padding: 24px 16px; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); display: flex; flex-direction: column; align-items: center; gap: 4px; }
 .retro-empty-card p { font-size: 13px; color: var(--text-muted); text-align: center; line-height: 1.5; }
+
+/* ── Score Prediction Card ── */
+.score-pred-card { margin: 0 16px 14px; padding: 16px; background: linear-gradient(135deg, rgba(0,180,166,.12) 0%, rgba(0,180,166,.04) 100%); border: 1px solid rgba(0,180,166,.25); border-radius: var(--radius-md); }
+.sp-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.sp-label { font-size: 11px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.6px; }
+.sp-trend { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 100px; }
+.sp-trend.up { background: rgba(34,197,94,.15); color: #22c55e; }
+.sp-trend.down { background: rgba(239,68,68,.12); color: #ef4444; }
+.sp-trend.stable { background: rgba(255,255,255,.07); color: var(--text-muted); }
+.sp-score-row { display: flex; align-items: flex-end; gap: 6px; margin-bottom: 6px; }
+.sp-score { font-size: 38px; font-weight: 900; color: var(--text-primary); line-height: 1; }
+.sp-scale { font-size: 13px; color: var(--text-muted); font-weight: 500; margin-bottom: 5px; }
+.sp-insight { font-size: 12px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 10px; }
+.sp-cta { font-size: 12px; font-weight: 700; color: var(--accent); background: none; border: none; cursor: pointer; padding: 0; }
+
+/* ── Weak Spot Alert Card ── */
+.weak-spot-card { margin: 0 16px 14px; padding: 14px 16px; background: rgba(239,68,68,.07); border: 1px solid rgba(239,68,68,.2); border-radius: var(--radius-md); display: flex; align-items: center; gap: 12px; }
+.ws-badge { font-size: 22px; flex-shrink: 0; }
+.ws-body { flex: 1; min-width: 0; }
+.ws-title { font-size: 13px; font-weight: 700; color: var(--text-primary); margin-bottom: 2px; }
+.ws-sub { font-size: 12px; color: var(--text-secondary); }
+.ws-cta { flex-shrink: 0; font-size: 12px; font-weight: 700; color: #ef4444; background: none; border: none; cursor: pointer; padding: 0; white-space: nowrap; }
+
+/* ── Foco 15min Card ── */
+.foco-card { display: flex; align-items: center; gap: 14px; background: linear-gradient(135deg, rgba(249,115,22,.12) 0%, rgba(249,115,22,.04) 100%); border: 1px solid rgba(249,115,22,.25); border-radius: var(--radius-md); padding: 14px 16px; margin-bottom: 16px; cursor: pointer; transition: opacity .15s; }
+.foco-card:active { opacity: .75; }
+.foco-icon { font-size: 28px; flex-shrink: 0; }
+.foco-card-left { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; }
+.foco-title { font-size: 14px; font-weight: 800; color: var(--text-primary); }
+.foco-sub { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+
+/* ── Streak Shield Modal ── */
+#streak-shield-modal { display: none; position: fixed; inset: 0; z-index: 1800; background: rgba(0,0,0,.6); align-items: center; justify-content: center; padding: 24px; }
+#streak-shield-modal.active { display: flex; }
+.shield-modal-box { background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 28px 24px; max-width: 340px; width: 100%; text-align: center; }
+.shield-modal-box h3 { font-size: 20px; font-weight: 800; color: var(--text-primary); margin-bottom: 6px; }
+.shield-modal-box p { font-size: 14px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 20px; }
+.shield-btn-primary { width: 100%; padding: 13px; background: var(--accent); color: #fff; font-size: 15px; font-weight: 700; border: none; border-radius: var(--radius-sm); cursor: pointer; margin-bottom: 10px; }
+.shield-btn-secondary { width: 100%; padding: 11px; background: none; color: var(--text-muted); font-size: 13px; font-weight: 600; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); cursor: pointer; }
+
+/* ── Wrapped Banner Card ── */
+.wrapped-banner-card { margin: 0 16px 14px; padding: 14px 16px; background: linear-gradient(135deg, rgba(99,102,241,.13) 0%, rgba(99,102,241,.05) 100%); border: 1px solid rgba(99,102,241,.28); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: opacity .15s; }
+.wrapped-banner-card:active { opacity: .75; }
+.wb-left { display: flex; align-items: center; gap: 12px; }
+.wb-emoji { font-size: 24px; flex-shrink: 0; }
+.wb-title { font-size: 13px; font-weight: 700; color: var(--text-primary); }
+.wb-sub { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+.wb-cta { font-size: 13px; font-weight: 700; color: #818cf8; flex-shrink: 0; }
+
+/* ── Study Plan Screen ── */
+.sp-countdown-bar { margin: 16px 16px 4px; padding: 12px 16px; background: linear-gradient(135deg, rgba(0,180,166,.12), rgba(0,180,166,.04)); border: 1px solid rgba(0,180,166,.22); border-radius: var(--radius-md); display: flex; align-items: center; gap: 6px; }
+.sp-cd-num { font-size: 28px; font-weight: 900; color: var(--accent); }
+.sp-cd-label { font-size: 14px; color: var(--text-secondary); font-weight: 600; }
+.settings-section-sub { font-size: 12px; color: var(--text-muted); margin: 4px 0 10px; line-height: 1.5; }
+.sp-day-grid { display: flex; flex-direction: column; gap: 8px; }
+.sp-day-row { display: flex; align-items: center; gap: 10px; }
+.sp-day-name { font-size: 12px; font-weight: 700; color: var(--text-secondary); width: 28px; flex-shrink: 0; }
+.sp-min-btns { display: flex; gap: 5px; flex-wrap: wrap; }
+.sp-min-btn { font-size: 11px; font-weight: 600; padding: 5px 8px; border-radius: 8px; border: 1px solid var(--border-subtle); background: transparent; color: var(--text-muted); cursor: pointer; transition: all .15s; }
+.sp-min-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.sp-goal-row { display: flex; align-items: center; gap: 12px; margin: 8px 0; }
+.sp-goal-row input[type=range] { flex: 1; accent-color: var(--accent); }
+.sp-goal-value { font-size: 20px; font-weight: 900; color: var(--accent); min-width: 40px; text-align: right; }
+.sp-summary-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+.sp-chip { font-size: 11px; font-weight: 700; padding: 5px 10px; background: rgba(0,180,166,.1); border: 1px solid rgba(0,180,166,.2); border-radius: 100px; color: var(--accent); }
+.sp-preview-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.sp-preview-icon { font-size: 20px; flex-shrink: 0; }
+.sp-preview-left { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+.sp-preview-name { font-size: 13px; font-weight: 700; color: var(--text-primary); }
+.sp-preview-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.sp-preview-bar-wrap { width: 60px; height: 6px; background: rgba(255,255,255,.07); border-radius: 3px; flex-shrink: 0; overflow: hidden; }
+.sp-preview-bar { height: 100%; background: var(--accent); border-radius: 3px; transition: width .3s; }
+.sp-empty { font-size: 13px; color: var(--text-muted); text-align: center; padding: 20px 0; }
+
+/* ── Teacher Dashboard ── */
+.teacher-invite-card { margin: 16px 16px 4px; padding: 16px; background: linear-gradient(135deg, rgba(0,180,166,.1), rgba(0,180,166,.03)); border: 1px solid rgba(0,180,166,.22); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.teacher-invite-left { flex: 1; }
+.teacher-invite-label { font-size: 10px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.6px; }
+.teacher-invite-code { font-size: 28px; font-weight: 900; color: var(--text-primary); letter-spacing: 3px; margin: 4px 0; }
+.teacher-invite-hint { font-size: 12px; color: var(--text-muted); }
+.teacher-copy-btn { padding: 10px 16px; background: var(--accent); color: #fff; font-size: 13px; font-weight: 700; border: none; border-radius: var(--radius-sm); cursor: pointer; flex-shrink: 0; }
+.teacher-stats-row { display: flex; gap: 10px; margin: 4px 16px 4px; }
+.teacher-stat-card { flex: 1; padding: 14px 10px; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); text-align: center; }
+.ts-num { display: block; font-size: 22px; font-weight: 900; color: var(--text-primary); }
+.ts-label { display: block; font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-top: 3px; }
+.teacher-student-list { display: flex; flex-direction: column; gap: 6px; }
+.teacher-student-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border-subtle); }
+.teacher-student-row:last-child { border-bottom: none; }
+.ts-avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; color: #fff; flex-shrink: 0; }
+.ts-info { flex: 1; min-width: 0; }
+.ts-name { font-size: 13px; font-weight: 700; color: var(--text-primary); }
+.ts-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.ts-status { font-size: 11px; font-weight: 700; flex-shrink: 0; }
+.teacher-empty { padding: 16px; background: rgba(255,255,255,.03); border-radius: var(--radius-sm); font-size: 13px; color: var(--text-secondary); text-align: center; }

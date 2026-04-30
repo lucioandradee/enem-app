@@ -25,9 +25,9 @@ const BADGE_DEFINITIONS = {
         { id: 'globalista',          icon: '🌍', name: 'Globalista',             xp: 100, hint: 'Alcance 70% de acerto em Ciências Humanas',  check: () => getAreaPct('humanas') >= 70 },
     ],
     maratonista: [
-        { id: '100_questoes',   icon: '💯', name: '100 Questões',    xp: 100, hint: 'Responda 100 questões corretamente',   check: () => (state.progress.totalCorretas||0) >= 100 },
-        { id: '500_questoes',   icon: '🏅', name: '500 Questões',    xp: 200, hint: 'Responda 500 questões corretamente',   check: () => (state.progress.totalCorretas||0) >= 500 },
-        { id: 'o_maratonista',  icon: '🏃', name: 'O Maratonista',   xp: 400, hint: 'Responda 1000 questões corretamente',  check: () => (state.progress.totalCorretas||0) >= 1000 },
+        { id: '100_questoes',   icon: '💯', name: 'Caçador de XP',   xp: 100, hint: 'Responda 100 questões corretamente',   check: () => (state.progress.totalCorretas||0) >= 100 },
+        { id: '500_questoes',   icon: '🏅', name: 'Mestre das Questões', xp: 200, hint: 'Responda 500 questões corretamente', check: () => (state.progress.totalCorretas||0) >= 500 },
+        { id: 'o_maratonista',  icon: '🏃', name: 'Maratonista',     xp: 400, hint: 'Responda 1000 questões corretamente',  check: () => (state.progress.totalCorretas||0) >= 1000 },
     ],
 };
 

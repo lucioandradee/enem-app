@@ -5,6 +5,8 @@
 
 'use strict';
 
+const _DEV = typeof location !== 'undefined' && location.hostname === 'localhost';
+
 // =====================================================
 // STATE
 // =====================================================
@@ -41,12 +43,12 @@ const PAYWALL_MESSAGES = {
         body:  '90 questões com o tempo real do ENEM (5h30min). Assine o Premium e simule a prova completa!',
     },
     redacaoIA: {
-        title: 'Redação com IA é exclusivo Premium 👑',
-        body:  'Corrija sua redação nas 5 competências com análise detalhada por IA. Assine o Premium para desbloquear!',
+        title: 'Nota 1000 na redação é exclusivo Premium 👑',
+        body:  'Veja sua nota nas 5 competências do ENEM e descubra exatamente o que corrigir para chegar mais perto de 1000.',
     },
     tutor: {
-        title: 'Tutor IA é exclusivo Premium 👑',
-        body:  'Converse com um professor de IA especialista em todas as disciplinas do ENEM. Assine o Premium e tire suas dúvidas sem limites!',
+        title: 'Professor 24h é exclusivo Premium 👑',
+        body:  'Tire dúvidas sobre qualquer assunto do ENEM a qualquer hora. Sem julgamentos, direto ao ponto.',
     },
     largeQuiz: {
         title: 'Simulados maiores são exclusivos Premium 👑',
@@ -299,7 +301,7 @@ try {
     const _saved = localStorage.getItem('enem_state');
     state = _saved ? _migrateState(JSON.parse(_saved)) : null;
 } catch (e) {
-    console.warn('⚠️ Estado corrompido, resetando:', e);
+    _DEV && console.warn('⚠️ Estado corrompido, resetando:', e);
     localStorage.removeItem('enem_state');
     state = null;
 }
@@ -352,7 +354,7 @@ function saveState() {
         localStorage.setItem('enem_state', JSON.stringify(state));
     } catch (e) {
         // localStorage cheio: remover cache da API e tentar novamente
-        console.warn('⚠️ localStorage cheio, limpando cache da API...', e);
+        _DEV && console.warn('⚠️ localStorage cheio, limpando cache da API...', e);
         Object.keys(localStorage)
             .filter(k => k.startsWith('enem_q_') || k.startsWith('enem_exams'))
             .forEach(k => localStorage.removeItem(k));
@@ -696,15 +698,17 @@ const screenMap = {
     redacao: 'screen-redacao',
     analise: 'screen-analise',
     conteudo: 'screen-conteudo',
+    'study-plan': 'screen-study-plan',
+    teacher: 'screen-teacher',
 };
 
 const screensWithNav = ['home', 'ranking', 'achievements', 'profile', 'conteudo'];
-const screensWithoutNav = ['quiz', 'quiz-setup', 'result', 'settings', 'support', 'notifications', 'review', 'onboarding', 'login', 'plans', 'checkout', 'privacy', 'terms', 'redacao', 'analise'];
+const screensWithoutNav = ['quiz', 'quiz-setup', 'result', 'settings', 'support', 'notifications', 'review', 'onboarding', 'login', 'plans', 'checkout', 'privacy', 'terms', 'redacao', 'analise', 'study-plan', 'teacher'];
 
 function navigate(screenName) {
     // Conteúdo é exclusivo para usuários Premium
     if (screenName === 'conteudo' && !isPremium()) {
-        showPaywall('Conteúdo Premium 🔒', 'Flashcards, Resumos, Tutor IA e Progresso são exclusivos do plano Premium. Assine e domine o ENEM!');
+        showPaywall('Conteúdo Premium 🔒', 'Flashcards, Resumos, Professor 24h e Progresso são exclusivos do plano Premium. Assine e domine o ENEM!');
         return;
     }
 
@@ -714,7 +718,7 @@ function navigate(screenName) {
 
     const currentEl = currentId ? document.getElementById(currentId) : null;
     const nextEl = document.getElementById(nextId);
-    if (!nextEl) { console.error('Screen element not found:', nextId); return; }
+    if (!nextEl) { _DEV && console.error('Screen element not found:', nextId); return; }
 
     // Skip only when state AND DOM both confirm we're already on this screen
     if (currentId === nextId && nextEl.classList.contains('active')) return;
@@ -783,11 +787,13 @@ function renderScreen(screenName) {
             case 'checkout': renderCheckout(); break;
             case 'analise': renderAnalise(); break;
             case 'conteudo': renderConteudo(); break;
+            case 'study-plan': if (typeof renderStudyPlan !== 'undefined') renderStudyPlan(); break;
+            case 'teacher': if (typeof renderTeacherDashboard !== 'undefined') renderTeacherDashboard(); break;
             default: break;
         }
     } catch (e) {
-        console.error('❌ renderScreen [' + screenName + ']:', e);
-        _showQuickToast('Erro ao carregar tela: ' + e.message);
+        _DEV && console.error('❌ renderScreen [' + screenName + ']:', e);
+        _showQuickToast('Algo deu errado. Tente novamente.');
     }
 }
 
@@ -859,6 +865,9 @@ function renderDashboard() {
     renderHistorySparkline();
     renderDailyChallenge();
     renderENEMCountdown();
+    _renderScorePrediction();
+    _renderWeakSpotAlert();
+    _renderWrappedBanner();
 
     // Posição no ranking global (assíncrono, não bloqueia a UI)
     const rankEl  = document.getElementById('dash-ranking');
@@ -1465,11 +1474,19 @@ function renderReviewList(filter) {
     list.innerHTML = '';
 
     if (wrong.length === 0) {
+        const isVirgin = filter === 'all' && (state.quizHistory || []).length === 0;
         list.innerHTML = `
             <div class="empty-state">
-                <div class="empty-state-emoji">${filter === 'all' ? '🎉' : '✨'}</div>
-                <div class="empty-state-title">Tudo certo por aqui!</div>
-                <div class="empty-state-sub">Seus erros aparecerão aqui para você revisar.<br>Continue praticando!</div>
+                <div class="empty-state-emoji">${isVirgin ? '📝' : filter === 'all' ? '🎉' : '✨'}</div>
+                <div class="empty-state-title">${isVirgin ? 'Comece a praticar!' : 'Nenhum erro aqui!'}</div>
+                <div class="empty-state-sub">${
+                    isVirgin
+                        ? 'Seus erros aparecerão aqui após seus primeiros simulados.<br>É a melhor forma de revisar e melhorar.'
+                        : filter === 'all'
+                            ? 'Incrível — nenhum erro registrado! Ou talvez você ainda não tenha praticado muito.<br>Continue respondendo questões para ver seu histórico aqui.'
+                            : 'Sem erros nessa matéria — ótimo trabalho! ✨<br>Escolha outra disciplina para revisar.'
+                }</div>
+                ${isVirgin ? `<button class="empty-state-cta" onclick="navigate('quiz-setup')">Fazer primeiro simulado →</button>` : ''}
             </div>`;
         return;
     }
@@ -1570,9 +1587,9 @@ async function _requestPushPermission() {
         if (existing) return; // j\u00e1 inscrito
         // Configure VAPID public key abaixo quando o backend estiver pronto:
         // const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: VAPID_PUBLIC_KEY });
-        console.log('\u2705 Push permission granted. Configure VAPID key para ativar notifica\u00e7\u00f5es.');
+        _DEV && console.log('\u2705 Push permission granted. Configure VAPID key para ativar notifica\u00e7\u00f5es.');
     } catch (e) {
-        console.warn('\u26a0\ufe0f Push Notifications n\u00e3o dispon\u00edveis:', e.message);
+        _DEV && console.warn('\u26a0\ufe0f Push Notifications n\u00e3o dispon\u00edveis:', e.message);
     }
 }
 
@@ -1622,10 +1639,10 @@ async function finishOnboarding() {
                     if (errEl) { errEl.style.color = 'var(--orange, #f97316)'; errEl.textContent = 'E-mail já cadastrado. Faça login.'; }
                     return;
                 }
-                console.warn('⚠️ Erro ao registrar:', result.error);
+                _DEV && console.warn('⚠️ Erro ao registrar:', result.error);
             }
         } catch (e) {
-            console.warn('⚠️ Registro Supabase não disponível:', e);
+            _DEV && console.warn('⚠️ Registro Supabase não disponível:', e);
         } finally {
             _pendingPassword = ''; // limpar senha da memória imediatamente
         }
@@ -1645,14 +1662,15 @@ async function finishOnboarding() {
 
 // Capturar erros globais para diagnóstico
 window.onerror = (msg, src, line, col, err) => {
-    console.error('🔴 Erro global:', msg, 'em', src, 'linha', line);
-    // Mostrar erro na tela se o app não carregou
+    _DEV && console.error('🔴 Erro global:', msg, 'em', src, 'linha', line);
     const appEl = document.getElementById('app');
     if (appEl && !document.querySelector('.screen.active')) {
         appEl.insertAdjacentHTML('afterbegin',
-            `<div style="position:fixed;inset:0;background:#0a1929;color:#ef4444;padding:24px;font-family:monospace;z-index:9999;overflow:auto">
-            <b>❌ Erro ao carregar o app:</b><br>${msg}<br><small>${src}:${line}</small>
-            <br><br><button onclick="localStorage.clear();location.reload()" style="margin-top:16px;padding:10px 20px;background:#ef4444;color:white;border:none;border-radius:8px;cursor:pointer">Limpar dados e recarregar</button>
+            `<div style="position:fixed;inset:0;background:#0a1929;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;z-index:9999;text-align:center">
+            <p style="font-size:40px;margin-bottom:16px">😔</p>
+            <b style="font-size:18px;color:#eaf4f9">Ops! Algo deu errado.</b>
+            <p style="margin:12px 0 24px;color:#7a9ab5;font-size:14px;max-width:280px;line-height:1.6">Não foi possível carregar o app. Tente recarregar a página.</p>
+            <button onclick="localStorage.clear();location.reload()" style="padding:12px 28px;background:linear-gradient(135deg,#00c9b8,#007a6e);color:white;border:none;border-radius:12px;cursor:pointer;font-size:15px;font-weight:700;font-family:inherit">Recarregar</button>
             </div>`);
     }
     return false;
@@ -1753,6 +1771,9 @@ function init() {
                     if (typeof startSyncLoop !== 'undefined') startSyncLoop(user.id);
                     // Retomar polling se havia pagamento pendente
                     _resumePendingPayment();
+                    _checkReengagementPush();
+                    _checkStreakRecovery();
+                    _checkWrappedNotification();
                 });
             } else {
                 // Sem sessão ativa segundo getCurrentUser().
@@ -1849,7 +1870,7 @@ document.addEventListener('DOMContentLoaded', init);
             const cacheKey = `enem_q3_${latest}`;
             const cached = localStorage.getItem(cacheKey);
             if (!cached) {
-                console.log(`🔄 Pré-carregando questões ENEM ${latest}...`);
+                _DEV && console.log(`🔄 Pré-carregando questões ENEM ${latest}...`);
                 // Importa a função interna via módulo exposto
                 const pages = await Promise.all(
                     [0, 45, 90, 135].map(offset =>
@@ -1865,13 +1886,13 @@ document.addEventListener('DOMContentLoaded', init);
                             data: questions,
                             ts: Date.now()
                         }));
-                        console.log(`✅ Cache aquecido: ${questions.length} questões ENEM ${latest}`);
+                        _DEV && console.log(`✅ Cache aquecido: ${questions.length} questões ENEM ${latest}`);
                     } catch (e) {
-                        console.warn('⚠️ Sem espaço para cache de questões');
+                        // Silencioso — sem espaço no localStorage não afeta o app
                     }
                 }
             } else {
-                console.log(`✅ Cache já existe para ENEM ${latest}`);
+                _DEV && console.log(`✅ Cache já existe para ENEM ${latest}`);
             }
         } catch (e) {
             // Silencioso — falha no pré-aquecimento não afeta o app
@@ -2135,6 +2156,263 @@ function renderAnalise() {
                 <button style="background:var(--teal);color:#fff;border-radius:10px;padding:6px 12px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;border:none" onclick="navigate('quiz-setup')">Praticar →</button>
             </div>`).join('');
     }
+}
+
+// =====================================================
+// SCORE PREDICTION — Nota ENEM estimada (TRI)
+// =====================================================
+
+function _getWeekStr() {
+    const d = new Date();
+    const day = d.getDay();
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+    return new Date(new Date(d).setDate(diff)).toDateString();
+}
+
+function _calcENEMScore() {
+    const stats = state.progress && state.progress.stats;
+    if (!stats) return null;
+    const areas = ['humanas', 'natureza', 'linguagens', 'matematica'];
+    const totalAnswered = areas.reduce((s, d) => s + (stats[d]?.total || 0), 0);
+    if (totalAnswered < 10) return null;
+    const weightedRatio = areas.reduce((sum, d) => {
+        const st = stats[d] || { correct: 0, total: 0 };
+        const ratio = st.total > 0 ? st.correct / st.total : 0.5;
+        return sum + ratio * 0.25;
+    }, 0);
+    const score = Math.round(1 / (1 + Math.exp(-9 * (weightedRatio - 0.5))) * 700 + 300);
+    return Math.max(300, Math.min(1000, score));
+}
+
+function _calcScoreTrend() {
+    const hist = state.quizHistory || [];
+    if (hist.length < 5) return null;
+    const recent = hist.slice(-7);
+    const older  = hist.slice(-14, -7);
+    if (older.length === 0) return null;
+    const avg = arr => arr.reduce((s, h) => s + (h.pct || 0), 0) / arr.length;
+    return avg(recent) - avg(older);
+}
+
+function _getWeakSpot() {
+    const stats = state.progress && state.progress.stats;
+    if (!stats) return null;
+    const areas = [
+        { key: 'humanas',    name: 'Ciências Humanas' },
+        { key: 'natureza',   name: 'Ciências da Natureza' },
+        { key: 'linguagens', name: 'Linguagens' },
+        { key: 'matematica', name: 'Matemática' },
+    ];
+    let weakest = null, worstPct = 101;
+    for (const area of areas) {
+        const st = stats[area.key] || { correct: 0, total: 0 };
+        if (st.total < 5) continue;
+        const pct = Math.round((st.correct / st.total) * 100);
+        if (pct < worstPct) { worstPct = pct; weakest = { ...area, pct, total: st.total }; }
+    }
+    return weakest;
+}
+
+function _renderScorePrediction() {
+    const card = document.getElementById('score-pred-card');
+    if (!card) return;
+    const score = _calcENEMScore();
+    if (!score) { card.style.display = 'none'; return; }
+
+    card.style.display = '';
+    document.getElementById('sp-score').textContent = score.toLocaleString('pt-BR');
+
+    const trend = _calcScoreTrend();
+    const trendEl = document.getElementById('sp-trend');
+    if (trendEl) {
+        if (trend === null)   { trendEl.textContent = ''; }
+        else if (trend >= 2)  { trendEl.textContent = '↑ Subindo'; trendEl.style.color = '#22c55e'; }
+        else if (trend <= -2) { trendEl.textContent = '↓ Caindo';  trendEl.style.color = '#f97316'; }
+        else                  { trendEl.textContent = '→ Estável'; trendEl.style.color = '#7a9ab5'; }
+    }
+
+    const insightEl = document.getElementById('sp-insight');
+    if (insightEl) {
+        const weak   = _getWeakSpot();
+        const target = score < 700 ? 700 : score < 800 ? 800 : 900;
+        if (weak && score < target) {
+            insightEl.textContent = `Para chegar em ${target}, melhore em ${weak.name} (acerto atual: ${weak.pct}%).`;
+            const ctaEl = document.getElementById('sp-cta');
+            if (ctaEl) ctaEl.onclick = () => { quizSetup.discipline = weak.key; navigate('quiz-setup'); };
+        } else if (score >= 900) {
+            insightEl.textContent = 'Excelente! Você está no top 5% dos candidatos. 🏆';
+        } else {
+            insightEl.textContent = `Continue praticando para superar os ${target} pontos!`;
+        }
+    }
+}
+
+function _renderWeakSpotAlert() {
+    const card = document.getElementById('weak-spot-card');
+    if (!card) return;
+    const weak = _getWeakSpot();
+    if (!weak || weak.pct >= 70) { card.style.display = 'none'; return; }
+
+    card.style.display = '';
+    const titleEl = document.getElementById('ws-title');
+    const subEl   = document.getElementById('ws-sub');
+    const ctaEl   = document.getElementById('ws-cta');
+    if (titleEl) titleEl.textContent = weak.name;
+    if (subEl)   subEl.textContent   = `${weak.pct}% de acerto em ${weak.total} questões — foco aqui!`;
+    if (ctaEl)   ctaEl.onclick = () => { quizSetup.discipline = weak.key; navigate('quiz-setup'); };
+}
+
+// =====================================================
+// STREAK RECOVERY — Escudo Semanal Anti-churn
+// =====================================================
+
+function _checkStreakRecovery() {
+    const streak = state.user.streak || 0;
+    const lastStudy = state.user.lastStudyDate;
+    if (!lastStudy || streak < 3) return;
+
+    const now = new Date();
+    const daysDiff = Math.floor((now - new Date(lastStudy)) / (1000 * 60 * 60 * 24));
+    if (daysDiff < 2) return;
+
+    const weekStr = _getWeekStr();
+    if (state.user.shieldUsedWeek === weekStr) return;
+
+    const shownKey = 'enem_shield_shown_' + now.toDateString();
+    if (localStorage.getItem(shownKey)) return;
+    localStorage.setItem(shownKey, '1');
+
+    const bodyEl = document.getElementById('shield-body');
+    if (bodyEl) bodyEl.innerHTML = `Você ficou ${daysDiff} dias sem estudar e sua ofensiva de <strong style="color:#fb7185">${streak} dias</strong> foi perdida.<br>Use seu escudo semanal para recuperá-la!`;
+    const modal = document.getElementById('streak-shield-modal');
+    if (modal) modal.classList.add('active');
+}
+
+function activateStreakShield() {
+    const weekStr = _getWeekStr();
+    state.user.shieldUsedWeek = weekStr;
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    state.user.lastStudyDate = yesterday.toDateString();
+    saveState();
+    closeStreakShieldModal();
+    _showQuickToast('🛡️ Escudo ativado! Sua ofensiva está salva. Estude hoje para continuar!');
+}
+
+function closeStreakShieldModal() {
+    const modal = document.getElementById('streak-shield-modal');
+    if (modal) modal.classList.remove('active');
+}
+
+// =====================================================
+// REENGAJAMENTO — Push notifications inteligentes
+// =====================================================
+
+function _checkReengagementPush() {
+    const lastStudy = state.user.lastStudyDate;
+    if (!lastStudy) return;
+
+    const now = new Date();
+    const daysDiff = Math.floor((now - new Date(lastStudy)) / (1000 * 60 * 60 * 24));
+    const todayKey = 'enem_reeng_' + now.toDateString();
+    if (localStorage.getItem(todayKey)) return;
+
+    if (daysDiff >= 2) {
+        localStorage.setItem(todayKey, '1');
+        const streak = state.user.streak || 0;
+        if (streak >= 3) {
+            _pushNotification({
+                type: 'orange', icon: '🔥',
+                title: `Sua ofensiva de ${streak} dias está em risco!`,
+                body: `Você ficou ${daysDiff} dias sem estudar. Faça pelo menos 1 questão agora!`,
+                ctaScreen: 'quiz-setup', cta: 'Estudar agora',
+            });
+        } else {
+            _pushNotification({
+                type: 'blue', icon: '📚',
+                title: 'Está sentindo falta do ENEM Master?',
+                body: 'Volte agora e mantenha o ritmo rumo à sua nota!',
+                ctaScreen: 'quiz-setup', cta: 'Continuar estudando',
+            });
+        }
+    }
+
+    // Resumo de segunda-feira
+    if (now.getDay() === 1) {
+        const weekStr = _getWeekStr();
+        if (state.user.lastWeeklySummaryPush !== weekStr) {
+            state.user.lastWeeklySummaryPush = weekStr;
+            const weekStart = new Date(now);
+            weekStart.setDate(now.getDate() - 7);
+            const weekHist = (state.quizHistory || []).filter(h => h.date && new Date(h.date) >= weekStart);
+            const weekQ = weekHist.reduce((s, h) => s + (h.total || 0), 0);
+            const weekC = weekHist.reduce((s, h) => s + (h.correct || 0), 0);
+            if (weekQ > 0) {
+                _pushNotification({
+                    type: 'teal', icon: '📊',
+                    title: 'Resumo da sua semana!',
+                    body: `Semana passada: ${weekQ} questões, ${Math.round((weekC / weekQ) * 100)}% de acerto. Bora superar essa semana!`,
+                    ctaScreen: 'analise', cta: 'Ver análise',
+                });
+            }
+            saveState();
+        }
+    }
+}
+
+// =====================================================
+// WRAPPED MENSAL — Notificação + Banner no Dashboard
+// =====================================================
+
+function _checkWrappedNotification() {
+    const now = new Date();
+    if (now.getDate() !== 1) return;
+
+    const monthKey = now.getFullYear() + '-' + now.getMonth();
+    const notifKey = 'enem_wrapped_notif_' + monthKey;
+    if (localStorage.getItem(notifKey)) return;
+    localStorage.setItem(notifKey, '1');
+
+    const MONTH_NAMES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
+                         'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+    const prevMonth = now.getMonth() === 0 ? 11 : now.getMonth() - 1;
+    const prevYear  = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
+    const label = MONTH_NAMES[prevMonth] + ' ' + prevYear;
+
+    _pushNotification({
+        type: 'teal', icon: '✨',
+        title: 'Seu Wrapped de ' + label + ' está pronto!',
+        body: 'Veja seu resumo mensal: questões, acertos, XP e muito mais.',
+        ctaScreen: 'profile', cta: 'Ver Wrapped',
+    });
+}
+
+function _renderWrappedBanner() {
+    const card = document.getElementById('wrapped-banner-card');
+    if (!card) return;
+
+    const now = new Date();
+    const isFirstWeek = now.getDate() <= 7;
+    if (!isFirstWeek) { card.style.display = 'none'; return; }
+
+    const MONTH_NAMES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
+                         'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+    const prevMonth = now.getMonth() === 0 ? 11 : now.getMonth() - 1;
+    const prevYear  = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
+
+    if (typeof computeMonthlyRetro === 'undefined') { card.style.display = 'none'; return; }
+    const retro = computeMonthlyRetro(prevMonth, prevYear);
+    if (!retro) { card.style.display = 'none'; return; }
+
+    const label = MONTH_NAMES[prevMonth] + ' ' + prevYear;
+    const labelEl = document.getElementById('wrapped-banner-month');
+    const questEl = document.getElementById('wrapped-banner-quest');
+    const xpEl    = document.getElementById('wrapped-banner-xp');
+    if (labelEl) labelEl.textContent = label;
+    if (questEl) questEl.textContent = retro.totalQuestoes.toLocaleString('pt-BR') + ' questões';
+    if (xpEl)    xpEl.textContent    = retro.totalXP.toLocaleString('pt-BR') + ' XP';
+
+    card.style.display = '';
 }
 
 // =====================================================

@@ -14,10 +14,6 @@
   from { opacity: 0; transform: translateY(-8px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-@keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 4px 24px rgba(0,180,166,.45); }
-  50%       { box-shadow: 0 4px 40px rgba(0,180,166,.75); }
-}
 
 /* =====================================================
    LOGIN SCREEN
@@ -139,7 +135,7 @@
   color: #fff; border: none; border-radius: 14px;
   font-size: 15px; font-weight: 800; letter-spacing: -.2px; font-family: inherit;
   display: flex; align-items: center; justify-content: center; gap: 8px;
-  animation: pulse-glow 3s ease-in-out infinite;
+  box-shadow: 0 4px 20px rgba(0,180,166,.35);
   transition: transform .15s, filter .15s; cursor: pointer;
 }
 .login-cta-btn:hover  { transform: translateY(-2px); filter: brightness(1.1); }
@@ -297,7 +293,7 @@
   color: #fff; border: none; border-radius: 14px;
   font-size: 15px; font-weight: 800; letter-spacing: -.2px; font-family: inherit;
   display: flex; align-items: center; justify-content: center; gap: 8px;
-  animation: pulse-glow 3s ease-in-out infinite;
+  box-shadow: 0 4px 20px rgba(0,180,166,.35);
   transition: transform .15s, filter .15s; cursor: pointer;
 }
 .ob1-cta-btn:hover  { transform: translateY(-2px); filter: brightness(1.1); }
@@ -461,7 +457,7 @@
   color: #fff; border: none; border-radius: 14px;
   font-size: 15px; font-weight: 800; letter-spacing: -.2px; font-family: inherit;
   display: flex; align-items: center; justify-content: center; gap: 8px;
-  animation: pulse-glow 3s ease-in-out infinite;
+  box-shadow: 0 4px 20px rgba(0,180,166,.35);
   transition: transform .15s, filter .15s; cursor: pointer;
 }
 .ob2-cta-btn:hover  { transform: translateY(-2px); filter: brightness(1.1); }
@@ -526,7 +522,7 @@
   color: #fff; border: none; border-radius: 14px;
   font-size: 15px; font-weight: 800; letter-spacing: -.2px; font-family: inherit;
   display: flex; align-items: center; justify-content: center; gap: 8px;
-  animation: pulse-glow 3s ease-in-out infinite;
+  box-shadow: 0 4px 20px rgba(0,180,166,.35);
   transition: transform .15s, filter .15s; cursor: pointer;
 }
 .ob3-cta-btn:hover  { transform: translateY(-2px); filter: brightness(1.1); }

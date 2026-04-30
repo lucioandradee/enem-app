@@ -250,6 +250,7 @@
 .empty-state-emoji { font-size: 48px; }
 .empty-state-title { font-size: 18px; font-weight: 800; }
 .empty-state-sub   { font-size: 14px; color: var(--text-secondary); line-height: 1.5; }
+.empty-state-cta   { margin-top: 4px; padding: 11px 22px; background: var(--accent); color: #fff; font-size: 14px; font-weight: 700; border: none; border-radius: var(--radius-sm); cursor: pointer; }
 
 /* ---- Avatar ---- */
 .avatar {

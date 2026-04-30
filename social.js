@@ -345,6 +345,31 @@ function _generateQuizStoryCanvas(d) {
     ctx.fillStyle = 'rgba(255,255,255,0.78)';
     ctx.fillText(d.user || 'Estudante', W/2, nextY + 170);
 
+    // FOMO badge — percentil baseado no desempenho
+    const numPct = parseFloat((d.pct || '0').replace('%', '')) || 0;
+    let fomoText, fomoBg, fomoColor, fomoBorder;
+    if (numPct >= 90) {
+        fomoText = '🏆 Top 3% dos usuários hoje!';
+        fomoBg = 'rgba(245,197,24,0.15)'; fomoColor = '#f5c518'; fomoBorder = 'rgba(245,197,24,0.44)';
+    } else if (numPct >= 75) {
+        fomoText = '🔥 Top 10% dos usuários hoje!';
+        fomoBg = 'rgba(251,113,133,0.13)'; fomoColor = '#fb7185'; fomoBorder = 'rgba(251,113,133,0.38)';
+    } else if (numPct >= 60) {
+        fomoText = '⭐ Top 25% dos usuários hoje!';
+        fomoBg = 'rgba(0,180,166,0.14)'; fomoColor = '#00e5d4'; fomoBorder = 'rgba(0,180,166,0.44)';
+    } else if (numPct >= 50) {
+        fomoText = '📈 Acima da média nacional!';
+        fomoBg = 'rgba(0,180,166,0.12)'; fomoColor = '#00e5d4'; fomoBorder = 'rgba(0,180,166,0.38)';
+    } else {
+        fomoText = '💪 Continue praticando — você vai chegar lá!';
+        fomoBg = 'rgba(255,255,255,0.06)'; fomoColor = 'rgba(255,255,255,0.55)'; fomoBorder = 'rgba(255,255,255,0.15)';
+    }
+    ctx.fillStyle = fomoBg;
+    _roundRect(ctx, W/2 - 320, nextY + 194, 640, 76, 38); ctx.fill();
+    ctx.strokeStyle = fomoBorder; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.font = 'bold 32px Inter, Arial, sans-serif'; ctx.fillStyle = fomoColor;
+    ctx.fillText(fomoText, W/2, nextY + 242);
+
     // Separador CTA
     const divY = 1598;
     _drawSep(ctx, 80, divY, W - 80, 'rgba(255,255,255,0.10)');

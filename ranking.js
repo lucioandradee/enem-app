@@ -146,11 +146,23 @@ async function _loadRankingTab(tab) {
     }
 
     _renderPodiumEmpty();
-    if (list) list.innerHTML = '<div class="ranking-empty">'
-        + (tab === 'escola' && !state.user.school
-            ? '🏫 Cadastre sua escola no perfil para ver o ranking da sua turma!'
-            : 'Ainda não há alunos no ranking.<br>Complete um simulado para aparecer aqui! 🏆')
-        + '</div>';
+    if (list) {
+        if (tab === 'escola' && !state.user.school) {
+            list.innerHTML = `<div class="ranking-empty">
+                <div class="ranking-empty-icon">🏫</div>
+                <p class="ranking-empty-title">Sua escola não está cadastrada</p>
+                <p class="ranking-empty-sub">Adicione sua escola e compita com seus colegas. Leva 10 segundos.</p>
+                <button class="empty-state-cta" onclick="navigate('settings')">Adicionar escola →</button>
+            </div>`;
+        } else {
+            list.innerHTML = `<div class="ranking-empty">
+                <div class="ranking-empty-icon">🏆</div>
+                <p class="ranking-empty-title">Você ainda não está no ranking</p>
+                <p class="ranking-empty-sub">Complete 1 simulado para entrar e ver sua posição entre todos os estudantes.</p>
+                <button class="empty-state-cta" onclick="navigate('quiz-setup')">Começar simulado →</button>
+            </div>`;
+        }
+    }
     _renderUserRankFooter([]);
 }
 

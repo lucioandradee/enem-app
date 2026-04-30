@@ -202,7 +202,6 @@ async function verificarPremium() {
             .single();
 
         if (error) {
-            console.error('❌ verificarPremium:', error.message);
             return { is_premium: false, expires_at: null };
         }
 
@@ -224,7 +223,6 @@ async function verificarPremium() {
             expires_at: data?.plan_expires_at || null,
         };
     } catch (e) {
-        console.error('❌ verificarPremium (catch):', e);
         return { is_premium: false, expires_at: null };
     }
 }
@@ -317,7 +315,7 @@ function _startPlanPolling(method, showModal) {
                 return;
             }
         } catch (e) {
-            console.warn('Polling erro:', e);
+            // Silencioso — falha de polling é esperada e recuperável
         }
 
         if (_planPollingCount >= POLL_MAX_ATTEMPTS) {
@@ -352,7 +350,6 @@ function _resumePendingPayment() {
         return;
     }
     _checkoutPlan = pending;
-    console.log('⏳ Retomando polling de pagamento:', pending);
     setTimeout(() => _startPlanPolling(pending, false), 1200);
 }
 

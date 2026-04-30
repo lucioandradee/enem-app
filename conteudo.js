@@ -665,7 +665,7 @@ function renderConteudo() {
     if (_tutorMessages.length === 0) {
         _tutorMessages = [{
             role: 'ai',
-            text: 'Olá! Sou o **Tutor IA** do ENEM Master 🎓\n\nPosso te explicar qualquer assunto do ENEM: *Matemática, Física, Química, Biologia, Humanas, Linguagens e Redação*.\n\nUse as sugestões acima ou faça sua pergunta! 👆',
+            text: 'Olá! Sou o **Professor 24h** do ENEM Master 🎓\n\nPosso te explicar qualquer assunto do ENEM: *Matemática, Física, Química, Biologia, Humanas, Linguagens e Redação*.\n\nUse as sugestões acima ou faça sua pergunta! 👆',
         }];
     }
     _renderTutorMessages();
