@@ -154,7 +154,7 @@
 .week-sheet-body  { padding: 8px 16px 0; }
 .ws-row {
   display: flex; align-items: center; gap: 12px;
-  padding: 13px 4px; border-bottom: 1px solid var(--border-subtle);
+  padding: 12px 4px; border-bottom: 1px solid var(--border-subtle);
 }
 .ws-row:last-child { border-bottom: none; }
 .ws-row-today { background: rgba(0,180,166,0.06); border-radius: var(--radius-sm); padding-left: 8px; padding-right: 8px; }
@@ -164,6 +164,7 @@
 .ws-info  { flex: 1; overflow: hidden; }
 .ws-area  { font-size: 10px; font-weight: 700; color: var(--teal); display: block; letter-spacing: .06em; }
 .ws-topic { font-size: 13px; font-weight: 600; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ws-sub   { font-size: 11px; color: var(--text-secondary); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
 .ws-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 .ws-badge { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 20px; white-space: nowrap; }
 .ws-done   { background: rgba(34,197,94,0.15);  color: #22c55e; }

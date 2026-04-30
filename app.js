@@ -1003,10 +1003,11 @@ function showWeekSchedule() {
             <div class="ws-info">
                 <span class="ws-area">${subj.area}</span>
                 <span class="ws-topic">${subj.title}</span>
+                <span class="ws-sub">${subj.sub}</span>
             </div>
             <div class="ws-right">
                 ${statusBadge}
-                <button class="ws-start-btn" onclick="closeWeekSchedule();navigate('quiz-setup')">→</button>
+                <button class="ws-start-btn" onclick="closeWeekSchedule();quizState.discipline='${subj.disc}';navigate('quiz-setup')" title="Praticar este tópico">→</button>
             </div>
         </div>`;
     }
@@ -1021,34 +1022,132 @@ function closeWeekSchedule() {
 }
 
 function getDynamicSchedule() {
-    const allSubjects = [
-        { disc: 'humanas',    area: 'CIÊNCIAS HUMANAS',    icon: '🌍', title: 'Geopolítica Contemporânea', sub: 'Globalização e Blocos Econômicos' },
-        { disc: 'natureza',   area: 'CIÊNCIAS DA NATUREZA', icon: '🧬', title: 'Biologia: Genética',          sub: 'Leis de Mendel e Heredogramas' },
-        { disc: 'linguagens', area: 'LINGUAGENS',            icon: '✍️', title: 'Redação ENEM',               sub: 'Proposta de Intervenção' },
-        { disc: 'matematica', area: 'MATEMÁTICA',            icon: '➗', title: 'Funções do 2º Grau',          sub: 'Bhaskara e Vértice da Parábola' },
-    ];
+    // ── Banco completo de tópicos mais cobrados no ENEM ────────────────────────
+    const TOPIC_BANK = {
+        humanas: [
+            { title: 'Era Vargas e Estado Novo',           sub: 'Getúlio Vargas, trabalhismo e industrialização' },
+            { title: 'Ditadura Militar (1964–1985)',        sub: 'Atos Institucionais, censura e abertura política' },
+            { title: 'Proclamação e República Velha',      sub: 'Coronelismo, política café-com-leite e oligarquias' },
+            { title: 'Segunda Guerra Mundial',             sub: 'Hitler, Holocausto, frentes de batalha e pós-guerra' },
+            { title: 'Guerra Fria',                        sub: 'URSS × EUA, corrida armamentista e Cortina de Ferro' },
+            { title: 'Sociologia: Marx e Capitalismo',     sub: 'Classes sociais, mais-valia e modo de produção' },
+            { title: 'Sociologia: Durkheim e Weber',       sub: 'Fato social, anomia, ação social e burocracia' },
+            { title: 'Filosofia: Iluminismo e Contrato',   sub: 'Locke, Rousseau, Montesquieu e direitos naturais' },
+            { title: 'Filosofia: Ética e Cidadania',       sub: 'Kant, utilitarismo e direitos humanos no ENEM' },
+            { title: 'Geopolítica e Blocos Econômicos',    sub: 'UE, MERCOSUL, BRICS e globalização' },
+            { title: 'Biomas e Questão Ambiental',         sub: 'Amazônia, Cerrado, desmatamento e sustentabilidade' },
+            { title: 'Urbanização e Questão Agrária',      sub: 'Êxodo rural, reforma agrária e MST' },
+            { title: 'Colonização e Brasil Colônia',       sub: 'Capitanias hereditárias, escravidão e ciclos econômicos' },
+            { title: 'Revolução Francesa e Liberalismo',   sub: 'Três estados, Declaração dos Direitos e burguesia' },
+            { title: 'Racismo, Gênero e Direitos Humanos', sub: 'Temas transversais mais cobrados no ENEM recente' },
+        ],
+        natureza: [
+            { title: 'Genética Mendeliana',                sub: 'Leis de Mendel, heredogramas e probabilidade' },
+            { title: 'Ecologia e Relações Ecológicas',     sub: 'Cadeias alimentares, ciclos biogeoquímicos e biomas' },
+            { title: 'Fisiologia Humana',                  sub: 'Digestão, circulação, respiração e excreção' },
+            { title: 'Evolução e Origem da Vida',          sub: 'Darwin, seleção natural, lamarckismo e especiação' },
+            { title: 'Biologia Celular e Molecular',       sub: 'DNA, RNA, proteínas, mitose e meiose' },
+            { title: 'Leis de Newton e Cinemática',        sub: 'Movimento, força, aceleração e gráficos' },
+            { title: 'Energia: Trabalho e Potência',       sub: 'Conservação de energia e máquinas simples' },
+            { title: 'Termodinâmica e Calor',              sub: 'Temperatura, calor específico e leis da termodinâmica' },
+            { title: 'Eletricidade e Circuitos',           sub: 'Resistência, corrente, tensão e lei de Ohm' },
+            { title: 'Ondas, Som e Óptica',                sub: 'Reflexão, refração, espelhos e lentes' },
+            { title: 'Química Orgânica: Funções e Reações',sub: 'Hidrocarbonetos, álcool, ácidos e ésteres' },
+            { title: 'Estequiometria e Reações Químicas',  sub: 'Mol, balanceamento e cálculo estequiométrico' },
+            { title: 'Ácidos, Bases e pH',                 sub: 'Teoria de Arrhenius, neutralização e indicadores' },
+            { title: 'Tabela Periódica e Ligações',        sub: 'Propriedades, eletronegatividade e ligações iônicas/covalentes' },
+            { title: 'Biotecnologia e Microbiologia',      sub: 'Vírus, bactérias, vacinas, DNA recombinante' },
+        ],
+        linguagens: [
+            { title: 'Redação ENEM: Proposta de Intervenção', sub: 'Os 5 agentes e o respeito aos direitos humanos' },
+            { title: 'Redação ENEM: Argumentação',         sub: 'Tese, argumentos e coesão textual' },
+            { title: 'Interpretação de Texto',             sub: 'Inferência, intertextualidade e gêneros textuais' },
+            { title: 'Modernismo Brasileiro',              sub: 'Semana de Arte Moderna, Oswald e Mário de Andrade' },
+            { title: 'Realismo e Naturalismo',             sub: 'Machado de Assis, Eça de Queirós e o cientificismo' },
+            { title: 'Literatura: Romantismo Brasileiro',  sub: 'Indianismo, ultrarromantismo e condoreirismo' },
+            { title: 'Figuras de Linguagem',               sub: 'Metáfora, ironia, hipérbole, eufemismo e antítese' },
+            { title: 'Variação Linguística e Norma Culta', sub: 'Preconceito linguístico, dialetos e registros' },
+            { title: 'Gramática: Concordância e Regência', sub: 'Concordância verbal, nominal e regência verbal' },
+            { title: 'Publicidade, Charges e Multimodal',  sub: 'Leitura de imagem, humor e argumentação visual' },
+            { title: 'Inglês: Interpretação de Texto',     sub: 'Vocabulário em contexto e compreensão global' },
+            { title: 'Semiótica e Linguagens não-verbais', sub: 'Música, cinema, fotografia e HQs como linguagem' },
+        ],
+        matematica: [
+            { title: 'Funções do 1º e 2º Grau',           sub: 'Raízes, Bhaskara, vértice e gráfico da parábola' },
+            { title: 'Porcentagem e Juros Compostos',      sub: 'Aumentos, descontos e fórmula do montante' },
+            { title: 'Geometria Plana: Áreas e Perímetros',sub: 'Triângulo, quadriláteros, círculo e semelhança' },
+            { title: 'Probabilidade e Estatística',        sub: 'Eventos, frequência, média, mediana e moda' },
+            { title: 'Progressões Aritmética e Geométrica',sub: 'Termo geral, soma e aplicações no ENEM' },
+            { title: 'Trigonometria',                      sub: 'Seno, cosseno, tangente e Lei dos Senos e Cossenos' },
+            { title: 'Geometria Espacial',                 sub: 'Volume de prismas, pirâmides, cilindros e esferas' },
+            { title: 'Equações e Sistemas Lineares',       sub: 'Sistemas 2×2, determinante e interpretação gráfica' },
+            { title: 'Análise Combinatória',               sub: 'Permutação, combinação, arranjo e princípio fundamental' },
+            { title: 'Razão, Proporção e Regra de Três',   sub: 'Grandezas proporcionais, mistura e escala' },
+            { title: 'Matrizes e Determinantes',           sub: 'Operações, determinante e regra de Cramer' },
+            { title: 'Logaritmo e Exponencial',            sub: 'Propriedades, equações logarítmicas e crescimento' },
+        ],
+    };
 
-    // Ordenar: áreas com pior desempenho primeiro (mais frequentes)
+    const AREA_LABELS = {
+        humanas:    'CIÊNCIAS HUMANAS',
+        natureza:   'CIÊNCIAS DA NATUREZA',
+        linguagens: 'LINGUAGENS',
+        matematica: 'MATEMÁTICA',
+    };
+    const AREA_ICONS = {
+        humanas: '🌍', natureza: '🧬', linguagens: '✍️', matematica: '➗',
+    };
+
+    // ── Calcular força de cada área (menor % = mais fraca = mais slots) ──────
     const stats = state.progress.stats;
-    const withPct = allSubjects.map(s => {
-        const st = stats[s.disc];
-        const pct = st && st.total > 0 ? st.correct / st.total : 0.5;
-        return { ...s, pct };
+    const weak  = state.weakSubjects || [];
+    const discs = ['humanas', 'natureza', 'linguagens', 'matematica'];
+
+    const strength = {};
+    discs.forEach(d => {
+        const st = stats[d];
+        let pct = st && st.total >= 5 ? st.correct / st.total : 0.50;
+        if (weak.includes(d)) pct -= 0.15; // penalidade se declarou fraqueza no onboarding
+        strength[d] = pct;
     });
 
-    // Se tem preferência do onboarding, priorizar essas
-    const weak = state.weakSubjects || [];
-    withPct.forEach(s => { if (weak.includes(s.disc)) s.pct -= 0.2; });
+    // ── Montar distribuição dos 6 dias da semana ──────────────────────────────
+    // Ordenar da mais fraca para mais forte
+    const sorted = [...discs].sort((a, b) => strength[a] - strength[b]);
+    // A mais fraca ganha 2 slots, a segunda mais fraca 2 slots, as outras 1 slot cada = 6 total
+    const dayDiscs = [sorted[0], sorted[1], sorted[2], sorted[3], sorted[0], sorted[1]];
 
-    // Montar semana: 6 slots, distribuindo mais os mais fracos
-    withPct.sort((a, b) => a.pct - b.pct);
-    let pool = [...withPct, withPct[0], withPct[1]]; // fraquinhos aparecem 2x
+    // Embaralhar mantendo seed semanal (muda a cada segunda-feira)
+    const today   = new Date();
+    const mon     = new Date(today);
+    const dow     = today.getDay();
+    mon.setDate(today.getDate() - (dow === 0 ? 6 : dow - 1));
+    const weekSeed = parseInt(mon.toISOString().slice(0, 10).replace(/-/g, ''), 10);
+    const rand     = _seededRandom(weekSeed);
 
-    // Seed baseada na data: mesmo resultado durante todo o dia, muda a cada dia
-    const dateSeed = parseInt(new Date().toISOString().slice(0, 10).replace(/-/g, ''), 10);
-    const rand = _seededRandom(dateSeed);
-    pool = pool.sort(() => rand() - 0.5).slice(0, 6);
-    return pool;
+    // Para cada dia, escolher tópico diferente dentro da disciplina
+    // Usar índice determinístico baseado no dia da semana para evitar repetição
+    const usedPerDisc = {};
+    return dayDiscs.map((disc, slotIdx) => {
+        const bank    = TOPIC_BANK[disc];
+        const used    = usedPerDisc[disc] || [];
+        const available = bank.filter((_, i) => !used.includes(i));
+        // Escolher índice via rand seeded + slot
+        const pickArr = available.length > 0 ? available : bank;
+        const idx     = Math.floor((rand() + slotIdx * 0.1371) % 1 * pickArr.length);
+        const topic   = pickArr[Math.max(0, Math.min(idx, pickArr.length - 1))];
+        const bankIdx = bank.indexOf(topic);
+        if (!usedPerDisc[disc]) usedPerDisc[disc] = [];
+        usedPerDisc[disc].push(bankIdx);
+
+        return {
+            disc,
+            area:  AREA_LABELS[disc],
+            icon:  AREA_ICONS[disc],
+            title: topic.title,
+            sub:   topic.sub,
+        };
+    });
 }
 
 function renderTodayCard() {
