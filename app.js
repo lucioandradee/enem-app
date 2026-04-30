@@ -1007,7 +1007,7 @@ function showWeekSchedule() {
             </div>
             <div class="ws-right">
                 ${statusBadge}
-                <button class="ws-start-btn" onclick="closeWeekSchedule();quizState.discipline='${subj.disc}';navigate('quiz-setup')" title="Praticar este tópico">→</button>
+                <button class="ws-start-btn" onclick="closeWeekSchedule();startQuiz('${subj.disc}',10)" title="Praticar este tópico">→</button>
             </div>
         </div>`;
     }
