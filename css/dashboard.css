@@ -293,8 +293,19 @@
 .sp-score-row { display: flex; align-items: flex-end; gap: 6px; margin-bottom: 6px; }
 .sp-score { font-size: 38px; font-weight: 900; color: var(--text-primary); line-height: 1; }
 .sp-scale { font-size: 13px; color: var(--text-muted); font-weight: 500; margin-bottom: 5px; }
-.sp-insight { font-size: 12px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 10px; }
+.sp-insight { font-size: 13px; color: var(--text-secondary); line-height: 1.55; margin-bottom: 12px; }
 .sp-cta { font-size: 12px; font-weight: 700; color: var(--accent); background: none; border: none; cursor: pointer; padding: 0; }
+.sp-milestone-wrap { margin: 8px 0 12px; }
+.sp-milestone-bar-bg { height: 6px; background: rgba(255,255,255,.1); border-radius: 100px; margin-bottom: 5px; overflow: hidden; }
+.sp-milestone-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent), #22c55e); border-radius: 100px; transition: width .6s cubic-bezier(.4,0,.2,1); }
+.sp-milestone-label { font-size: 10px; color: var(--text-muted); font-weight: 600; letter-spacing: 0.3px; }
+.sp-areas { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+.sp-area-row { display: flex; align-items: center; gap: 6px; }
+.sp-area-icon { font-size: 12px; flex-shrink: 0; width: 16px; text-align: center; }
+.sp-area-name { font-size: 11px; color: var(--text-secondary); font-weight: 500; white-space: nowrap; flex-shrink: 0; min-width: 66px; }
+.sp-area-bar-bg { flex: 1; height: 5px; background: rgba(255,255,255,.1); border-radius: 100px; overflow: hidden; min-width: 0; }
+.sp-area-bar-fill { height: 100%; border-radius: 100px; transition: width .6s cubic-bezier(.4,0,.2,1); }
+.sp-area-pct { font-size: 11px; font-weight: 700; text-align: right; flex-shrink: 0; min-width: 28px; }
 
 /* ── Weak Spot Alert Card ── */
 .weak-spot-card { margin: 0 16px 14px; padding: 14px 16px; background: rgba(239,68,68,.07); border: 1px solid rgba(239,68,68,.2); border-radius: var(--radius-md); display: flex; align-items: center; gap: 12px; }

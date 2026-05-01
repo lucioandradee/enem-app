@@ -2175,12 +2175,15 @@ function _calcENEMScore() {
     const areas = ['humanas', 'natureza', 'linguagens', 'matematica'];
     const totalAnswered = areas.reduce((s, d) => s + (stats[d]?.total || 0), 0);
     if (totalAnswered < 10) return null;
-    const weightedRatio = areas.reduce((sum, d) => {
+    // Usa apenas áreas com dados suficientes para evitar distorção
+    let sum = 0, count = 0;
+    for (const d of areas) {
         const st = stats[d] || { correct: 0, total: 0 };
-        const ratio = st.total > 0 ? st.correct / st.total : 0.5;
-        return sum + ratio * 0.25;
-    }, 0);
-    const score = Math.round(1 / (1 + Math.exp(-9 * (weightedRatio - 0.5))) * 700 + 300);
+        if (st.total >= 5) { sum += st.correct / st.total; count++; }
+    }
+    if (count === 0) return null;
+    const avgRatio = sum / count;
+    const score = Math.round(1 / (1 + Math.exp(-9 * (avgRatio - 0.5))) * 700 + 300);
     return Math.max(300, Math.min(1000, score));
 }
 
@@ -2222,6 +2225,7 @@ function _renderScorePrediction() {
     card.style.display = '';
     document.getElementById('sp-score').textContent = score.toLocaleString('pt-BR');
 
+    // Trend
     const trend = _calcScoreTrend();
     const trendEl = document.getElementById('sp-trend');
     if (trendEl) {
@@ -2231,19 +2235,73 @@ function _renderScorePrediction() {
         else                  { trendEl.textContent = '→ Estável'; trendEl.style.color = '#7a9ab5'; }
     }
 
+    // Barra de progresso até a próxima meta
+    const milestoneWrap = document.getElementById('sp-milestone-wrap');
+    const milestoneFill = document.getElementById('sp-milestone-fill');
+    const milestoneLabel = document.getElementById('sp-milestone-label');
+    if (milestoneWrap && milestoneFill && milestoneLabel && score < 1000) {
+        const target = score < 700 ? 700 : score < 800 ? 800 : score < 900 ? 900 : 1000;
+        const base   = target === 700 ? 300 : target - 100;
+        const pct    = Math.min(100, Math.round(((score - base) / (target - base)) * 100));
+        milestoneFill.style.width = pct + '%';
+        milestoneLabel.textContent = `${pct}% do caminho até ${target} pts`;
+        milestoneWrap.style.display = '';
+    } else if (milestoneWrap) {
+        milestoneWrap.style.display = 'none';
+    }
+
+    // Breakdown por área
+    const areasEl = document.getElementById('sp-areas');
+    if (areasEl) {
+        const stats = state.progress && state.progress.stats;
+        const areasList = [
+            { key: 'humanas',    name: 'Humanas',    icon: '🌍' },
+            { key: 'natureza',   name: 'Natureza',   icon: '🔬' },
+            { key: 'linguagens', name: 'Linguagens', icon: '📝' },
+            { key: 'matematica', name: 'Matemática', icon: '🔢' },
+        ];
+        let html = '';
+        for (const area of areasList) {
+            const st = stats && stats[area.key] || { correct: 0, total: 0 };
+            if (st.total < 5) continue;
+            const pct   = Math.round((st.correct / st.total) * 100);
+            const color = pct >= 65 ? '#22c55e' : pct >= 45 ? '#f5c518' : '#ef4444';
+            html += `<div class="sp-area-row">` +
+                `<span class="sp-area-icon">${area.icon}</span>` +
+                `<span class="sp-area-name">${area.name}</span>` +
+                `<div class="sp-area-bar-bg"><div class="sp-area-bar-fill" style="width:${pct}%;background:${color}"></div></div>` +
+                `<span class="sp-area-pct" style="color:${color}">${pct}%</span>` +
+            `</div>`;
+        }
+        areasEl.innerHTML = html;
+        areasEl.style.display = html ? '' : 'none';
+    }
+
+    // Insight humanizado
     const insightEl = document.getElementById('sp-insight');
     if (insightEl) {
         const weak   = _getWeakSpot();
         const target = score < 700 ? 700 : score < 800 ? 800 : 900;
-        if (weak && score < target) {
-            insightEl.textContent = `Para chegar em ${target}, melhore em ${weak.name} (acerto atual: ${weak.pct}%).`;
-            const ctaEl = document.getElementById('sp-cta');
-            if (ctaEl) ctaEl.onclick = () => { quizSetup.discipline = weak.key; navigate('quiz-setup'); };
-        } else if (score >= 900) {
-            insightEl.textContent = 'Excelente! Você está no top 5% dos candidatos. 🏆';
+        let msg = '';
+
+        if (score >= 900) {
+            msg = 'Você está no top 5% dos candidatos — desempenho de aprovado. Continue assim! 🏆';
+        } else if (!weak) {
+            if (score >= 800) msg = `Nota muito boa! Falta ${target - score} pts para atingir ${target}. Mantenha o ritmo.`;
+            else               msg = `Você está no caminho certo. Continue praticando para superar os ${target} pontos!`;
         } else {
-            insightEl.textContent = `Continue praticando para superar os ${target} pontos!`;
+            const gap = target - score;
+            if (weak.pct < 30) {
+                msg = `${weak.name} está puxando sua nota pra baixo (${weak.pct}% de acerto). Esse é seu maior ganho agora — focar aqui pode te levar aos ${target} pts.`;
+            } else if (weak.pct < 50) {
+                msg = `Para chegar nos ${target}, sua maior alavanca é ${weak.name} — você está acertando ${weak.pct}% das questões. Dá pra melhorar muito!`;
+            } else {
+                msg = `${weak.name} é seu ponto mais fraco (${weak.pct}% de acerto). Um foco extra aqui fecha a distância para ${target} pts.`;
+            }
         }
+        insightEl.textContent = msg;
+        const ctaEl = document.getElementById('sp-cta');
+        if (ctaEl && weak) ctaEl.onclick = () => { quizSetup.discipline = weak.key; navigate('quiz-setup'); };
     }
 }
 
@@ -2258,7 +2316,12 @@ function _renderWeakSpotAlert() {
     const subEl   = document.getElementById('ws-sub');
     const ctaEl   = document.getElementById('ws-cta');
     if (titleEl) titleEl.textContent = weak.name;
-    if (subEl)   subEl.textContent   = `${weak.pct}% de acerto em ${weak.total} questões — foco aqui!`;
+    if (subEl) {
+        const questStr = weak.total === 1 ? '1 questão' : `${weak.total} questões`;
+        if (weak.pct < 30)       subEl.textContent = `Só ${weak.pct}% de acerto em ${questStr} — aqui tá o maior potencial de melhora!`;
+        else if (weak.pct < 50)  subEl.textContent = `${weak.pct}% de acerto em ${questStr} — ainda dá pra avançar bastante aqui.`;
+        else                     subEl.textContent = `${weak.pct}% de acerto em ${questStr} — um pouco de foco faz diferença.`;
+    }
     if (ctaEl)   ctaEl.onclick = () => { quizSetup.discipline = weak.key; navigate('quiz-setup'); };
 }
 
