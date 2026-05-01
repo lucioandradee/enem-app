@@ -199,8 +199,12 @@
 /* ---- Sparkline ---- */
 .sparkline-card { justify-content: space-between; }
 .sparkline-svg  { width: 100%; height: 44px; overflow: visible; display: block; flex-shrink: 0; }
+.sparkline-svg:empty { display: none; }
 .sparkline-label { transition: color 0.3s; }
 .sparkline-sub   { margin-top: 2px; font-weight: 600; transition: color 0.3s; }
+/* Estado vazio: centraliza o texto e oculta o SVG */
+.sparkline-card:has(.sparkline-empty:not([style*="display: none"])) .sparkline-svg { display: none; }
+.sparkline-card:has(.sparkline-empty:not([style*="display: none"])) { justify-content: center; align-items: center; text-align: center; gap: 6px; }
 
 /* ---- Toggle Switch ---- */
 .toggle-switch { position: relative; display: inline-block; width: 46px; height: 26px; flex-shrink: 0; }

@@ -283,30 +283,54 @@
 .retro-empty-card p { font-size: 13px; color: var(--text-muted); text-align: center; line-height: 1.5; }
 
 /* ── Score Prediction Card ── */
-.score-pred-card { margin: 0 16px 14px; padding: 20px; background: linear-gradient(135deg, rgba(0,180,166,.12) 0%, rgba(0,180,166,.04) 100%); border: 1px solid rgba(0,180,166,.25); border-radius: var(--radius-md); }
-.sp-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
-.sp-label { font-size: 10px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.8px; }
-.sp-trend { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 100px; }
-.sp-trend.up { background: rgba(34,197,94,.15); color: #22c55e; }
-.sp-trend.down { background: rgba(239,68,68,.12); color: #ef4444; }
-.sp-trend.stable { background: rgba(255,255,255,.07); color: var(--text-muted); }
+.score-pred-card {
+    margin: 0 16px 14px;
+    background: linear-gradient(135deg, rgba(0,180,166,.13) 0%, rgba(0,180,166,.03) 100%);
+    border: 1px solid rgba(0,180,166,.28);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+}
+.sp-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 18px 10px;
+}
+.sp-label { font-size: 10px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; }
+.sp-trend { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 100px; background: rgba(255,255,255,.07); color: var(--text-muted); }
+/* Bloco da nota grande */
+.sp-score-section {
+    padding: 4px 18px 18px;
+    border-bottom: 1px solid rgba(255,255,255,.07);
+}
 .sp-score-row { display: flex; align-items: flex-end; gap: 8px; margin-bottom: 14px; }
-.sp-score { font-size: 44px; font-weight: 900; color: var(--text-primary); line-height: 1; }
-.sp-scale { font-size: 14px; color: var(--text-muted); font-weight: 500; margin-bottom: 6px; }
-.sp-divider { height: 1px; background: rgba(255,255,255,.07); margin-bottom: 16px; }
-.sp-milestone-wrap { margin-bottom: 16px; }
-.sp-milestone-bar-bg { height: 6px; background: rgba(255,255,255,.1); border-radius: 100px; margin-bottom: 6px; overflow: hidden; }
-.sp-milestone-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent), #22c55e); border-radius: 100px; transition: width .6s cubic-bezier(.4,0,.2,1); }
+.sp-score { font-size: 48px; font-weight: 900; color: var(--text-primary); line-height: 1; letter-spacing: -1px; }
+.sp-scale { font-size: 14px; color: var(--text-muted); font-weight: 500; margin-bottom: 8px; }
+.sp-milestone-wrap { margin: 0; }
+.sp-milestone-bar-bg { height: 6px; background: rgba(255,255,255,.1); border-radius: 100px; margin-bottom: 7px; overflow: hidden; }
+.sp-milestone-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent), #22c55e); border-radius: 100px; transition: width .7s cubic-bezier(.4,0,.2,1); }
 .sp-milestone-label { font-size: 10px; color: var(--text-muted); font-weight: 600; letter-spacing: 0.3px; }
-.sp-areas { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
-.sp-area-row { display: flex; align-items: center; gap: 8px; }
-.sp-area-icon { font-size: 12px; flex-shrink: 0; width: 16px; text-align: center; }
-.sp-area-name { font-size: 11px; color: var(--text-secondary); font-weight: 500; white-space: nowrap; flex-shrink: 0; min-width: 70px; }
-.sp-area-bar-bg { flex: 1; height: 5px; background: rgba(255,255,255,.1); border-radius: 100px; overflow: hidden; min-width: 0; }
-.sp-area-bar-fill { height: 100%; border-radius: 100px; transition: width .6s cubic-bezier(.4,0,.2,1); }
-.sp-area-pct { font-size: 11px; font-weight: 700; text-align: right; flex-shrink: 0; min-width: 28px; }
-.sp-insight { font-size: 13px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 14px; }
-.sp-cta { font-size: 12px; font-weight: 700; color: var(--accent); background: none; border: none; cursor: pointer; padding: 0; }
+/* Breakdown por área */
+.sp-areas {
+    padding: 14px 18px;
+    display: flex; flex-direction: column; gap: 10px;
+    border-bottom: 1px solid rgba(255,255,255,.07);
+}
+.sp-area-row { display: flex; align-items: center; gap: 9px; }
+.sp-area-icon { font-size: 13px; flex-shrink: 0; width: 18px; text-align: center; }
+.sp-area-name { font-size: 12px; color: var(--text-secondary); font-weight: 500; white-space: nowrap; flex-shrink: 0; min-width: 72px; }
+.sp-area-bar-bg { flex: 1; height: 6px; background: rgba(255,255,255,.1); border-radius: 100px; overflow: hidden; min-width: 0; }
+.sp-area-bar-fill { height: 100%; border-radius: 100px; transition: width .7s cubic-bezier(.4,0,.2,1); }
+.sp-area-pct { font-size: 12px; font-weight: 700; text-align: right; flex-shrink: 0; min-width: 32px; }
+/* Footer: insight + CTA */
+.sp-footer { padding: 14px 18px; }
+.sp-insight { font-size: 13px; color: var(--text-secondary); line-height: 1.65; margin-bottom: 12px; }
+.sp-cta {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12px; font-weight: 700; color: var(--accent);
+    background: rgba(0,180,166,.12); border: 1px solid rgba(0,180,166,.25);
+    border-radius: 20px; padding: 6px 14px; cursor: pointer;
+    transition: background .15s;
+}
+.sp-cta:active { background: rgba(0,180,166,.22); }
 
 /* ── Weak Spot Alert Card ── */
 .weak-spot-card { margin: 0 16px 14px; padding: 14px 16px; background: rgba(239,68,68,.07); border: 1px solid rgba(239,68,68,.2); border-radius: var(--radius-md); display: flex; align-items: center; gap: 12px; }
