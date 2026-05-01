@@ -30,18 +30,29 @@
     var(--bg-primary);
 }
 
-/* Painéis mobile: empilhados, sem estilo extra */
+/* Mobile: coluna única, painéis reais */
+.login-wrap {
+  align-items: center;
+}
 .login-panel-left {
-  display: contents; /* no mobile, age como se não existisse — filhos flutuam normalmente */
+  display: flex; flex-direction: column; align-items: center;
+  width: 100%; max-width: 440px;
 }
 .login-panel-right {
-  display: contents;
+  display: flex; flex-direction: column; align-items: stretch;
+  width: 100%; max-width: 440px;
+  padding: 0 16px;
 }
+
+/* Esconde bloco de headline/stats no mobile — muito conteúdo para tela pequena */
+.login-headline-block { display: none; }
+
 
 /* Bloco superior — marca */
 .login-brand {
   display: flex; align-items: center; gap: 10px;
-  padding: 32px 24px 0;
+  padding: 32px 24px 20px;
+  width: 100%;
   animation: fade-down .55s cubic-bezier(.16,1,.3,1) both;
 }
 .login-brand-logo {
@@ -78,7 +89,8 @@
 
 /* Card do formulário */
 .login-card {
-  margin: 0 16px;
+  margin: 0;
+  width: 100%;
   background: rgba(17,40,64,.8);
   border: 1px solid rgba(0,180,166,.2);
   border-radius: 20px; padding: 20px;
@@ -154,9 +166,10 @@
 
 /* Rodapé */
 .login-footer {
-  padding: 16px 16px 24px;
+  padding: 16px 0 32px;
   display: flex; flex-direction: column; gap: 14px;
   animation: fade-up .45s .25s both;
+  width: 100%;
 }
 .login-register-block {
   display: flex; align-items: center; justify-content: space-between;
