@@ -1849,11 +1849,10 @@ function init() {
                     nav.style.display = 'none';
                     state.currentScreen = 'onboarding';
                 } else if (!_forceLogin && !state.onboardingDone && !isReturningUser) {
-                    // Usuário novo → mostrar landing de conversão
-                    document.getElementById('screen-landing').classList.add('active');
+                    // Usuário novo → mostrar login (entrada principal)
+                    document.getElementById('screen-login').classList.add('active');
                     nav.style.display = 'none';
-                    state.currentScreen = 'landing';
-                    renderLanding();
+                    state.currentScreen = 'login';
                 } else if (_paymentReturn) {
                     // Retorno do gateway: mostrar login com banner de sucesso
                     document.getElementById('screen-login').classList.add('active');
@@ -1886,10 +1885,9 @@ function init() {
         }).catch(() => {
             // Supabase indisponível: usar estado local como fallback
             if (!state.onboardingDone && !isReturningUser) {
-                document.getElementById('screen-landing').classList.add('active');
+                document.getElementById('screen-login').classList.add('active');
                 nav.style.display = 'none';
-                state.currentScreen = 'landing';
-                renderLanding();
+                state.currentScreen = 'login';
             } else {
                 state.currentScreen = 'home';
                 document.getElementById('screen-home').classList.add('active');
@@ -1904,10 +1902,9 @@ function init() {
 
     // Fallback: Supabase não disponível — usar estado local
     if (!state.onboardingDone && !isReturningUser) {
-        document.getElementById('screen-landing').classList.add('active');
+        document.getElementById('screen-login').classList.add('active');
         nav.style.display = 'none';
-        state.currentScreen = 'landing';
-        renderLanding();
+        state.currentScreen = 'login';
         return;
     }
     state.currentScreen = 'home';
