@@ -102,6 +102,21 @@
   animation: fade-up .45s .15s both;
 }
 
+/* Cabeçalho dentro do card */
+.login-card-header {
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+  margin-bottom: 2px;
+}
+.login-card-title {
+  font-size: 17px; font-weight: 900; color: #fff;
+  letter-spacing: -.35px; line-height: 1.2; margin: 0 0 4px;
+}
+.login-card-sub {
+  font-size: 12px; color: rgba(255,255,255,.42); margin: 0;
+  font-weight: 400; line-height: 1.45;
+}
+
 /* Inputs com ícone */
 .login-input-group {
   position: relative; display: flex; align-items: center;
