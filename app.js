@@ -1725,6 +1725,9 @@ window.onerror = (msg, src, line, col, err) => {
 };
 
 function init() {
+    // Remover estilo de guarda (injetado pelo session guard para evitar flash do home)
+    var _guardStyle = document.getElementById('guard-hide-home');
+    if (_guardStyle) _guardStyle.remove();
     // Garantir que apenas uma tela fique ativa (nenhuma fica visível durante verificação de sessão)
     document.querySelectorAll('.screen.active').forEach(s => s.classList.remove('active'));
     // Ocultar nav durante verificação: evita flash de tela errada antes do auth ser resolvido

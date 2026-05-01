@@ -36,16 +36,30 @@
    Só redireciona se tiver CERTEZA de que não há sessão (token ausente ou inválido).
    Qualquer dúvida — deixa o SDK do Supabase decidir.                         */
 (function () {
-  // Callback OAuth: ?code= na URL ? deixa passar (auth-callback processa)
+  // Callback OAuth: ?code= na URL → deixa passar (auth-callback processa)
   if (window.location.search.indexOf('code=') !== -1) return;
-  // Parâmetros de CTA da landing page ? deixa o init() decidir a tela
-  if (window.location.search.indexOf('ref=') !== -1) return;
+
+  var hasRef = window.location.search.indexOf('ref=') !== -1;
+
+  // Quando vem de CTA sem sessão, oculta o home imediatamente para evitar flash.
+  // init() remove esse estilo antes de decidir qual tela mostrar.
+  function hideHome() {
+    var s = document.createElement('style');
+    s.id = 'guard-hide-home';
+    s.textContent = '#screen-home{display:none}';
+    document.head.appendChild(s);
+  }
+
   try {
     var sbKey = 'sb-nkuiwdolkluetsadauwb-auth-token';
     var raw = localStorage.getItem(sbKey);
 
-    // Sem nenhum token armazenado ? redireciona imediatamente
-    if (!raw) { window.location.replace('/'); return; }
+    // Sem nenhum token armazenado
+    if (!raw) {
+      if (hasRef) { hideHome(); return; }
+      window.location.replace('/');
+      return;
+    }
 
     // Suporte a sessão fragmentada (chunked storage do SDK v2)
     var maybeCount = parseInt(raw, 10);
@@ -54,21 +68,28 @@
       var parts = [];
       for (var i = 0; i < maybeCount; i++) {
         var chunk = localStorage.getItem(sbKey + '.' + i);
-        if (!chunk) { window.location.replace('/'); return; }
+        if (!chunk) {
+          if (hasRef) { hideHome(); return; }
+          window.location.replace('/');
+          return;
+        }
         parts.push(chunk);
       }
       sessionStr = parts.join('');
     }
 
     var parsed = JSON.parse(sessionStr);
-    // Aceita sessão com access_token OU refresh_token ? se um expirou o SDK renova
+    // Aceita sessão com access_token OU refresh_token → se um expirou o SDK renova
     var hasAnyToken = parsed && (
       parsed.access_token   || parsed.refresh_token ||
       (parsed.session && (parsed.session.access_token || parsed.session.refresh_token))
     );
-    if (!hasAnyToken) { window.location.replace('/'); }
+    if (!hasAnyToken) {
+      if (hasRef) { hideHome(); return; }
+      window.location.replace('/');
+    }
   } catch (e) {
-    // JSON inválido ou outro erro ? deixa o SDK decidir (não redireciona)
+    // JSON inválido ou outro erro → deixa o SDK decidir (não redireciona)
   }
 })();
 </script>
