@@ -514,9 +514,11 @@
   }
   #screen-login .login-panel-left .login-headline {
     font-size: 36px;
+    letter-spacing: -1px;
+    margin-bottom: 12px;
   }
-  #screen-login .login-panel-left .login-subheadline {
-    font-size: 16px;
+  #screen-login .login-panel-left .login-hero-stats {
+    display: flex;
   }
 
   /* Painel direito — formulário */

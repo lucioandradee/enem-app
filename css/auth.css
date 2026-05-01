@@ -30,28 +30,30 @@
     var(--bg-primary);
 }
 
-/* Mobile: coluna única, painéis reais */
+/* Mobile: coluna única centralizada */
 .login-wrap {
   align-items: center;
+  justify-content: center;
 }
 .login-panel-left {
-  display: flex; flex-direction: column; align-items: center;
-  width: 100%; max-width: 440px;
+  display: flex; flex-direction: column; align-items: flex-start;
+  width: 100%; max-width: 420px;
+  padding: 0 20px;
 }
 .login-panel-right {
   display: flex; flex-direction: column; align-items: stretch;
-  width: 100%; max-width: 440px;
-  padding: 0 16px;
+  width: 100%; max-width: 420px;
+  padding: 0 16px 24px;
 }
 
-/* Esconde bloco de headline/stats no mobile — muito conteúdo para tela pequena */
-.login-headline-block { display: none; }
+/* No mobile: headline condensada, sem stats */
+.login-hero-stats { display: none; }
 
 
 /* Bloco superior — marca */
 .login-brand {
   display: flex; align-items: center; gap: 10px;
-  padding: 32px 24px 20px;
+  padding: 20px 0 8px;
   width: 100%;
   animation: fade-down .55s cubic-bezier(.16,1,.3,1) both;
 }
@@ -70,12 +72,12 @@
 
 /* Headline */
 .login-headline-block {
-  padding: 22px 24px 24px;
+  padding: 4px 0 14px;
   animation: fade-up .55s .08s cubic-bezier(.16,1,.3,1) both;
 }
 .login-headline {
-  font-size: 34px; font-weight: 900; line-height: 1.08;
-  letter-spacing: -1px; margin-bottom: 12px; color: #fff;
+  font-size: 22px; font-weight: 900; line-height: 1.1;
+  letter-spacing: -.5px; margin-bottom: 6px; color: #fff;
 }
 .login-headline-accent {
   background: linear-gradient(125deg, #c4b5fd 0%, #a78bfa 30%, var(--teal) 65%, #00e5d4 100%);
