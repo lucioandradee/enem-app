@@ -690,6 +690,7 @@ const screenMap = {
     support: 'screen-support',
     notifications: 'screen-notifications',
     onboarding: 'screen-onboarding',
+    landing: 'screen-landing',
     login: 'screen-login',
     plans: 'screen-plans',
     checkout: 'screen-checkout',
@@ -703,7 +704,7 @@ const screenMap = {
 };
 
 const screensWithNav = ['home', 'ranking', 'achievements', 'profile', 'conteudo'];
-const screensWithoutNav = ['quiz', 'quiz-setup', 'result', 'settings', 'support', 'notifications', 'review', 'onboarding', 'login', 'plans', 'checkout', 'privacy', 'terms', 'redacao', 'analise', 'study-plan', 'teacher'];
+const screensWithoutNav = ['quiz', 'quiz-setup', 'result', 'settings', 'support', 'notifications', 'review', 'onboarding', 'login', 'landing', 'plans', 'checkout', 'privacy', 'terms', 'redacao', 'analise', 'study-plan', 'teacher'];
 
 function navigate(screenName) {
     // Conteúdo é exclusivo para usuários Premium
@@ -783,6 +784,7 @@ function renderScreen(screenName) {
             case 'quiz-setup': renderQuizSetup(); break;
             case 'review': renderReview(); break;
             case 'achievements': renderAchievements(); break;
+            case 'landing': renderLanding(); break;
             case 'redacao': renderRedacao(); break;
             case 'checkout': renderCheckout(); break;
             case 'analise': renderAnalise(); break;
@@ -795,6 +797,52 @@ function renderScreen(screenName) {
         _DEV && console.error('❌ renderScreen [' + screenName + ']:', e);
         _showQuickToast('Algo deu errado. Tente novamente.');
     }
+}
+
+// =====================================================
+// LANDING PAGE
+// =====================================================
+function renderLanding() {
+    const days = _daysToENEM();
+    const daysStr = days + ' dias';
+    const els = [
+        document.getElementById('lp-hero-days'),
+        document.getElementById('lp-strip-days'),
+        document.getElementById('lp-pricing-days'),
+        document.getElementById('lp-final-days'),
+    ];
+    els.forEach((el, i) => {
+        if (!el) return;
+        el.textContent = i === 3 ? days : (i === 1 ? days : daysStr);
+    });
+
+    // Scroll-triggered reveal with IntersectionObserver
+    const screen = document.getElementById('screen-landing');
+    if (!screen) return;
+    const sections = screen.querySelectorAll('.lp-section, .lp-final');
+    sections.forEach(s => s.classList.add('lp-animate'));
+
+    if ('IntersectionObserver' in window) {
+        const obs = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('lp-visible');
+                    obs.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+        sections.forEach(s => obs.observe(s));
+    } else {
+        sections.forEach(s => s.classList.add('lp-visible'));
+    }
+}
+
+function lpToggleFaq(btn) {
+    const item = btn.closest('.lp-faq-item');
+    if (!item) return;
+    const isOpen = item.classList.contains('open');
+    document.querySelectorAll('#screen-landing .lp-faq-item.open').forEach(el => el.classList.remove('open'));
+    if (!isOpen) item.classList.add('open');
 }
 
 // =====================================================
@@ -1737,12 +1785,22 @@ function init() {
     // Detectar entrada pelo funil (landing.html?ref=landing)
     const _urlParams    = new URLSearchParams(window.location.search);
     const _refSource    = (_urlParams.get('ref') || _urlParams.get('utm_source') || '').toLowerCase();
-    const _forceFunnel  = _refSource === 'landing' || _refSource === 'landing_page';
-    const _forceLogin    = _refSource === 'login';
-    const _paymentReturn = _refSource === 'payment-success' || _refSource === 'cakto-return';
+    const _forceFunnel    = _refSource === 'landing' || _refSource === 'landing_page';
+    const _forceLogin     = _refSource === 'login';
+    const _paymentReturn  = _refSource === 'payment-success' || _refSource === 'cakto-return';
+    const _previewLanding = _urlParams.get('preview') === 'landing';
     // Limpar parâmetro da URL sem recarregar a página
-    if ((_forceFunnel || _forceLogin || _paymentReturn) && window.history?.replaceState) {
+    if ((_forceFunnel || _forceLogin || _paymentReturn || _previewLanding) && window.history?.replaceState) {
         window.history.replaceState({}, '', window.location.pathname);
+    }
+
+    // Preview forçado da landing (útil para desenvolvimento/demonstração)
+    if (_previewLanding) {
+        document.getElementById('screen-landing').classList.add('active');
+        if (_initNav) _initNav.style.display = 'none';
+        state.currentScreen = 'landing';
+        renderLanding();
+        return;
     }
 
     // ── Verificar sessão Supabase SEMPRE antes de decidir qual tela mostrar ──
@@ -1785,10 +1843,17 @@ function init() {
 
                 // Onboarding: usuário novo SEM dados locais, vindo de qualquer CTA
                 // (exceto quando explicitamente quer fazer login com ?ref=login).
-                if (!_forceLogin && (_forceFunnel || (!state.onboardingDone && !isReturningUser))) {
+                if (!_forceLogin && _forceFunnel) {
+                    // Vindo de landing externa → ir direto ao onboarding
                     document.getElementById('screen-onboarding').classList.add('active');
                     nav.style.display = 'none';
                     state.currentScreen = 'onboarding';
+                } else if (!_forceLogin && !state.onboardingDone && !isReturningUser) {
+                    // Usuário novo → mostrar landing de conversão
+                    document.getElementById('screen-landing').classList.add('active');
+                    nav.style.display = 'none';
+                    state.currentScreen = 'landing';
+                    renderLanding();
                 } else if (_paymentReturn) {
                     // Retorno do gateway: mostrar login com banner de sucesso
                     document.getElementById('screen-login').classList.add('active');
@@ -1821,9 +1886,10 @@ function init() {
         }).catch(() => {
             // Supabase indisponível: usar estado local como fallback
             if (!state.onboardingDone && !isReturningUser) {
-                document.getElementById('screen-onboarding').classList.add('active');
+                document.getElementById('screen-landing').classList.add('active');
                 nav.style.display = 'none';
-                state.currentScreen = 'onboarding';
+                state.currentScreen = 'landing';
+                renderLanding();
             } else {
                 state.currentScreen = 'home';
                 document.getElementById('screen-home').classList.add('active');
@@ -1838,9 +1904,10 @@ function init() {
 
     // Fallback: Supabase não disponível — usar estado local
     if (!state.onboardingDone && !isReturningUser) {
-        document.getElementById('screen-onboarding').classList.add('active');
+        document.getElementById('screen-landing').classList.add('active');
         nav.style.display = 'none';
-        state.currentScreen = 'onboarding';
+        state.currentScreen = 'landing';
+        renderLanding();
         return;
     }
     state.currentScreen = 'home';
@@ -2218,11 +2285,17 @@ function _getWeakSpot() {
 
 function _renderScorePrediction() {
     const card = document.getElementById('score-pred-card');
+    const header = document.getElementById('score-pred-header');
     if (!card) return;
     const score = _calcENEMScore();
-    if (!score) { card.style.display = 'none'; return; }
+    if (!score) {
+        card.style.display = 'none';
+        if (header) header.style.display = 'none';
+        return;
+    }
 
     card.style.display = '';
+    if (header) header.style.display = '';
     document.getElementById('sp-score').textContent = score.toLocaleString('pt-BR');
 
     // Trend

@@ -284,7 +284,7 @@
 
 /* ── Score Prediction Card ── */
 .score-pred-card {
-    margin: 0 16px 14px;
+    margin: 4px 0 18px;
     background: var(--bg-card);
     border: 1px solid rgba(0,180,166,.3);
     border-radius: var(--radius-md);

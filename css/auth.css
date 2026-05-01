@@ -24,8 +24,9 @@
   display: flex; flex-direction: column; align-items: stretch;
   min-height: 100%; padding: 0; gap: 0; overflow-y: auto;
   background:
-    radial-gradient(ellipse 120% 50% at 50% -10%, rgba(0,180,166,.18) 0%, transparent 55%),
-    radial-gradient(ellipse 60% 30% at 90% 80%, rgba(0,100,120,.1) 0%, transparent 50%),
+    radial-gradient(ellipse 170% 55% at 50% -20%, rgba(124,58,237,.30) 0%, transparent 50%),
+    radial-gradient(ellipse 90% 40% at 110% 100%, rgba(0,180,166,.16) 0%, transparent 55%),
+    radial-gradient(ellipse 55% 30% at -15% 55%, rgba(99,102,241,.12) 0%, transparent 50%),
     var(--bg-primary);
 }
 
@@ -40,8 +41,8 @@
 /* Bloco superior — marca */
 .login-brand {
   display: flex; align-items: center; gap: 10px;
-  padding: 28px 24px 0;
-  animation: fade-down .4s both;
+  padding: 32px 24px 0;
+  animation: fade-down .55s cubic-bezier(.16,1,.3,1) both;
 }
 .login-brand-logo {
   width: 42px; height: 42px;
@@ -58,20 +59,21 @@
 
 /* Headline */
 .login-headline-block {
-  padding: 24px 24px 20px;
-  animation: fade-up .45s .08s both;
+  padding: 22px 24px 24px;
+  animation: fade-up .55s .08s cubic-bezier(.16,1,.3,1) both;
 }
 .login-headline {
-  font-size: 28px; font-weight: 900; line-height: 1.15;
-  letter-spacing: -.6px; margin-bottom: 8px;
+  font-size: 34px; font-weight: 900; line-height: 1.08;
+  letter-spacing: -1px; margin-bottom: 12px; color: #fff;
 }
 .login-headline-accent {
-  background: linear-gradient(135deg, var(--teal) 0%, #00e5d4 100%);
+  background: linear-gradient(125deg, #c4b5fd 0%, #a78bfa 30%, var(--teal) 65%, #00e5d4 100%);
   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 .login-subheadline {
-  font-size: 14px; color: var(--text-muted); line-height: 1.5;
+  font-size: 13px; color: rgba(255,255,255,.48); line-height: 1.55;
+  letter-spacing: .15px;
 }
 
 /* Card do formulário */
@@ -177,6 +179,89 @@
 }
 /* Compat legacy */
 .login-trust-note { font-size: 11px; color: var(--text-muted); text-align: center; }
+
+/* ---- Brand badge com avatar stack ---- */
+.login-brand-badge {
+  display: flex; align-items: center; gap: 6px;
+  margin-left: auto; flex-shrink: 0;
+  font-size: 11px; font-weight: 700; color: rgba(255,255,255,.7);
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 100px; padding: 4px 10px 4px 6px;
+}
+.login-badge-avatars { display: flex; }
+.login-badge-av {
+  width: 16px; height: 16px; border-radius: 50%;
+  border: 1.5px solid rgba(5,5,8,.5);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 7px; font-weight: 900; color: #fff;
+  flex-shrink: 0;
+}
+.login-badge-av:not(:first-child) { margin-left: -5px; }
+
+/* ---- Hero eyebrow com ponto pulsante ---- */
+.login-hero-eyebrow {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: 10px; font-weight: 800; letter-spacing: .12em;
+  color: var(--teal); text-transform: uppercase;
+  background: rgba(0,180,166,.08);
+  border: 1px solid rgba(0,180,166,.22);
+  border-radius: 100px; padding: 5px 12px 5px 8px;
+  margin-bottom: 18px;
+}
+.login-hero-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--teal);
+  box-shadow: 0 0 0 3px rgba(0,180,166,.2);
+  animation: pulse-dot 2.4s ease-in-out infinite;
+  flex-shrink: 0;
+}
+@keyframes pulse-dot {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(0,180,166,.2); opacity: 1; }
+  50%       { box-shadow: 0 0 0 6px rgba(0,180,166,.04); opacity: .65; }
+}
+
+/* ---- Stats row com gradient border ---- */
+.login-hero-stats {
+  position: relative;
+  display: flex; align-items: center;
+  border-radius: 16px; padding: 14px 16px;
+  margin-top: 20px;
+  background: rgba(255,255,255,.03);
+  overflow: hidden;
+}
+.login-hero-stats::before {
+  content: '';
+  position: absolute; inset: 0;
+  border-radius: 16px; padding: 1px;
+  background: linear-gradient(135deg, rgba(124,58,237,.45) 0%, rgba(0,180,166,.3) 50%, rgba(124,58,237,.15) 100%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+}
+.login-hero-stat {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; gap: 3px;
+}
+.login-hero-stat-num {
+  font-size: 17px; font-weight: 900; color: #fff;
+  letter-spacing: -.5px; line-height: 1;
+}
+.login-hero-stat-unit {
+  font-size: 11px; font-weight: 700; color: rgba(255,255,255,.45);
+  letter-spacing: 0;
+}
+.login-hero-stat-label {
+  font-size: 9px; font-weight: 700; color: rgba(255,255,255,.38);
+  text-transform: uppercase; letter-spacing: .5px; text-align: center;
+}
+.login-hero-stat-divider {
+  width: 1px; height: 34px; flex-shrink: 0;
+  background: linear-gradient(to bottom, transparent, rgba(255,255,255,.12), transparent);
+  margin: 0 2px;
+}
 .login-label { font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .5px; padding-left: 2px; }
 .login-field { display: flex; flex-direction: column; gap: 6px; }
 .login-password-wrap .ob-input { text-align: left; padding-right: 48px; }

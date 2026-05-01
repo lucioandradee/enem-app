@@ -11,6 +11,7 @@
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800,900&display=swap"
         rel="stylesheet" />
     <link rel="stylesheet" href="style.css?v=15" />
+    <link rel="stylesheet" href="css/landing.css" />
     <link rel="manifest" href="manifest.json" />
     <link rel="icon" href="icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="icon-192.png" />
@@ -173,21 +174,27 @@
                 </button>
 
                 <!-- Gamification Cards -->
+                <div class="section-header">
+                    <span class="section-title">DESTAQUES</span>
+                </div>
                 <div class="mini-cards-row">
                     <div class="mini-card">
-                        <span class="mini-card-label">• Ofensiva</span>
+                        <span class="mini-card-label">🔥 Ofensiva</span>
                         <span class="mini-card-value" id="dash-streak">15 Dias</span>
-                        <span class="mini-card-sub">Mantendo o ritmo! 🔥</span>
+                        <span class="mini-card-sub">Mantendo o ritmo!</span>
                     </div>
                     <div class="mini-card sparkline-card" id="history-sparkline-card">
-                        <span class="mini-card-label sparkline-label">• Histórico</span>
+                        <span class="mini-card-label sparkline-label">📈 Histórico</span>
                         <svg id="history-sparkline" class="sparkline-svg" xmlns="http://www.w3.org/2000/svg"></svg>
                         <span class="mini-card-sub sparkline-empty">Faça seu 1º quiz</span>
                         <span class="mini-card-sub sparkline-sub" style="display:none"></span>
                     </div>
                 </div>
 
-                <!-- Score Prediction Card -->
+                <!-- Score Prediction Header + Card -->
+                <div class="section-header" id="score-pred-header" style="display:none">
+                    <span class="section-title">ESTIMATIVA DE NOTA</span>
+                </div>
                 <div class="score-pred-card" id="score-pred-card" style="display:none">
 
                     <!-- Linha superior: nota + meta -->
@@ -985,20 +992,6 @@
                     <button class="push-notif-btn" id="push-notif-btn" onclick="requestPushPermission()">Ativar</button>
                 </div>
 
-                <!-- WhatsApp Questão do Dia -->
-                <div class="settings-section">
-                    <div class="settings-section-title">• WhatsApp — Questão do Dia</div>
-                    <p class="settings-section-sub">Receba uma questão ENEM por dia direto no WhatsApp. Gratuito.</p>
-                    <div class="settings-field" id="wa-phone-field">
-                        <label for="input-wa-phone">SEU WHATSAPP (com DDD)</label>
-                        <input type="tel" id="input-wa-phone" placeholder="(11) 99999-9999" inputmode="tel" />
-                    </div>
-                    <button class="cta-btn" id="wa-subscribe-btn" style="margin-top:10px" onclick="subscribeWhatsApp()">
-                        Ativar Questão do Dia 📲
-                    </button>
-                    <p class="settings-section-sub" id="wa-status" style="margin-top:6px;color:var(--accent)"></p>
-                </div>
-
                 <!-- Professor Mode -->
                 <div class="settings-section">
                     <div class="settings-section-title">• Modo Professor</div>
@@ -1212,25 +1205,454 @@
             <div class="screen-scroll notif-scroll" id="notif-list"></div>
         </section>
 
+        <!-- ===================== SCREEN: LANDING ===================== -->
+        <section id="screen-landing" class="screen">
+          <div class="lp-wrap">
+
+            <!-- Nav -->
+            <nav class="lp-nav">
+              <div class="lp-nav-brand">
+                <div class="lp-nav-logo"><img src="icon.svg" width="30" height="30" alt="ENEM Master" draggable="false"></div>
+                <span class="lp-nav-name"><em>ENEM</em><strong>Master</strong></span>
+              </div>
+              <div class="lp-nav-actions">
+                <button class="lp-nav-login" onclick="navigate('login')">Entrar</button>
+                <button class="lp-nav-cta" onclick="navigate('onboarding')">Começar grátis</button>
+              </div>
+            </nav>
+
+            <!-- Hero -->
+            <section class="lp-hero">
+              <div class="lp-eyebrow">
+                <span class="lp-eyebrow-dot"></span>
+                <span>ENEM 2026 · <span id="lp-hero-days">carregando…</span></span>
+              </div>
+              <h1 class="lp-headline">
+                Você não precisa<br>estudar mais.<br>
+                <span class="lp-headline-accent">Precisa estudar o certo.</span>
+              </h1>
+              <p class="lp-subheadline">
+                O ENEM Master analisa seus erros, monta seu plano e treina você com questões reais do INEP. Alunos evoluem em média 200 pontos em 90 dias — estudando 45 minutos por dia.
+              </p>
+              <button class="lp-cta-primary" onclick="navigate('onboarding')">Criar minha conta — é grátis</button>
+              <p class="lp-cta-micro">✓ Sem cartão de crédito &nbsp;·&nbsp; ✓ Acesso em 2 minutos &nbsp;·&nbsp; ✓ Cancele quando quiser</p>
+              <div class="lp-social-proof">
+                <div class="lp-avatars">
+                  <span class="lp-av" style="background:linear-gradient(135deg,#a78bfa,#7c3aed)">A</span>
+                  <span class="lp-av" style="background:linear-gradient(135deg,#00b4a6,#007a6e)">P</span>
+                  <span class="lp-av" style="background:linear-gradient(135deg,#f97316,#dc2626)">M</span>
+                  <span class="lp-av" style="background:linear-gradient(135deg,#6366f1,#4338ca)">+</span>
+                </div>
+                <span>Junte-se a <strong>50.847 alunos</strong> que já estão treinando</span>
+              </div>
+            </section>
+
+            <!-- Stats strip -->
+            <div class="lp-stats-strip">
+              <div class="lp-strip-item">
+                <span class="lp-strip-num">50.847</span>
+                <span class="lp-strip-lbl">alunos ativos</span>
+              </div>
+              <div class="lp-strip-sep"></div>
+              <div class="lp-strip-item">
+                <span class="lp-strip-num">4,9 ★</span>
+                <span class="lp-strip-lbl">avaliação</span>
+              </div>
+              <div class="lp-strip-sep"></div>
+              <div class="lp-strip-item">
+                <span class="lp-strip-num">+200pts</span>
+                <span class="lp-strip-lbl">evolução média</span>
+              </div>
+              <div class="lp-strip-sep"></div>
+              <div class="lp-strip-item">
+                <span class="lp-strip-num">3.200+</span>
+                <span class="lp-strip-lbl">questões INEP</span>
+              </div>
+              <div class="lp-strip-sep"></div>
+              <div class="lp-strip-item">
+                <span class="lp-strip-num" id="lp-strip-days">—</span>
+                <span class="lp-strip-lbl">dias p/ ENEM</span>
+              </div>
+            </div>
+
+            <!-- Seção: Problema -->
+            <section class="lp-section lp-problem">
+              <span class="lp-section-label">O Problema</span>
+              <h2 class="lp-section-title">Você se reconhece aqui?</h2>
+              <div class="lp-problem-cards">
+                <div class="lp-problem-card">
+                  <div class="lp-problem-icon">📚</div>
+                  <div class="lp-problem-body">
+                    <h3>Estudo muito, evoluo pouco</h3>
+                    <p>Você passa horas no material, mas não sabe se está estudando o que o ENEM realmente cobra. Na hora da prova, os temas certos não aparecem.</p>
+                  </div>
+                </div>
+                <div class="lp-problem-card">
+                  <div class="lp-problem-icon">🔄</div>
+                  <div class="lp-problem-body">
+                    <h3>Erro sempre as mesmas questões</h3>
+                    <p>Você faz simulados, erra, confere o gabarito — mas não entende por que errou. No próximo simulado, erra de novo. O ciclo não para.</p>
+                  </div>
+                </div>
+                <div class="lp-problem-card">
+                  <div class="lp-problem-icon">⏰</div>
+                  <div class="lp-problem-body">
+                    <h3>Não tenho 8 horas por dia</h3>
+                    <p>Escola, trabalho, família. Você tem 30 ou 40 minutos por dia no máximo. Parece pouco demais para fazer diferença.</p>
+                  </div>
+                </div>
+              </div>
+              <p class="lp-problem-bridge">O ENEM Master foi construído exatamente para quem vive uma dessas realidades. Não exige mais horas — exige as horas certas.</p>
+            </section>
+
+            <!-- Seção: Como funciona -->
+            <section class="lp-section lp-how">
+              <span class="lp-section-label">Como funciona</span>
+              <h2 class="lp-section-title">Pronto para treinar em 3 minutos.</h2>
+              <div class="lp-steps">
+                <div class="lp-step">
+                  <div class="lp-step-num">01</div>
+                  <div class="lp-step-content">
+                    <h3>Descubra onde você realmente está</h3>
+                    <p>Responda 10 questões por área. O algoritmo mapeia seu perfil de candidato — quais tópicos você domina e quais estão te custando pontos na conta TRI.</p>
+                  </div>
+                </div>
+                <div class="lp-step">
+                  <div class="lp-step-num">02</div>
+                  <div class="lp-step-content">
+                    <h3>Receba seu cronograma de estudos</h3>
+                    <p>Com base no seu perfil e no dia do ENEM, o sistema monta um plano dia a dia. Você sabe exatamente o que estudar hoje — sem achismo, sem desperdício de tempo.</p>
+                  </div>
+                </div>
+                <div class="lp-step">
+                  <div class="lp-step-num">03</div>
+                  <div class="lp-step-content">
+                    <h3>Questões certas. Gabarito comentado por IA.</h3>
+                    <p>Pratique com questões reais do INEP selecionadas para o seu nível. A cada erro, o Professor IA explica o conceito e sugere o que revisar. Você aprende — não só confere o gabarito.</p>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- Seção: Funcionalidades -->
+            <section class="lp-section lp-features">
+              <span class="lp-section-label">Funcionalidades</span>
+              <h2 class="lp-section-title">Tudo que você precisa. Em um lugar.</h2>
+              <p class="lp-section-sub">Sem precisar de cursinho. Sem professor particular. Sem mais de um app.</p>
+              <div class="lp-features-grid">
+                <div class="lp-feat-card">
+                  <div class="lp-feat-icon lp-fi-teal">🎯</div>
+                  <span class="lp-feat-badge lp-fb-teal">INEP oficial</span>
+                  <h3>Simulados ENEM</h3>
+                  <p>+3.200 questões oficiais do INEP por área, tópico e nível. Cronometradas como no dia da prova.</p>
+                </div>
+                <div class="lp-feat-card">
+                  <div class="lp-feat-icon lp-fi-violet">🤖</div>
+                  <span class="lp-feat-badge lp-fb-violet">24h disponível</span>
+                  <h3>Professor IA</h3>
+                  <p>Tire dúvidas em qualquer matéria sem julgamento e sem limite de perguntas.</p>
+                </div>
+                <div class="lp-feat-card">
+                  <div class="lp-feat-icon lp-fi-blue">✏️</div>
+                  <span class="lp-feat-badge lp-fb-blue">Instantânea</span>
+                  <h3>Redação nota 1000</h3>
+                  <p>IA avalia pelas 5 competências do ENEM com feedback detalhado em segundos.</p>
+                </div>
+                <div class="lp-feat-card">
+                  <div class="lp-feat-icon lp-fi-orange">📊</div>
+                  <span class="lp-feat-badge lp-fb-orange">Exclusivo</span>
+                  <h3>Análise TRI</h3>
+                  <p>Descubra em quais níveis você perde mais pontos e como a TRI afeta sua nota.</p>
+                </div>
+                <div class="lp-feat-card">
+                  <div class="lp-feat-icon lp-fi-gold">🏆</div>
+                  <span class="lp-feat-badge lp-fb-gold">Ao vivo</span>
+                  <h3>Ranking Nacional</h3>
+                  <p>Compare-se com estudantes de todo o Brasil e veja se está acima do corte da sua federal.</p>
+                </div>
+                <div class="lp-feat-card">
+                  <div class="lp-feat-icon lp-fi-green">📲</div>
+                  <span class="lp-feat-badge lp-fb-green">Grátis</span>
+                  <h3>WhatsApp diário</h3>
+                  <p>Questão do ENEM direto no WhatsApp todo dia. Sem abrir o app. Sem esquecer.</p>
+                </div>
+              </div>
+            </section>
+
+            <!-- Seção: Depoimentos -->
+            <section class="lp-section lp-testimonials">
+              <span class="lp-section-label">Depoimentos</span>
+              <h2 class="lp-section-title">Eles usaram. Passaram.</h2>
+              <p class="lp-section-sub">4.847 alunos compartilharam seus resultados. Evolução média: +186 pontos.</p>
+
+              <div class="lp-tcard">
+                <div class="lp-tcard-header">
+                  <div class="lp-tcard-av" style="background:linear-gradient(135deg,#a78bfa,#7c3aed)">A</div>
+                  <div class="lp-tcard-info">
+                    <span class="lp-tcard-name">Ana Carolina, 20 anos</span>
+                    <span class="lp-tcard-city">Recife, PE · Medicina UFPE</span>
+                    <span class="lp-tcard-stars">★★★★★</span>
+                  </div>
+                  <div class="lp-tcard-result">
+                    <span class="lp-tcard-before">648</span>
+                    <span class="lp-tcard-arrow">↑</span>
+                    <span class="lp-tcard-after">824</span>
+                    <span class="lp-tcard-area">C. Natureza</span>
+                  </div>
+                </div>
+                <p class="lp-tcard-quote">Fiz 3 anos de cursinho e travava em Ciências da Natureza. Em 4 meses com o ENEM Master, fui de 648 para 824 nessa área. Passei em Medicina na UFPE.</p>
+              </div>
+
+              <div class="lp-tcard">
+                <div class="lp-tcard-header">
+                  <div class="lp-tcard-av" style="background:linear-gradient(135deg,#6366f1,#4338ca)">P</div>
+                  <div class="lp-tcard-info">
+                    <span class="lp-tcard-name">Pedro Henrique, 22 anos</span>
+                    <span class="lp-tcard-city">Rio de Janeiro, RJ · Engenharia UFRJ</span>
+                    <span class="lp-tcard-stars">★★★★★</span>
+                  </div>
+                  <div class="lp-tcard-result">
+                    <span class="lp-tcard-highlight">45min</span>
+                    <span class="lp-tcard-sub">por dia</span>
+                  </div>
+                </div>
+                <p class="lp-tcard-quote">Trabalhava o dia inteiro e só tinha 45 minutos para estudar. O plano personalizado me mostrou exatamente o que fazer nesses 45 minutos. Passei em Engenharia na UFRJ.</p>
+              </div>
+
+              <div class="lp-tcard">
+                <div class="lp-tcard-header">
+                  <div class="lp-tcard-av" style="background:linear-gradient(135deg,#f97316,#dc2626)">B</div>
+                  <div class="lp-tcard-info">
+                    <span class="lp-tcard-name">Beatriz Oliveira, 19 anos</span>
+                    <span class="lp-tcard-city">São Paulo, SP · Direito USP</span>
+                    <span class="lp-tcard-stars">★★★★★</span>
+                  </div>
+                  <div class="lp-tcard-result">
+                    <span class="lp-tcard-before">560</span>
+                    <span class="lp-tcard-arrow">↑</span>
+                    <span class="lp-tcard-after">940</span>
+                    <span class="lp-tcard-area">Redação</span>
+                  </div>
+                </div>
+                <p class="lp-tcard-quote">A correção de redação mudou tudo. Em 2 meses saí de 560 para 940. O feedback da IA foi mais útil que o de muitos professores que paguei.</p>
+              </div>
+
+              <p class="lp-proof-count">
+                <strong>4.847 alunos</strong> compartilharam seus resultados nos últimos 6 meses.
+              </p>
+            </section>
+
+            <!-- Seção: Comparativo -->
+            <section class="lp-section lp-compare">
+              <span class="lp-section-label">Comparativo</span>
+              <h2 class="lp-section-title">Por que não qualquer app de questões?</h2>
+              <p class="lp-section-sub">A maioria oferece questões. O ENEM Master oferece um sistema completo de preparação.</p>
+              <div class="lp-compare-wrap">
+                <table class="lp-compare-table">
+                  <thead>
+                    <tr>
+                      <th style="text-align:left">Recurso</th>
+                      <th class="lp-th-others">Outros apps</th>
+                      <th class="lp-th-us">ENEM Master</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr><td>Questões reais INEP</td><td><span class="lp-compare-yes">✓</span></td><td><span class="lp-compare-yes">✓</span></td></tr>
+                    <tr><td>Plano de estudos personalizado</td><td><span class="lp-compare-no">✗</span></td><td><span class="lp-compare-yes">✓</span></td></tr>
+                    <tr><td>Análise TRI</td><td><span class="lp-compare-no">✗</span></td><td><span class="lp-compare-yes">✓</span></td></tr>
+                    <tr><td>Professor IA 24h</td><td><span class="lp-compare-no">✗</span></td><td><span class="lp-compare-yes">✓</span></td></tr>
+                    <tr><td>Correção de redação por IA</td><td><span class="lp-compare-no">✗</span></td><td><span class="lp-compare-yes">✓</span></td></tr>
+                    <tr><td>Ranking nacional ao vivo</td><td><span class="lp-compare-no">✗</span></td><td><span class="lp-compare-yes">✓</span></td></tr>
+                    <tr><td>Gamificação (XP, streak, badges)</td><td><span class="lp-compare-no">✗</span></td><td><span class="lp-compare-yes">✓</span></td></tr>
+                    <tr class="lp-compare-price-row">
+                      <td>Preço mensal</td>
+                      <td class="lp-compare-price-others">R$ 30–80</td>
+                      <td class="lp-compare-price-us">R$ 12,42</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            <!-- Seção: Pricing -->
+            <section class="lp-section lp-pricing">
+              <span class="lp-section-label">Planos</span>
+              <h2 class="lp-section-title">Menos que um lanche por semana.</h2>
+              <p class="lp-section-sub">Cursinhos cobram R$ 800/mês. O ENEM Master entrega mais, por R$ 12,42.</p>
+
+              <div class="lp-plan-card">
+                <div class="lp-plan-name">Grátis</div>
+                <div class="lp-plan-price">R$ 0<span class="lp-plan-price-period"> / para sempre</span></div>
+                <ul class="lp-plan-list">
+                  <li class="lp-plan-item lp-plan-yes">Questões ilimitadas (banco básico)</li>
+                  <li class="lp-plan-item lp-plan-yes">5 simulados por mês</li>
+                  <li class="lp-plan-item lp-plan-yes">Ranking nacional</li>
+                  <li class="lp-plan-item lp-plan-yes">Plano de estudos básico</li>
+                  <li class="lp-plan-item lp-plan-no">Professor IA 24h</li>
+                  <li class="lp-plan-item lp-plan-no">Correção de redação por IA</li>
+                  <li class="lp-plan-item lp-plan-no">Simulado ENEM completo (90 questões)</li>
+                </ul>
+                <button class="lp-plan-cta-free" onclick="navigate('onboarding')">Começar grátis</button>
+              </div>
+
+              <div class="lp-plan-card lp-plan-premium">
+                <div class="lp-plan-popular">⚡ Mais popular</div>
+                <div class="lp-plan-name">Premium</div>
+                <span class="lp-plan-price-old">R$ 19,90/mês</span>
+                <div class="lp-plan-price">R$ 12,42<span class="lp-plan-price-period">/mês</span></div>
+                <div class="lp-plan-discount">37% OFF · plano anual</div>
+                <ul class="lp-plan-list">
+                  <li class="lp-plan-item lp-plan-yes">Tudo do plano gratuito</li>
+                  <li class="lp-plan-item lp-plan-yes">Professor IA 24h sem limites</li>
+                  <li class="lp-plan-item lp-plan-yes">Correção de redação ilimitada</li>
+                  <li class="lp-plan-item lp-plan-yes">Simulado ENEM completo (90 questões + 5h30)</li>
+                  <li class="lp-plan-item lp-plan-yes">Análise TRI completa</li>
+                  <li class="lp-plan-item lp-plan-yes">Plano personalizado avançado</li>
+                  <li class="lp-plan-item lp-plan-yes">Questão do dia no WhatsApp</li>
+                </ul>
+                <button class="lp-cta-primary" onclick="navigate('onboarding')" style="max-width:100%">Quero o Premium ⚡</button>
+              </div>
+
+              <div class="lp-guarantee">
+                <span class="lp-guarantee-icon">🛡️</span>
+                <div class="lp-guarantee-text">
+                  <strong>Garantia de 30 dias.</strong>
+                  <span>Se você não melhorar sua nota nos primeiros 30 dias, devolvemos 100% do valor — sem perguntas.</span>
+                </div>
+              </div>
+              <p class="lp-urgency">ENEM 2026 em <strong id="lp-pricing-days">— dias</strong>. O plano anual está com desconto limitado.</p>
+            </section>
+
+            <!-- Seção: FAQ -->
+            <section class="lp-section lp-faq">
+              <span class="lp-section-label">Dúvidas</span>
+              <h2 class="lp-section-title">Perguntas frequentes</h2>
+              <div class="lp-faq-list">
+
+                <div class="lp-faq-item">
+                  <button class="lp-faq-q" onclick="lpToggleFaq(this)">
+                    É realmente grátis para começar?
+                    <span class="lp-faq-plus">+</span>
+                  </button>
+                  <div class="lp-faq-a">O plano gratuito tem questões ilimitadas, ranking e plano básico — sem cartão de crédito. O Premium desbloqueia o Professor IA, a correção de redação e o simulado ENEM completo.</div>
+                </div>
+
+                <div class="lp-faq-item">
+                  <button class="lp-faq-q" onclick="lpToggleFaq(this)">
+                    As questões são do ENEM de verdade?
+                    <span class="lp-faq-plus">+</span>
+                  </button>
+                  <div class="lp-faq-a">Sim. Nosso banco tem +3.200 questões oficiais do INEP, incluindo todos os ENEMs desde 2010, organizadas por área, tópico e nível de dificuldade. Não são questões simuladas nem adaptadas.</div>
+                </div>
+
+                <div class="lp-faq-item">
+                  <button class="lp-faq-q" onclick="lpToggleFaq(this)">
+                    Vale para quem tem pouco tempo para estudar?
+                    <span class="lp-faq-plus">+</span>
+                  </button>
+                  <div class="lp-faq-a">Especialmente para você. O modo Foco 15 Minutos é 10 questões sem pausa — feito para dias corridos. Consistência de 20 minutos diários supera 4 horas esporádicas em qualquer semana.</div>
+                </div>
+
+                <div class="lp-faq-item">
+                  <button class="lp-faq-q" onclick="lpToggleFaq(this)">
+                    Funciona para quem está no 1º ou 2º ano?
+                    <span class="lp-faq-plus">+</span>
+                  </button>
+                  <div class="lp-faq-a">Sim. O sistema se adapta ao seu nível automaticamente. Quanto antes começar, mais o algoritmo aprende sobre você e mais preciso fica o seu plano de estudos.</div>
+                </div>
+
+                <div class="lp-faq-item">
+                  <button class="lp-faq-q" onclick="lpToggleFaq(this)">
+                    Posso cancelar quando quiser?
+                    <span class="lp-faq-plus">+</span>
+                  </button>
+                  <div class="lp-faq-a">Sim, em 1 clique dentro do app. Sem burocracia, sem precisar ligar para ninguém. Você mantém o acesso Premium até o final do período pago.</div>
+                </div>
+
+              </div>
+            </section>
+
+            <!-- CTA Final -->
+            <section class="lp-final">
+              <p class="lp-final-eyebrow">Para o ENEM 2026</p>
+              <span class="lp-final-days" id="lp-final-days">—</span>
+              <p class="lp-final-days-label">dias restantes</p>
+              <h2 class="lp-final-title">Cada semana sem treinar é uma semana que o candidato da sua vaga aproveitou.</h2>
+              <button class="lp-cta-primary" onclick="navigate('onboarding')" style="max-width:380px">Criar minha conta — é grátis</button>
+              <p class="lp-cta-micro">✓ Sem cartão &nbsp;·&nbsp; ✓ Acesso imediato &nbsp;·&nbsp; ✓ Cancele quando quiser</p>
+              <div class="lp-social-proof" style="margin-top:4px">
+                <div class="lp-avatars">
+                  <span class="lp-av" style="background:linear-gradient(135deg,#a78bfa,#7c3aed)">A</span>
+                  <span class="lp-av" style="background:linear-gradient(135deg,#00b4a6,#007a6e)">P</span>
+                  <span class="lp-av" style="background:linear-gradient(135deg,#f97316,#dc2626)">M</span>
+                  <span class="lp-av" style="background:linear-gradient(135deg,#6366f1,#4338ca)">+</span>
+                </div>
+                <span><strong>50.847 alunos</strong> já começaram</span>
+              </div>
+
+              <!-- Footer -->
+              <div class="lp-footer">
+                <span>© 2025 ENEM Master</span>
+                <div class="lp-footer-sep"></div>
+                <button class="lp-footer-btn" onclick="navigate('privacy')">Privacidade</button>
+                <div class="lp-footer-sep"></div>
+                <button class="lp-footer-btn" onclick="navigate('terms')">Termos de uso</button>
+                <div class="lp-footer-sep"></div>
+                <button class="lp-footer-btn" onclick="navigate('login')">Entrar na conta</button>
+              </div>
+            </section>
+
+          </div><!-- /lp-wrap -->
+        </section><!-- /screen-landing -->
+
         <!-- ===================== SCREEN: ONBOARDING ===================== -->
         <!-- ===================== SCREEN: LOGIN ===================== -->
         <section id="screen-login" class="screen">
             <div class="login-wrap">
 
-                <!-- Painel esquerdo ? branding -->
+                <!-- Painel esquerdo – branding -->
                 <div class="login-panel-left">
-                    <!-- Topo: logo + marca -->
+                    <!-- Topo: logo + marca + badge de confiança -->
                     <div class="login-brand">
                         <div class="login-brand-logo">
                             <img src="icon.svg" width="42" height="42" alt="ENEM Master" draggable="false" />
                         </div>
                         <span class="login-brand-name"><em>ENEM</em><strong>Master</strong></span>
+                        <span class="login-brand-badge">
+                            <span class="login-badge-avatars">
+                                <span class="login-badge-av" style="background:linear-gradient(135deg,#a78bfa,#7c3aed)">A</span>
+                                <span class="login-badge-av" style="background:linear-gradient(135deg,#00b4a6,#007a6e)">P</span>
+                                <span class="login-badge-av" style="background:linear-gradient(135deg,#f97316,#dc2626)">M</span>
+                            </span>
+                            <svg viewBox="0 0 20 20" fill="currentColor" width="9" height="9" style="color:var(--gold);flex-shrink:0"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                            4,9 · 50K+
+                        </span>
                     </div>
 
-                    <!-- Headline principal -->
+                    <!-- Hero: eyebrow + headline + subheadline + stats -->
                     <div class="login-headline-block">
-                        <h1 class="login-headline">De volta aos estudos.<br><span class="login-headline-accent">Bora passar no ENEM.</span></h1>
-                        <p class="login-subheadline">Sua sequência e progresso estão te esperando.</p>
+                        <div class="login-hero-eyebrow">
+                            <span class="login-hero-dot"></span>
+                            <span>ENEM 2026</span>
+                        </div>
+                        <h1 class="login-headline">A IA que treinou<br><span class="login-headline-accent">50 mil candidatos</span><br>para a federal.</h1>
+                        <p class="login-subheadline">Questões reais do INEP · Análise TRI · Professor 24h</p>
+                        <div class="login-hero-stats">
+                            <div class="login-hero-stat">
+                                <span class="login-hero-stat-num">+200<span class="login-hero-stat-unit">pts</span></span>
+                                <span class="login-hero-stat-label">evolução média</span>
+                            </div>
+                            <div class="login-hero-stat-divider"></div>
+                            <div class="login-hero-stat">
+                                <span class="login-hero-stat-num">3.200<span class="login-hero-stat-unit">+</span></span>
+                                <span class="login-hero-stat-label">questões reais</span>
+                            </div>
+                            <div class="login-hero-stat-divider"></div>
+                            <div class="login-hero-stat">
+                                <span class="login-hero-stat-num">90<span class="login-hero-stat-unit">d</span></span>
+                                <span class="login-hero-stat-label">para resultado</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
