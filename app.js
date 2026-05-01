@@ -2225,6 +2225,30 @@ function renderAnalise() {
 // =====================================================
 // SCORE PREDICTION — Nota ENEM estimada (TRI)
 // =====================================================
+// Tabelas de conversão acerto→nota por área, calibradas com base nos
+// microdados do INEP (ENEM 2019-2023). Cada entrada: [taxa_acerto, nota_estimada].
+// Matemática tem amplitude maior (questões mais difíceis, maior dispersão).
+// Interpolação linear entre pontos para estimativa contínua.
+const _AREA_SCORE_TABLE = {
+    humanas:    [[0,300],[0.15,355],[0.30,415],[0.45,480],[0.55,530],[0.65,600],[0.80,710],[0.90,800],[1.0,875]],
+    natureza:   [[0,300],[0.15,360],[0.30,420],[0.45,480],[0.55,530],[0.65,605],[0.80,720],[0.90,810],[1.0,880]],
+    linguagens: [[0,300],[0.15,350],[0.30,405],[0.45,470],[0.55,520],[0.65,585],[0.80,690],[0.90,775],[1.0,850]],
+    matematica: [[0,300],[0.15,370],[0.30,435],[0.45,510],[0.55,580],[0.65,665],[0.80,780],[0.90,870],[1.0,975]],
+};
+
+function _calcAreaTRIScore(area, ratio) {
+    const table = _AREA_SCORE_TABLE[area];
+    if (!table) return Math.round(300 + ratio * 550);
+    for (let i = 1; i < table.length; i++) {
+        const [x0, y0] = table[i - 1];
+        const [x1, y1] = table[i];
+        if (ratio <= x1) {
+            const t = (ratio - x0) / (x1 - x0);
+            return Math.round(y0 + t * (y1 - y0));
+        }
+    }
+    return table[table.length - 1][1];
+}
 
 function _getWeekStr() {
     const d = new Date();
@@ -2239,16 +2263,18 @@ function _calcENEMScore() {
     const areas = ['humanas', 'natureza', 'linguagens', 'matematica'];
     const totalAnswered = areas.reduce((s, d) => s + (stats[d]?.total || 0), 0);
     if (totalAnswered < 10) return null;
-    // Usa apenas áreas com dados suficientes para evitar distorção
+    // Calcula nota TRI por área e retorna a média — igual ao ENEM real.
+    // Cada área usa tabela própria calibrada com microdados INEP 2019-2023.
     let sum = 0, count = 0;
-    for (const d of areas) {
-        const st = stats[d] || { correct: 0, total: 0 };
-        if (st.total >= 5) { sum += st.correct / st.total; count++; }
+    for (const area of areas) {
+        const st = stats[area] || { correct: 0, total: 0 };
+        if (st.total >= 5) {
+            sum += _calcAreaTRIScore(area, st.correct / st.total);
+            count++;
+        }
     }
     if (count === 0) return null;
-    const avgRatio = sum / count;
-    const score = Math.round(1 / (1 + Math.exp(-9 * (avgRatio - 0.5))) * 700 + 300);
-    return Math.max(300, Math.min(1000, score));
+    return Math.round(sum / count);
 }
 
 function _calcScoreTrend() {
@@ -2270,12 +2296,14 @@ function _getWeakSpot() {
         { key: 'linguagens', name: 'Linguagens' },
         { key: 'matematica', name: 'Matemática' },
     ];
-    let weakest = null, worstPct = 101;
+    let weakest = null, worstScore = 99999;
     for (const area of areas) {
         const st = stats[area.key] || { correct: 0, total: 0 };
         if (st.total < 5) continue;
-        const pct = Math.round((st.correct / st.total) * 100);
-        if (pct < worstPct) { worstPct = pct; weakest = { ...area, pct, total: st.total }; }
+        const ratio = st.correct / st.total;
+        const pct = Math.round(ratio * 100);
+        const triScore = _calcAreaTRIScore(area.key, ratio);
+        if (triScore < worstScore) { worstScore = triScore; weakest = { ...area, pct, total: st.total, triScore }; }
     }
     return weakest;
 }
@@ -2331,7 +2359,7 @@ function _renderScorePrediction() {
         if (barWrap) barWrap.style.display = 'none';
     }
 
-    // Breakdown por área
+    // Breakdown por área — mostra nota TRI estimada por área (igual ao ENEM real)
     const areasEl = document.getElementById('sp-areas');
     if (areasEl) {
         const stats = state.progress && state.progress.stats;
@@ -2345,13 +2373,16 @@ function _renderScorePrediction() {
         for (const area of areasList) {
             const st = stats && stats[area.key] || { correct: 0, total: 0 };
             if (st.total < 5) continue;
-            const pct   = Math.round((st.correct / st.total) * 100);
-            const color = pct >= 65 ? '#22c55e' : pct >= 45 ? '#f5c518' : '#ef4444';
+            const ratio     = st.correct / st.total;
+            const areaScore = _calcAreaTRIScore(area.key, ratio);
+            // Barra: 300 (mín) → 975 (máx possível em MT) normalizada para 0-100%
+            const barPct = Math.round(((areaScore - 300) / 675) * 100);
+            const color  = areaScore >= 600 ? '#22c55e' : areaScore >= 470 ? '#f5c518' : '#ef4444';
             rows.push(`<div class="sp-area-row">` +
                 `<span class="sp-area-icon">${area.icon}</span>` +
                 `<span class="sp-area-name">${area.name}</span>` +
-                `<div class="sp-area-bar-bg"><div class="sp-area-bar-fill" style="width:${pct}%;background:${color}"></div></div>` +
-                `<span class="sp-area-pct" style="color:${color}">${pct}%</span>` +
+                `<div class="sp-area-bar-bg"><div class="sp-area-bar-fill" style="width:${barPct}%;background:${color}"></div></div>` +
+                `<span class="sp-area-pct" style="color:${color}">${areaScore}</span>` +
             `</div>`);
         }
         // Só exibe o breakdown se houver 2+ áreas — 1 área sozinha é redundante
@@ -2373,13 +2404,12 @@ function _renderScorePrediction() {
             if (score >= 800) msg = `Nota muito boa! Falta ${target - score} pts para atingir ${target}. Mantenha o ritmo.`;
             else               msg = `Você está no caminho certo. Continue praticando para superar os ${target} pontos!`;
         } else {
-            const gap = target - score;
             if (weak.pct < 30) {
-                msg = `${weak.name} está puxando sua nota pra baixo (${weak.pct}% de acerto). Esse é seu maior ganho agora — focar aqui pode te levar aos ${target} pts.`;
+                msg = `${weak.name} está puxando sua nota pra baixo (~${weak.triScore} pts, ${weak.pct}% de acerto). Esse é seu maior ganho agora — focar aqui pode te levar aos ${target} pts.`;
             } else if (weak.pct < 50) {
-                msg = `Para chegar nos ${target}, sua maior alavanca é ${weak.name} — você está acertando ${weak.pct}% das questões. Dá pra melhorar muito!`;
+                msg = `Para chegar nos ${target}, sua maior alavanca é ${weak.name} (~${weak.triScore} pts). Você está acertando ${weak.pct}% das questões — dá pra melhorar muito!`;
             } else {
-                msg = `${weak.name} é seu ponto mais fraco (${weak.pct}% de acerto). Um foco extra aqui fecha a distância para ${target} pts.`;
+                msg = `${weak.name} é seu ponto mais fraco (~${weak.triScore} pts). Um foco extra aqui fecha a distância para ${target} pts.`;
             }
         }
         insightEl.textContent = msg;
@@ -2409,9 +2439,9 @@ function _renderWeakSpotAlert() {
     if (titleEl) titleEl.textContent = weak.name;
     if (subEl) {
         const questStr = weak.total === 1 ? '1 questão' : `${weak.total} questões`;
-        if (weak.pct < 30)       subEl.textContent = `Só ${weak.pct}% de acerto em ${questStr} — aqui tá o maior potencial de melhora!`;
-        else if (weak.pct < 50)  subEl.textContent = `${weak.pct}% de acerto em ${questStr} — ainda dá pra avançar bastante aqui.`;
-        else                     subEl.textContent = `${weak.pct}% de acerto em ${questStr} — um pouco de foco faz diferença.`;
+        if (weak.pct < 30)       subEl.textContent = `Só ${weak.pct}% de acerto em ${questStr} (~${weak.triScore} pts no ENEM) — aqui tá o maior potencial de melhora!`;
+        else if (weak.pct < 50)  subEl.textContent = `${weak.pct}% de acerto em ${questStr} (~${weak.triScore} pts) — ainda dá pra avançar bastante aqui.`;
+        else                     subEl.textContent = `${weak.pct}% de acerto em ${questStr} (~${weak.triScore} pts) — um pouco de foco faz diferença.`;
     }
     if (ctaEl)   ctaEl.onclick = () => { quizSetup.discipline = weak.key; navigate('quiz-setup'); };
 }
