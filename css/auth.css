@@ -642,3 +642,102 @@
 }
 .ob3-cta-btn:hover  { transform: translateY(-2px); filter: brightness(1.1); }
 .ob3-cta-btn:active { transform: translateY(0); animation: none; }
+
+/* =====================================================
+   AUTH — DESKTOP (768px+)
+   ===================================================== */
+@media (min-width: 768px) {
+
+  /* ---- LOGIN — layout dois painéis ---- */
+  #screen-login {
+    display: flex;
+    align-items: stretch;
+  }
+
+  .login-wrap {
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    min-height: 100%;
+    width: 100%;
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 0 64px;
+    gap: 72px;
+    background:
+      radial-gradient(ellipse 60% 60% at 20% 50%, rgba(124,58,237,.18) 0%, transparent 55%),
+      radial-gradient(ellipse 55% 55% at 80% 50%, rgba(0,180,166,.12) 0%, transparent 55%),
+      var(--bg-primary);
+  }
+
+  .login-panel-left {
+    flex: 1;
+    max-width: 480px;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .login-panel-right {
+    flex: 1;
+    max-width: 420px;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .login-brand { padding: 0 0 8px; }
+
+  .login-headline {
+    font-size: 40px;
+    letter-spacing: -.9px;
+    line-height: 1.08;
+  }
+
+  .login-subheadline {
+    font-size: 15px;
+    max-width: 380px;
+  }
+
+  /* Mostrar stats no desktop */
+  .login-hero-stats { display: flex; }
+
+  .login-card {
+    padding: 28px;
+    gap: 14px;
+    border-radius: 24px;
+  }
+
+  .login-card-title { font-size: 20px; }
+
+  .login-footer { padding: 16px 0 0; }
+
+  /* ---- ONBOARDING — card centrado na tela ---- */
+  #screen-onboarding {
+    align-items: center;
+    justify-content: center;
+    background:
+      radial-gradient(ellipse 80% 50% at 50% 0%, rgba(124,58,237,.18) 0%, transparent 55%),
+      radial-gradient(ellipse 60% 40% at 80% 100%, rgba(0,180,166,.12) 0%, transparent 55%),
+      var(--bg-primary);
+  }
+
+  .onboarding-wrap {
+    max-width: 520px;
+    width: 100%;
+    height: auto;
+    flex: none;
+    padding: 44px 44px 40px;
+    background: rgba(13, 32, 52, 0.75);
+    border: 1px solid rgba(0, 180, 166, 0.18);
+    border-radius: 28px;
+    backdrop-filter: blur(18px);
+    box-shadow: 0 32px 80px rgba(0, 0, 0, 0.55);
+    overflow-y: visible;
+  }
+
+  .ob1-title { font-size: 30px; }
+  .ob2-title, .ob3-title { font-size: 26px; }
+}

@@ -154,6 +154,7 @@
   #screen-onboarding {
     left: 0;
     z-index: 500;
+    background: var(--bg-primary); /* garante opacidade total sobre a sidebar */
   }
 
   /* ---- Screen Scroll — padding aumentado ---- */
