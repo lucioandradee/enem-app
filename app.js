@@ -2260,21 +2260,23 @@ function _renderScorePrediction() {
             { key: 'linguagens', name: 'Linguagens', icon: '📝' },
             { key: 'matematica', name: 'Matemática', icon: '🔢' },
         ];
-        let html = '';
+        let rows = [];
         for (const area of areasList) {
             const st = stats && stats[area.key] || { correct: 0, total: 0 };
             if (st.total < 5) continue;
             const pct   = Math.round((st.correct / st.total) * 100);
             const color = pct >= 65 ? '#22c55e' : pct >= 45 ? '#f5c518' : '#ef4444';
-            html += `<div class="sp-area-row">` +
+            rows.push(`<div class="sp-area-row">` +
                 `<span class="sp-area-icon">${area.icon}</span>` +
                 `<span class="sp-area-name">${area.name}</span>` +
                 `<div class="sp-area-bar-bg"><div class="sp-area-bar-fill" style="width:${pct}%;background:${color}"></div></div>` +
                 `<span class="sp-area-pct" style="color:${color}">${pct}%</span>` +
-            `</div>`;
+            `</div>`);
         }
-        areasEl.innerHTML = html;
-        areasEl.style.display = html ? '' : 'none';
+        // Só exibe o breakdown se houver 2+ áreas — 1 área sozinha é redundante
+        const showAreas = rows.length >= 2;
+        areasEl.innerHTML = showAreas ? rows.join('') : '';
+        areasEl.style.display = showAreas ? '' : 'none';
     }
 
     // Insight humanizado
@@ -2310,6 +2312,14 @@ function _renderWeakSpotAlert() {
     if (!card) return;
     const weak = _getWeakSpot();
     if (!weak || weak.pct >= 70) { card.style.display = 'none'; return; }
+    // Oculta o weak-spot card se o score card já está visível e só existe 1 área
+    // com dados — evita duplicação de informação
+    const stats = state.progress && state.progress.stats;
+    const areasWithData = ['humanas','natureza','linguagens','matematica']
+        .filter(k => (stats && stats[k] && stats[k].total >= 5));
+    const scoreCardVisible = document.getElementById('score-pred-card') &&
+        document.getElementById('score-pred-card').style.display !== 'none';
+    if (scoreCardVisible && areasWithData.length < 2) { card.style.display = 'none'; return; }
 
     card.style.display = '';
     const titleEl = document.getElementById('ws-title');
