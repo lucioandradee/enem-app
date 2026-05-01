@@ -403,3 +403,66 @@ CREATE POLICY "Admin can insert webhook_events" ON public.webhook_events
 GRANT EXECUTE ON FUNCTION public.activate_premium_by_email(TEXT, TEXT, INTEGER) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.deactivate_premium_by_email(TEXT)              TO authenticated;
 GRANT EXECUTE ON FUNCTION public.auto_deactivate_expired_premium()              TO authenticated;
+
+-- ═══════════════════════════════════════════════════════════════
+-- TURMA / MODO PROFESSOR
+-- class_code          : código único gerado pelo professor
+-- enrolled_class_code : código da turma que o aluno inseriu
+-- ═══════════════════════════════════════════════════════════════
+ALTER TABLE users ADD COLUMN IF NOT EXISTS class_code          TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS enrolled_class_code TEXT;
+
+-- Cada professor tem um código exclusivo (NULL não dispara o índice único)
+CREATE UNIQUE INDEX IF NOT EXISTS users_class_code_idx
+  ON users (class_code)
+  WHERE class_code IS NOT NULL;
+
+-- ─── RPC: get_class_students ─────────────────────────────────
+-- Retorna os alunos inscritos + estatísticas reais de progresso.
+-- SECURITY DEFINER: lê outros usuários, mas só o dono do código pode chamar.
+CREATE OR REPLACE FUNCTION public.get_class_students(p_class_code TEXT)
+RETURNS TABLE (
+  student_id        UUID,
+  student_name      TEXT,
+  total_questions   BIGINT,
+  correct_questions BIGINT,
+  accuracy          NUMERIC,
+  last_active       TIMESTAMP WITH TIME ZONE
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+BEGIN
+  -- Garante que quem chama é o dono do código (ou admin)
+  IF NOT EXISTS (
+    SELECT 1 FROM public.users
+    WHERE id = auth.uid()
+      AND class_code = p_class_code
+  ) AND (auth.jwt() -> 'app_metadata' ->> 'role') <> 'admin' THEN
+    RAISE EXCEPTION 'unauthorized';
+  END IF;
+
+  RETURN QUERY
+  SELECT
+    u.id                                                             AS student_id,
+    u.name                                                           AS student_name,
+    COALESCE(SUM(p.questions_answered), 0)::BIGINT                  AS total_questions,
+    COALESCE(SUM(p.correct), 0)::BIGINT                             AS correct_questions,
+    CASE
+      WHEN COALESCE(SUM(p.questions_answered), 0) > 0
+        THEN ROUND(
+               COALESCE(SUM(p.correct), 0)::NUMERIC
+               / SUM(p.questions_answered)::NUMERIC * 100, 1)
+      ELSE 0
+    END                                                              AS accuracy,
+    MAX(p.created_at)                                                AS last_active
+  FROM public.users u
+  LEFT JOIN public.progress p ON p.user_id = u.id
+  WHERE u.enrolled_class_code = p_class_code
+  GROUP BY u.id, u.name
+  ORDER BY total_questions DESC NULLS LAST;
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.get_class_students(TEXT) TO authenticated;

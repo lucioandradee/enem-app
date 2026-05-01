@@ -275,6 +275,55 @@ function _rebuildStatsFromHistory(records) {
 }
 
 // =====================================================
+// TURMA / MODO PROFESSOR
+// =====================================================
+
+// Persiste o código de turma do professor no banco
+async function saveClassCode(userId, code) {
+    try {
+        const { error } = await supabase
+            .from('users')
+            .update({ class_code: code, updated_at: new Date().toISOString() })
+            .eq('id', userId);
+        if (error) throw error;
+        console.log('✅ class_code salvo:', code);
+        return { success: true };
+    } catch (error) {
+        console.error('❌ Erro ao salvar class_code:', error.message);
+        return { success: false, error: error.message };
+    }
+}
+
+// Inscreve o aluno em uma turma (salva enrolled_class_code no banco)
+async function enrollInClass(userId, classCode) {
+    try {
+        const { error } = await supabase
+            .from('users')
+            .update({ enrolled_class_code: classCode, updated_at: new Date().toISOString() })
+            .eq('id', userId);
+        if (error) throw error;
+        console.log('✅ enrolled_class_code salvo:', classCode);
+        return { success: true };
+    } catch (error) {
+        console.error('❌ Erro ao inscrever em turma:', error.message);
+        return { success: false, error: error.message };
+    }
+}
+
+// Busca alunos inscritos na turma com estatísticas reais (chama RPC get_class_students)
+async function getClassStudents(classCode) {
+    try {
+        const { data, error } = await supabase
+            .rpc('get_class_students', { p_class_code: classCode });
+        if (error) throw error;
+        return { success: true, data: data || [] };
+    } catch (error) {
+        console.error('❌ Erro ao buscar alunos da turma:', error.message);
+        return { success: false, data: [], error: error.message };
+    }
+}
+
+// =====================================================
 // FUNÇÕES DE RANKING
 // =====================================================
 
