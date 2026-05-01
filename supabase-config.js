@@ -245,13 +245,32 @@ async function loadProgressHistory(userId) {
             .select('*')
             .eq('user_id', userId)
             .order('created_at', { ascending: false });
-        
+
         if (error) throw error;
-        console.log('? Histórico carregado:', data.length, 'registros');
+        console.log('✅ Histórico carregado:', data.length, 'registros');
         return { success: true, data: data };
     } catch (error) {
-        console.error('? Erro ao carregar histórico:', error.message);
+        console.error('❌ Erro ao carregar histórico:', error.message);
         return { success: false, error: error.message };
+    }
+}
+
+// Reconstrói state.progress.stats a partir dos registros do Supabase.
+// Usado no login para restaurar a estimativa de nota em novo device/browser.
+function _rebuildStatsFromHistory(records) {
+    const agg = {};
+    for (const r of records) {
+        if (!r.subject) continue;
+        if (!agg[r.subject]) agg[r.subject] = { correct: 0, total: 0 };
+        agg[r.subject].total   += (r.questions_answered || 0);
+        agg[r.subject].correct += (r.correct || 0);
+    }
+    if (!state.progress.stats) state.progress.stats = {};
+    for (const [k, v] of Object.entries(agg)) {
+        const local = state.progress.stats[k] || { correct: 0, total: 0 };
+        if (v.total > local.total) {
+            state.progress.stats[k] = v;
+        }
     }
 }
 
@@ -363,6 +382,12 @@ function initializeSupabaseListeners() {
                 .then(() => {
                     if (typeof loadUserPlan !== 'undefined') return loadUserPlan(incomingId);
                 })
+                .then(() => loadProgressHistory(incomingId).then(res => {
+                    if (res.success && res.data && res.data.length) {
+                        _rebuildStatsFromHistory(res.data);
+                        saveState();
+                    }
+                }).catch(() => {}))
                 .then(() => {
                     if (typeof renderDashboard !== 'undefined') renderDashboard();
                     // Retomar polling se havia pagamento pendente antes do login
