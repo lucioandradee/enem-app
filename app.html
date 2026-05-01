@@ -41,22 +41,13 @@
 
   var hasRef = window.location.search.indexOf('ref=') !== -1;
 
-  // Quando vem de CTA sem sessão, oculta o home imediatamente para evitar flash.
-  // init() remove esse estilo antes de decidir qual tela mostrar.
-  function hideHome() {
-    var s = document.createElement('style');
-    s.id = 'guard-hide-home';
-    s.textContent = '#screen-home{display:none}';
-    document.head.appendChild(s);
-  }
-
   try {
     var sbKey = 'sb-nkuiwdolkluetsadauwb-auth-token';
     var raw = localStorage.getItem(sbKey);
 
     // Sem nenhum token armazenado
     if (!raw) {
-      if (hasRef) { hideHome(); return; }
+      if (hasRef) return; // init() decide a tela
       window.location.replace('/');
       return;
     }
@@ -69,7 +60,7 @@
       for (var i = 0; i < maybeCount; i++) {
         var chunk = localStorage.getItem(sbKey + '.' + i);
         if (!chunk) {
-          if (hasRef) { hideHome(); return; }
+          if (hasRef) return;
           window.location.replace('/');
           return;
         }
@@ -85,7 +76,7 @@
       (parsed.session && (parsed.session.access_token || parsed.session.refresh_token))
     );
     if (!hasAnyToken) {
-      if (hasRef) { hideHome(); return; }
+      if (hasRef) return;
       window.location.replace('/');
     }
   } catch (e) {
@@ -98,7 +89,7 @@
     <div id="app">
 
         <!-- ===================== SCREEN: DASHBOARD ===================== -->
-        <section id="screen-home" class="screen active">
+        <section id="screen-home" class="screen">
             <div class="screen-scroll">
                 <!-- Header -->
                 <div class="dashboard-header">
