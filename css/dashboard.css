@@ -285,34 +285,48 @@
 /* ── Score Prediction Card ── */
 .score-pred-card {
     margin: 0 16px 14px;
-    background: linear-gradient(135deg, rgba(0,180,166,.13) 0%, rgba(0,180,166,.03) 100%);
-    border: 1px solid rgba(0,180,166,.28);
+    background: var(--bg-card);
+    border: 1px solid rgba(0,180,166,.3);
     border-radius: var(--radius-md);
     overflow: hidden;
 }
-.sp-header {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 14px 18px 10px;
+/* Linha topo: nota à esquerda, meta à direita */
+.sp-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 18px 18px 14px;
+    border-bottom: 1px solid rgba(255,255,255,.06);
 }
+.sp-left { display: flex; flex-direction: column; gap: 4px; }
 .sp-label { font-size: 10px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; }
-.sp-trend { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 100px; background: rgba(255,255,255,.07); color: var(--text-muted); }
-/* Bloco da nota grande */
-.sp-score-section {
-    padding: 4px 18px 18px;
-    border-bottom: 1px solid rgba(255,255,255,.07);
+.sp-score-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.sp-score { font-size: 46px; font-weight: 900; color: var(--text-primary); line-height: 1; letter-spacing: -2px; }
+.sp-scale { font-size: 14px; color: var(--text-muted); font-weight: 500; align-self: flex-end; margin-bottom: 4px; }
+.sp-trend {
+    font-size: 11px; font-weight: 700;
+    padding: 2px 8px; border-radius: 20px;
+    align-self: flex-end; margin-bottom: 4px;
 }
-.sp-score-row { display: flex; align-items: flex-end; gap: 8px; margin-bottom: 14px; }
-.sp-score { font-size: 48px; font-weight: 900; color: var(--text-primary); line-height: 1; letter-spacing: -1px; }
-.sp-scale { font-size: 14px; color: var(--text-muted); font-weight: 500; margin-bottom: 8px; }
-.sp-milestone-wrap { margin: 0; }
-.sp-milestone-bar-bg { height: 6px; background: rgba(255,255,255,.1); border-radius: 100px; margin-bottom: 7px; overflow: hidden; }
-.sp-milestone-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent), #22c55e); border-radius: 100px; transition: width .7s cubic-bezier(.4,0,.2,1); }
-.sp-milestone-label { font-size: 10px; color: var(--text-muted); font-weight: 600; letter-spacing: 0.3px; }
+.sp-trend:empty { display: none; }
+/* Bloco de meta à direita */
+.sp-right {
+    display: flex; flex-direction: column; align-items: flex-end; gap: 2px;
+    flex-shrink: 0; text-align: right;
+}
+.sp-target-label { font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; }
+.sp-target-val { font-size: 24px; font-weight: 900; color: var(--accent); line-height: 1.1; }
+.sp-target-pct { font-size: 10px; color: var(--text-muted); font-weight: 500; white-space: nowrap; margin-top: 2px; }
+/* Barra de progresso */
+.sp-bar-wrap { padding: 12px 18px 10px; border-bottom: 1px solid rgba(255,255,255,.06); }
+.sp-milestone-bar-bg { height: 7px; background: rgba(255,255,255,.1); border-radius: 100px; overflow: hidden; }
+.sp-milestone-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent), #22c55e); border-radius: 100px; transition: width .8s cubic-bezier(.4,0,.2,1); }
 /* Breakdown por área */
 .sp-areas {
     padding: 14px 18px;
     display: flex; flex-direction: column; gap: 10px;
-    border-bottom: 1px solid rgba(255,255,255,.07);
+    border-bottom: 1px solid rgba(255,255,255,.06);
 }
 .sp-area-row { display: flex; align-items: center; gap: 9px; }
 .sp-area-icon { font-size: 13px; flex-shrink: 0; width: 18px; text-align: center; }
@@ -320,17 +334,17 @@
 .sp-area-bar-bg { flex: 1; height: 6px; background: rgba(255,255,255,.1); border-radius: 100px; overflow: hidden; min-width: 0; }
 .sp-area-bar-fill { height: 100%; border-radius: 100px; transition: width .7s cubic-bezier(.4,0,.2,1); }
 .sp-area-pct { font-size: 12px; font-weight: 700; text-align: right; flex-shrink: 0; min-width: 32px; }
-/* Footer: insight + CTA */
-.sp-footer { padding: 14px 18px; }
+/* Footer */
+.sp-footer { padding: 14px 18px; background: rgba(0,180,166,.05); }
 .sp-insight { font-size: 13px; color: var(--text-secondary); line-height: 1.65; margin-bottom: 12px; }
 .sp-cta {
     display: inline-flex; align-items: center; gap: 6px;
     font-size: 12px; font-weight: 700; color: var(--accent);
-    background: rgba(0,180,166,.12); border: 1px solid rgba(0,180,166,.25);
-    border-radius: 20px; padding: 6px 14px; cursor: pointer;
+    background: rgba(0,180,166,.13); border: 1px solid rgba(0,180,166,.3);
+    border-radius: 20px; padding: 7px 16px; cursor: pointer;
     transition: background .15s;
 }
-.sp-cta:active { background: rgba(0,180,166,.22); }
+.sp-cta:active { background: rgba(0,180,166,.25); }
 
 /* ── Weak Spot Alert Card ── */
 .weak-spot-card { margin: 0 16px 14px; padding: 14px 16px; background: rgba(239,68,68,.07); border: 1px solid rgba(239,68,68,.2); border-radius: var(--radius-md); display: flex; align-items: center; gap: 12px; }

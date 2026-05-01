@@ -2229,25 +2229,36 @@ function _renderScorePrediction() {
     const trend = _calcScoreTrend();
     const trendEl = document.getElementById('sp-trend');
     if (trendEl) {
-        if (trend === null)   { trendEl.textContent = ''; }
-        else if (trend >= 2)  { trendEl.textContent = '↑ Subindo'; trendEl.style.color = '#22c55e'; }
-        else if (trend <= -2) { trendEl.textContent = '↓ Caindo';  trendEl.style.color = '#f97316'; }
-        else                  { trendEl.textContent = '→ Estável'; trendEl.style.color = '#7a9ab5'; }
+        if (trend === null || (trend > -2 && trend < 2)) {
+            trendEl.textContent = '';
+            trendEl.style.cssText = '';
+        } else if (trend >= 2) {
+            trendEl.textContent = '↑ Subindo';
+            trendEl.style.cssText = 'background:rgba(34,197,94,.15);color:#22c55e;';
+        } else {
+            trendEl.textContent = '↓ Caindo';
+            trendEl.style.cssText = 'background:rgba(249,115,22,.15);color:#f97316;';
+        }
     }
 
-    // Barra de progresso até a próxima meta
+    // Meta + barra de progresso
     const milestoneWrap = document.getElementById('sp-milestone-wrap');
+    const barWrap       = document.getElementById('sp-bar-wrap');
     const milestoneFill = document.getElementById('sp-milestone-fill');
     const milestoneLabel = document.getElementById('sp-milestone-label');
-    if (milestoneWrap && milestoneFill && milestoneLabel && score < 1000) {
+    const targetValEl   = document.getElementById('sp-target-val');
+    if (score < 1000) {
         const target = score < 700 ? 700 : score < 800 ? 800 : score < 900 ? 900 : 1000;
         const base   = target === 700 ? 300 : target - 100;
         const pct    = Math.min(100, Math.round(((score - base) / (target - base)) * 100));
-        milestoneFill.style.width = pct + '%';
-        milestoneLabel.textContent = `${pct}% do caminho até ${target} pts`;
-        milestoneWrap.style.display = '';
-    } else if (milestoneWrap) {
-        milestoneWrap.style.display = 'none';
+        if (milestoneFill) milestoneFill.style.width = pct + '%';
+        if (milestoneLabel) milestoneLabel.textContent = pct + '% do caminho';
+        if (targetValEl) targetValEl.textContent = target;
+        if (milestoneWrap) milestoneWrap.style.display = '';
+        if (barWrap) barWrap.style.display = '';
+    } else {
+        if (milestoneWrap) milestoneWrap.style.display = 'none';
+        if (barWrap) barWrap.style.display = 'none';
     }
 
     // Breakdown por área

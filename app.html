@@ -190,27 +190,31 @@
                 <!-- Score Prediction Card -->
                 <div class="score-pred-card" id="score-pred-card" style="display:none">
 
-                    <!-- Topo: label + trend -->
-                    <div class="sp-header">
-                        <span class="sp-label">NOTA ENEM ESTIMADA</span>
-                        <span class="sp-trend" id="sp-trend"></span>
-                    </div>
-
-                    <!-- Nota grande + barra de progresso -->
-                    <div class="sp-score-section">
-                        <div class="sp-score-row">
-                            <span class="sp-score" id="sp-score">—</span>
-                            <span class="sp-scale">/ 1000</span>
-                        </div>
-                        <div class="sp-milestone-wrap" id="sp-milestone-wrap" style="display:none">
-                            <div class="sp-milestone-bar-bg">
-                                <div class="sp-milestone-bar-fill" id="sp-milestone-fill" style="width:0%"></div>
+                    <!-- Linha superior: nota + meta -->
+                    <div class="sp-top">
+                        <div class="sp-left">
+                            <span class="sp-label">NOTA ENEM ESTIMADA</span>
+                            <div class="sp-score-row">
+                                <span class="sp-score" id="sp-score">—</span>
+                                <span class="sp-scale">/ 1000</span>
+                                <span class="sp-trend" id="sp-trend"></span>
                             </div>
-                            <span class="sp-milestone-label" id="sp-milestone-label"></span>
+                        </div>
+                        <div class="sp-right" id="sp-milestone-wrap" style="display:none">
+                            <span class="sp-target-label" id="sp-target-label">META</span>
+                            <span class="sp-target-val" id="sp-target-val"></span>
+                            <span class="sp-target-pct" id="sp-milestone-label"></span>
                         </div>
                     </div>
 
-                    <!-- Breakdown por área -->
+                    <!-- Barra de progresso -->
+                    <div class="sp-bar-wrap" id="sp-bar-wrap" style="display:none">
+                        <div class="sp-milestone-bar-bg">
+                            <div class="sp-milestone-bar-fill" id="sp-milestone-fill" style="width:0%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Breakdown por área (só com 2+) -->
                     <div class="sp-areas" id="sp-areas" style="display:none"></div>
 
                     <!-- Insight + CTA -->
