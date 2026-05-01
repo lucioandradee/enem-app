@@ -13,18 +13,30 @@ async function renderTeacherDashboard() {
             <p style="font-size:13px">Carregando dados da turma…</p>
         </div>`;
 
-    const code = await _getOrCreateClassCode();
+    try {
+        await _renderTeacherContent(body);
+    } catch (err) {
+        console.error('❌ renderTeacherDashboard:', err);
+        // Fallback: renderiza com state local, sem dados do banco
+        try { await _renderTeacherContent(body, true); } catch (_) {}
+    }
+}
 
-    // Busca alunos reais do Supabase via RPC
+async function _renderTeacherContent(body, offlineMode) {
+    const code = _getOrCreateClassCodeSync();
+
+    // Busca alunos reais do Supabase via RPC (só se coluna já existe no banco)
     let students = [];
-    if (state.user.id && typeof getClassStudents !== 'undefined') {
-        const result = await getClassStudents(code).catch(() => ({ success: false, data: [] }));
-        students = (result.data || []).map(s => ({
-            name:       s.student_name  || 'Aluno',
-            questoes:   Number(s.total_questions)   || 0,
-            accuracy:   Number(s.accuracy)          || 0,
-            lastActive: s.last_active   || null,
-        }));
+    if (!offlineMode && state.user && state.user.id && typeof getClassStudents !== 'undefined') {
+        try {
+            const result = await getClassStudents(code);
+            students = ((result && result.data) || []).map(s => ({
+                name:       s.student_name  || 'Aluno',
+                questoes:   Number(s.total_questions)   || 0,
+                accuracy:   Number(s.accuracy)          || 0,
+                lastActive: s.last_active   || null,
+            }));
+        } catch (_) { /* RPC ainda não existe no banco — lista vazia */ }
     }
 
     const enrolledCode = state.user.enrolled_class_code || state.user.enrolledClassCode || '';
@@ -91,45 +103,28 @@ async function renderTeacherDashboard() {
     `;
 }
 
-// Retorna o código da turma do professor.
-// Prioridade: state (camelCase ou snake_case) → banco → gera novo.
-async function _getOrCreateClassCode() {
-    // Normaliza entre as duas grafias possíveis no state
-    const existing = state.user.classCode || state.user.class_code;
+// Retorna o código da turma do professor — 100% síncrono (sem depender do banco).
+// Salva em background quando há sessão ativa.
+function _getOrCreateClassCodeSync() {
+    const user = (state && state.user) || {};
+    const existing = user.classCode || user.class_code;
     if (existing) {
-        state.user.classCode   = existing;
-        state.user.class_code  = existing;
+        user.classCode  = existing;
+        user.class_code = existing;
         return existing;
     }
 
-    // Tenta buscar do banco (outro dispositivo pode ter gerado antes)
-    if (state.user.id) {
-        const { data } = await supabase
-            .from('users')
-            .select('class_code')
-            .eq('id', state.user.id)
-            .maybeSingle()
-            .catch(() => ({ data: null }));
-
-        if (data?.class_code) {
-            state.user.classCode  = data.class_code;
-            state.user.class_code = data.class_code;
-            saveState();
-            return data.class_code;
-        }
-    }
-
     // Gera novo código único (4 chars do uid + 4 dígitos)
-    const uid  = (state.user.id || state.user.email || 'user').replace(/[^a-zA-Z0-9]/g, '');
+    const uid  = (user.id || user.email || 'user').replace(/[^a-zA-Z0-9]/g, '');
     const code = (uid.slice(0, 4) + Math.floor(1000 + Math.random() * 9000)).toUpperCase();
 
-    state.user.classCode  = code;
-    state.user.class_code = code;
-    saveState();
+    user.classCode  = code;
+    user.class_code = code;
+    if (typeof saveState !== 'undefined') saveState();
 
-    // Persiste no banco em background
-    if (state.user.id && typeof saveClassCode !== 'undefined') {
-        saveClassCode(state.user.id, code).catch(() => {});
+    // Persiste no banco em background (falha silenciosamente se coluna ainda não existe)
+    if (user.id && typeof saveClassCode !== 'undefined') {
+        saveClassCode(user.id, code).catch(() => {});
     }
 
     return code;
@@ -224,37 +219,16 @@ async function joinClass() {
     }
 
     msg.style.color = 'var(--text-muted)';
-    msg.textContent = 'Verificando…';
+    msg.textContent = 'Salvando…';
 
-    // Valida se o código existe no banco
-    if (state.user.id) {
-        const { data: ownerRow } = await supabase
-            .from('users')
-            .select('id, name')
-            .eq('class_code', code)
-            .maybeSingle()
-            .catch(() => ({ data: null }));
-
-        if (!ownerRow) {
-            msg.style.color = '#ef4444';
-            msg.textContent = '❌ Código não encontrado. Confirme com seu professor.';
-            return;
-        }
-    }
-
-    // Salva no state (ambas as grafias para compatibilidade)
+    // Salva no state imediatamente (ambas as grafias para compatibilidade)
     state.user.enrolledClassCode   = code;
     state.user.enrolled_class_code = code;
     saveState();
 
-    // Persiste no banco
+    // Persiste no banco em background — não bloqueia se coluna ainda não existe
     if (state.user.id && typeof enrollInClass !== 'undefined') {
-        const result = await enrollInClass(state.user.id, code).catch(() => ({ success: false }));
-        if (!result.success) {
-            msg.style.color = '#ef4444';
-            msg.textContent = '❌ Erro ao salvar. Tente novamente.';
-            return;
-        }
+        enrollInClass(state.user.id, code).catch(() => {});
     }
 
     msg.style.color = 'var(--accent)';
