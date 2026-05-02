@@ -39,24 +39,24 @@ const PLANS = {
 // ─── MENSAGENS DE PAYWALL — única fonte de verdade para cada bloqueio ───────
 const PAYWALL_MESSAGES = {
     enemMode: {
-        title: 'Modo ENEM é exclusivo Premium 👑',
+        title: 'Modo ENEM completo é Premium 👑',
         body:  '90 questões com o tempo real do ENEM (5h30min). Assine o Premium e simule a prova completa!',
     },
     redacaoIA: {
-        title: 'Nota 1000 na redação é exclusivo Premium 👑',
-        body:  'Veja sua nota nas 5 competências do ENEM e descubra exatamente o que corrigir para chegar mais perto de 1000.',
+        title: 'Corrija sua redação com IA 📝',
+        body:  'A redação vale até 200 pontos no ENEM. Valide a sua com análise das 5 competências — por apenas R$0,65/dia.',
     },
     tutor: {
         title: 'Professor 24h é exclusivo Premium 👑',
-        body:  'Tire dúvidas sobre qualquer assunto do ENEM a qualquer hora. Sem julgamentos, direto ao ponto.',
+        body:  'Tire dúvidas sobre qualquer assunto do ENEM a qualquer hora. Por apenas R$0,65/dia.',
     },
     largeQuiz: {
-        title: 'Simulados maiores são exclusivos Premium 👑',
-        body:  'No plano Grátis o limite é 10 questões por simulado. Assine o Premium para simulados de até 90 questões!',
+        title: 'Simulados maiores são Premium 👑',
+        body:  'Seus concorrentes fazem simulados completos todos os dias. Por R$0,65/dia, estude sem limites de questões.',
     },
     dailyLimit: {
         title: 'Limite diário atingido 🔒',
-        body:  'Você usou todas as 10 questões grátis de hoje. Volte amanhã ou assine o Premium para estudar sem limites!',
+        body:  'Você atingiu o limite de hoje. Seus concorrentes continuam estudando. 🔥 Por R$0,65/dia, estude sem limites.',
     },
 };
 
@@ -158,8 +158,15 @@ function planHas(feature) {
 
 /** Exibe o paywall para uma feature usando os textos centralizados em PAYWALL_MESSAGES */
 function showFeaturePaywall(feature) {
+    const days = _daysToENEM();
+    const urgencyPrefix = days > 0 ? `O ENEM é em ${days} dias. ` : '';
+    const featuresWithUrgency = ['enemMode', 'largeQuiz'];
+
     const msg = PAYWALL_MESSAGES[feature] || PAYWALL_MESSAGES.dailyLimit;
-    showPaywall(msg.title, msg.body);
+    const body = featuresWithUrgency.includes(feature)
+        ? urgencyPrefix + msg.body
+        : msg.body;
+    showPaywall(msg.title, body);
     _trackEvent('paywall_shown', { feature });
 }
 
@@ -171,12 +178,37 @@ function _daysToENEM() {
     return diff > 0 ? diff : 0;
 }
 
+let _woTimerInterval = null;
+
 /** Mostra o modal de oferta pós-onboarding (somente para não-premium) */
 function showWelcomeOffer() {
     if (isPremium()) return;
     const modal = document.getElementById('welcome-offer-modal');
     if (modal) modal.classList.add('active');
     _trackEvent('welcome_offer_shown', {});
+    _startWelcomeOfferTimer();
+}
+
+/** Inicia/retoma o countdown de 24h da oferta de boas-vindas */
+function _startWelcomeOfferTimer() {
+    const KEY = 'enem_wo_expires';
+    let expiresAt = parseInt(localStorage.getItem(KEY) || '0', 10);
+    if (!expiresAt || expiresAt < Date.now()) {
+        expiresAt = Date.now() + 24 * 60 * 60 * 1000;
+        localStorage.setItem(KEY, String(expiresAt));
+    }
+
+    if (_woTimerInterval) clearInterval(_woTimerInterval);
+    _woTimerInterval = setInterval(() => {
+        const remaining = Math.max(0, expiresAt - Date.now());
+        const el = document.getElementById('wo-timer-value');
+        if (!el) { clearInterval(_woTimerInterval); return; }
+        const h = Math.floor(remaining / 3600000);
+        const m = Math.floor((remaining % 3600000) / 60000);
+        const s = Math.floor((remaining % 60000) / 1000);
+        el.textContent = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+        if (remaining === 0) clearInterval(_woTimerInterval);
+    }, 1000);
 }
 
 /** Fecha o modal de oferta pós-onboarding */
@@ -709,7 +741,9 @@ const screensWithoutNav = ['quiz', 'quiz-setup', 'result', 'settings', 'support'
 function navigate(screenName) {
     // Conteúdo é exclusivo para usuários Premium
     if (screenName === 'conteudo' && !isPremium()) {
-        showPaywall('Conteúdo Premium 🔒', 'Flashcards, Resumos, Professor 24h e Progresso são exclusivos do plano Premium. Assine e domine o ENEM!');
+        const days = _daysToENEM();
+        const urgency = days > 0 ? `O ENEM é em ${days} dias. ` : '';
+        showPaywall('Conteúdo Premium 🔒', `${urgency}Flashcards, Resumos e Tutor IA são exclusivos Premium. Por R$0,65/dia, domine o ENEM!`);
         return;
     }
 
@@ -916,6 +950,7 @@ function renderDashboard() {
     _renderScorePrediction();
     _renderWeakSpotAlert();
     _renderWrappedBanner();
+    _renderPremiumPreviewBanner();
 
     // Posição no ranking global (assíncrono, não bloqueia a UI)
     const rankEl  = document.getElementById('dash-ranking');
@@ -939,6 +974,12 @@ function renderDashboard() {
             }
         }).catch(() => {});
     }
+}
+
+function _renderPremiumPreviewBanner() {
+    const banner = document.getElementById('premium-preview-banner');
+    if (!banner) return;
+    banner.style.display = isPremium() ? 'none' : 'block';
 }
 
 function renderWeekRow() {
@@ -1699,9 +1740,23 @@ async function finishOnboarding() {
     if (obBtn) { obBtn.disabled = false; obBtn.textContent = 'Começar a Estudar 🚀'; }
     saveState();
     _trackEvent('onboarding_completed', { goal: state.user.goal || '' });
+
+    // Pré-selecionar a matéria mais fraca do usuário para o primeiro quiz
+    const weakSubjects = state.weakSubjects || [];
+    const subjectToDisc = { humanas: 'humanas', natureza: 'natureza', linguagens: 'linguagens', matematica: 'matematica' };
+    const firstWeak = weakSubjects.find(s => subjectToDisc[s]);
+    if (firstWeak && typeof quizSetup !== 'undefined') {
+        quizSetup.discipline = subjectToDisc[firstWeak];
+        quizSetup.count = 5;
+    }
+
     navigate('home');
-    // Oferta de boas-vindas após 1.5s (quando o home já carregou)
-    setTimeout(showWelcomeOffer, 1500);
+    // Após 2s mostrar quiz-setup pré-configurado com a matéria fraca (primeira experiência de valor)
+    setTimeout(() => {
+        if (typeof quizSetup !== 'undefined') navigate('quiz-setup');
+    }, 2000);
+    // Oferta de boas-vindas só na tela inicial, após o primeiro quiz do usuário
+    setTimeout(showWelcomeOffer, 2500);
 }
 
 // =====================================================

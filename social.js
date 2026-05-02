@@ -102,13 +102,32 @@ function _scheduleDailyStudyReminder() {
     let delay = target - now;
     if (delay < 0) delay = 60 * 1000;
 
-    const msgs = [
+    // Detectar matéria mais fraca para personalizar a notificação
+    const stats = (typeof state !== 'undefined' && state?.progress?.stats) || {};
+    const discNames = { humanas: 'Ciências Humanas', natureza: 'Ciências da Natureza', linguagens: 'Linguagens', matematica: 'Matemática' };
+    let weakestDisc = null;
+    let lowestPct = Infinity;
+    for (const [key, val] of Object.entries(stats)) {
+        if (val.total >= 5) {
+            const pct = val.correct / val.total;
+            if (pct < lowestPct) { lowestPct = pct; weakestDisc = key; }
+        }
+    }
+    const weakName = weakestDisc ? discNames[weakestDisc] : null;
+    const weakPct  = weakestDisc ? Math.round((stats[weakestDisc].correct / stats[weakestDisc].total) * 100) : null;
+
+    const genericMsgs = [
         { title:'📚 Hora de estudar!',           body:'Você tem questões te esperando. Bora revisar antes de dormir?' },
         { title:'🔥 Mantenha seu streak!',        body:'Estude pelo menos 10 minutos hoje para não perder sua sequência!' },
         { title:'🎯 ENEM cada vez mais perto!',   body:'Que tal um simulado rápido agora? Cada questão conta!' },
         { title:'⚡ Revise um flashcard hoje!',   body:'5 minutinhos de revisão no ENEM Master — vá lá!' },
         { title:'🏆 Ranking espera por você!',    body:'Outros estudantes estão avançando. Jogue algumas questões!' },
     ];
+    const personalizedMsgs = weakName ? [
+        { title:`📐 ${weakName} precisa de atenção!`, body:`Você acertou ${weakPct}% em ${weakName}. 5 minutos de treino hoje fazem diferença.` },
+        { title:`⚠️ Ponto fraco detectado!`,          body:`${weakName} está com ${weakPct}% de acerto. Bora virar a chave antes do ENEM?` },
+    ] : [];
+    const msgs = [...personalizedMsgs, ...genericMsgs];
     const msg = msgs[Math.floor(Math.random() * msgs.length)];
 
     setTimeout(() => {
@@ -184,6 +203,29 @@ function shareResult() {
 function closeShareModal() {
     const overlay = document.getElementById('share-modal-overlay');
     if (overlay) overlay.style.display = 'none';
+}
+
+/** Compartilha resultado diretamente no WhatsApp com mensagem motivacional */
+function shareResultWhatsApp() {
+    const pct     = document.getElementById('result-pct')?.textContent || '—';
+    const correct = document.getElementById('res-correct')?.textContent || '—';
+    const tri     = document.getElementById('result-tri-score')?.textContent;
+
+    const discLabels = {
+        misto:'Todas as Áreas', humanas:'Ciências Humanas', natureza:'Ciências da Natureza',
+        linguagens:'Linguagens', matematica:'Matemática', 'enem-dia1':'1º Dia ENEM', 'enem-dia2':'2º Dia ENEM',
+    };
+    const disc = discLabels[quizState?.discipline] || 'Simulado';
+
+    const triPart = tri && tri !== '—' ? `\n📊 Estimativa ENEM: *${tri}*` : '';
+    const text = encodeURIComponent(
+        `🎓 Acabei de fazer um simulado no *ENEM Master*!\n` +
+        `📚 ${disc}: *${pct}* de acerto (${correct} acertos)${triPart}\n` +
+        `🔥 Treinando pra mandar bem no ENEM!\n` +
+        `👉 Estude grátis também → enemmaster.com.br`
+    );
+    window.open('https://wa.me/?text=' + text, '_blank', 'noopener,noreferrer');
+    _trackEvent && _trackEvent('result_shared', { channel: 'whatsapp', pct });
 }
 
 function shareViaWhatsapp() {
