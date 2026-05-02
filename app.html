@@ -1004,16 +1004,6 @@
                     <button class="push-notif-btn" id="push-notif-btn" onclick="requestPushPermission()">Ativar</button>
                 </div>
 
-                <!-- Professor Mode -->
-                <div class="settings-section">
-                    <div class="settings-section-title">• Modo Professor</div>
-                    <p class="settings-section-sub">Monitore o desempenho da sua turma e identifique alunos em risco.</p>
-                    <button class="settings-link-row" onclick="navigate('teacher')">
-                        <span>🎓 Acessar Dashboard do Professor</span>
-                        <span class="arrow">›</span>
-                    </button>
-                </div>
-
                 <!-- Security Section -->
                 <div class="settings-section">
                     <div class="settings-section-title">• Segurança</div>
@@ -1080,23 +1070,6 @@
                 <div class="sp-plan-preview" id="sp-plan-preview"></div>
 
                 <button class="cta-btn" style="margin:0 16px 12px" onclick="saveStudyPlan()">Salvar meu plano</button>
-            </div>
-        </section>
-
-        <!-- ===================== SCREEN: DASHBOARD PROFESSOR ===================== -->
-        <section id="screen-teacher" class="screen">
-            <div class="inner-header">
-                <button class="back-btn" onclick="navigate('settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><polyline points="15 18 9 12 15 6"/></svg></button>
-                <h2 class="inner-title">Dashboard do Professor</h2>
-                <div></div>
-            </div>
-            <div class="screen-scroll">
-                <div id="teacher-dashboard-body">
-                    <div style="padding:40px 24px;text-align:center;color:var(--text-muted)">
-                        <div style="font-size:40px;margin-bottom:12px">🎓</div>
-                        <p style="font-size:14px;line-height:1.6">Carregando dados da turma…</p>
-                    </div>
-                </div>
             </div>
         </section>
 
@@ -2888,7 +2861,6 @@
     <script src="conteudo.js?v=3"></script>
     <script src="social.js?v=3"></script>
     <script src="study-plan.js?v=1"></script>
-    <script src="teacher.js?v=1"></script>
     <script src="app.js?v=19"></script>
     <script src="supabase-config.js?v=19"></script>
     <script>
