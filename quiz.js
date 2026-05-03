@@ -605,6 +605,38 @@ function confirmAnswer() {
     } else {
         document.getElementById('quiz-footer-hint').textContent = isCorrect ? '🎉 MUITO BEM!' : '📖 REVISE O CONCEITO';
     }
+    _checkSoftPaywallWarning();
+}
+
+function _checkSoftPaywallWarning() {
+    if (typeof isPremium === 'function' && isPremium()) return;
+    if (typeof getRemainingQuestions !== 'function') return;
+    const remaining = getRemainingQuestions();
+    if (remaining !== 3) return;
+    const hintEl = document.getElementById('quiz-footer-hint');
+    if (!hintEl) return;
+    hintEl.innerHTML = '⚡ <strong>3 questões restantes hoje</strong> — <button class="link-inline" onclick="navigate(\'plans\')" style="font-size:11px;color:var(--teal)">Ver Premium →</button>';
+    if (typeof _trackEvent === 'function') _trackEvent('soft_paywall_shown', { remaining: 3 });
+}
+
+function _grantComebackBonus() {
+    const lastStudy = state.user.lastStudyDate;
+    if (!lastStudy) return 0;
+    const daysMissed = Math.floor((Date.now() - new Date(lastStudy)) / 86400000);
+    if (daysMissed < 2 || daysMissed > 6) return 0;
+    if ((state.user.streak || 0) < 3) return 0;
+    const todayKey = 'enem_comeback_' + new Date().toDateString();
+    if (localStorage.getItem(todayKey)) return 0;
+    localStorage.setItem(todayKey, '1');
+    const bonus = Math.min(50, daysMissed * 10);
+    if (typeof _pushNotification === 'function') {
+        _pushNotification({
+            type: 'orange', icon: '🔥',
+            title: `Bem-vindo de volta! +${bonus} XP Bônus`,
+            body: `Você ficou ${daysMissed} dias fora — mas voltou! Ganhou +${bonus} XP de retorno.`,
+        });
+    }
+    return bonus;
 }
 
 function nextQuestion() {
@@ -624,9 +656,16 @@ function showResult() {
     const correct = quizState.correct;
     const pct = Math.round((correct / total) * 100);
 
-    // Bônus XP de streak diário (1 XP por dia de ofensiva, máximo 50)
-    const streakBonus = Math.min(state.user.streak || 0, 50);
+    // Comeback bonus (retorno após inatividade de 2–6 dias com streak anterior ≥ 3)
+    const comebackBonus = _grantComebackBonus();
+    quizState.bonusXp += comebackBonus;
+
+    // Bônus XP de streak — multiplicador progressivo por dias consecutivos
+    const streak = state.user.streak || 0;
+    const streakMultiplier = streak >= 14 ? 1.5 : streak >= 7 ? 1.25 : streak >= 3 ? 1.1 : 1.0;
+    const streakBonus = Math.round((correct * 10) * (streakMultiplier - 1));
     quizState.bonusXp += streakBonus;
+    quizState.streakMultiplier = streakMultiplier;
 
     const xpGained = (correct * 10) + quizState.bonusXp;
 
@@ -717,7 +756,8 @@ function showResult() {
         if (quizState.bonusXp > 0) {
             const parts = [];
             if (quizState.maxCombo >= 3) parts.push(`Combo x${quizState.maxCombo}`);
-            if (Math.min(state.user.streak || 0, 50) > 0) parts.push(`Streak ${state.user.streak}d`);
+            if ((quizState.streakMultiplier || 1) > 1) parts.push(`Streak x${quizState.streakMultiplier.toFixed(1)}`);
+            else if ((state.user.streak || 0) > 0) parts.push(`Streak ${state.user.streak}d`);
             bonusEl.textContent = `+${quizState.bonusXp} bônus (${parts.join(' + ')})`;
             bonusRow.style.display = '';
         } else {
@@ -737,8 +777,11 @@ function showResult() {
 
     navigate('result');
 
-    // Verificar conquistas DEPOIS de navegar
-    setTimeout(() => checkBadges(), 800);
+    // Verificar conquistas e nudges de conversão DEPOIS de navegar
+    setTimeout(() => {
+        checkBadges();
+        if (typeof _checkPowerUserNudge === 'function') _checkPowerUserNudge();
+    }, 800);
 }
 
 /* ---- Análise de desempenho pós-quiz ---- */

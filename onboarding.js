@@ -107,8 +107,11 @@ async function _obCheckEmailOnBlur() {
 }
 
 let _pendingPassword = ''; // senha temporária — nunca entra no state nem no localStorage
+let _obStepStartTime = Date.now(); // mede tempo em cada step para analytics
 
 async function onboardingNext() {
+    const timeOnStep = Math.round((Date.now() - _obStepStartTime) / 1000);
+    if (typeof _trackEvent === 'function') _trackEvent('onboarding_step_completed', { step: obStep, time_seconds: timeOnStep });
     if (obStep === 1) {
         const nameEl     = document.getElementById('ob-name');
         const emailEl    = document.getElementById('ob-email');
@@ -215,6 +218,8 @@ function goToObStep(step) {
     if (step === 3) {
         document.getElementById('ob-btn').textContent = 'Começar a Estudar 🚀';
     }
+    if (typeof _trackEvent === 'function') _trackEvent('onboarding_step_viewed', { step, from: obStep });
+    _obStepStartTime = Date.now();
     obStep = step;
 }
 

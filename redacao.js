@@ -304,6 +304,7 @@ async function submitEssay() {
         const xpRedacao = Math.round((result.total / 1000) * 200);
         state.user.xp   += xpRedacao;
         state.user.level = Math.max(1, Math.floor(state.user.xp / 500) + 1);
+        state.user.essaySubmitCount = (state.user.essaySubmitCount || 0) + 1;
         saveState();
         if (typeof getCurrentUser !== 'undefined') {
             getCurrentUser().then(user => {

@@ -86,19 +86,42 @@ async function requestPushPermission() {
     }
 }
 
-// Agenda um lembrete diário de estudo para às 20h
+// Agenda lembretes diários de estudo: matinal às 8h e noturno às 20h
 function _scheduleDailyStudyReminder() {
     if (Notification.permission !== 'granted') return;
 
     const todayKey = new Date().toDateString();
-    const lastScheduled = localStorage.getItem('enem_push_scheduled');
-    if (lastScheduled === todayKey) return; // já agendou hoje
-
     const now = new Date();
-    const target = new Date();
-    target.setHours(20, 0, 0, 0); // 20:00 local
 
-    // Se já passou das 20h, agenda para a hora + 1min (lembrete imediato de conquista diária)
+    // ── Lembrete matinal (8h) ──────────────────────────────────────────────────
+    const morningKey = 'enem_push_morning_' + todayKey;
+    if (!localStorage.getItem(morningKey)) {
+        const morning = new Date(); morning.setHours(8, 0, 0, 0);
+        const morningDelay = morning - now;
+        if (morningDelay > 0) {
+            setTimeout(() => {
+                const studiedToday = (typeof state !== 'undefined') &&
+                    state.user.questoesHojeData === new Date().toDateString() &&
+                    (state.user.questoesHoje || 0) > 0;
+                if (!studiedToday && Notification.permission === 'granted') {
+                    const n = new Notification('🌅 Bom dia! Hora de estudar!', {
+                        body: 'Comece o dia com 5 questões rápidas do ENEM. Leva menos de 10 minutos!',
+                        icon: '/favicon.ico', tag: 'enem-morning-reminder',
+                    });
+                    n.onclick = () => { window.focus(); n.close(); };
+                }
+                localStorage.setItem(morningKey, '1');
+            }, morningDelay);
+        }
+    }
+
+    // ── Lembrete noturno (20h) ─────────────────────────────────────────────────
+    const eveningKey = 'enem_push_evening_' + todayKey;
+    // Também aceitar a key antiga para não agendar duplo no primeiro dia após a atualização
+    const legacyKey  = localStorage.getItem('enem_push_scheduled');
+    if (localStorage.getItem(eveningKey) || legacyKey === todayKey) return;
+
+    const target = new Date(); target.setHours(20, 0, 0, 0);
     let delay = target - now;
     if (delay < 0) delay = 60 * 1000;
 
@@ -140,7 +163,7 @@ function _scheduleDailyStudyReminder() {
             });
             n.onclick = () => { window.focus(); n.close(); };
         }
-        localStorage.setItem('enem_push_scheduled', todayKey);
+        localStorage.setItem(eveningKey, '1');
     }, delay);
 }
 

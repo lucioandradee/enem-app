@@ -156,8 +156,11 @@ function planHas(feature) {
     return !!getUserPlan().features?.[feature];
 }
 
+let _lastPaywallFeature = null;
+
 /** Exibe o paywall para uma feature usando os textos centralizados em PAYWALL_MESSAGES */
 function showFeaturePaywall(feature) {
+    _lastPaywallFeature = feature;
     const days = _daysToENEM();
     const urgencyPrefix = days > 0 ? `O ENEM é em ${days} dias. ` : '';
     const featuresWithUrgency = ['enemMode', 'largeQuiz'];
@@ -215,6 +218,7 @@ function _startWelcomeOfferTimer() {
 function closeWelcomeOffer() {
     const modal = document.getElementById('welcome-offer-modal');
     if (modal) modal.classList.remove('active');
+    _trackEvent('welcome_offer_dismissed', {});
 }
 
 /** Atualiza urgência do paywall com contagem regressiva do ENEM */
@@ -244,6 +248,7 @@ const defaultState = {
         goalNotifDateDaily: '', // última data em que notificou meta diária concluída
         goalNotifWeekStart: '', // segunda-feira da semana em que notificou meta semanal
         goalNotifSundayDate: '', // data do domingo em que enviou alerta de meta não concluída
+        essaySubmitCount: 0,    // total de redações enviadas (para ocultar o discovery card)
     },
     progress: {
         humanas: 0, natureza: 0, linguagens: 0, matematica: 0,
@@ -912,6 +917,20 @@ function renderDashboard() {
     document.getElementById('dash-level').textContent = s.level;
     document.getElementById('dash-xp').textContent = s.xp.toLocaleString('pt-BR');
     document.getElementById('dash-streak').textContent = s.streak + ' Dias';
+    const streakBadgeEl = document.getElementById('streak-multiplier-badge');
+    const streakSubEl   = document.getElementById('dash-streak-sub');
+    if (streakBadgeEl) {
+        const streakVal = s.streak || 0;
+        const mult = streakVal >= 14 ? 1.5 : streakVal >= 7 ? 1.25 : streakVal >= 3 ? 1.1 : null;
+        if (mult) {
+            streakBadgeEl.textContent = `⚡ x${mult.toFixed(1)} XP em cada quiz`;
+            streakBadgeEl.style.display = 'block';
+            if (streakSubEl) streakSubEl.textContent = 'Multiplicador ativo!';
+        } else {
+            streakBadgeEl.style.display = 'none';
+            if (streakSubEl) streakSubEl.textContent = streakVal >= 1 ? 'Mais 3 dias → bônus XP!' : 'Comece hoje!';
+        }
+    }
 
     // XP card — badge de nível + barra de progresso
     const lvlBadgeEl = document.getElementById('dash-lvl-badge');
@@ -951,6 +970,7 @@ function renderDashboard() {
     _renderWeakSpotAlert();
     _renderWrappedBanner();
     _renderPremiumPreviewBanner();
+    _renderEssayDiscoveryCard();
 
     // Posição no ranking global (assíncrono, não bloqueia a UI)
     const rankEl  = document.getElementById('dash-ranking');
@@ -980,6 +1000,13 @@ function _renderPremiumPreviewBanner() {
     const banner = document.getElementById('premium-preview-banner');
     if (!banner) return;
     banner.style.display = isPremium() ? 'none' : 'block';
+}
+
+function _renderEssayDiscoveryCard() {
+    const card = document.getElementById('essay-discovery-card');
+    if (!card) return;
+    const hasSubmitted = (state.user.essaySubmitCount || 0) > 0;
+    card.style.display = (!isPremium() && !hasSubmitted) ? 'block' : 'none';
 }
 
 function renderWeekRow() {
@@ -1751,11 +1778,35 @@ async function finishOnboarding() {
     }
 
     navigate('home');
-    // Após 2s mostrar quiz-setup pré-configurado com a matéria fraca (primeira experiência de valor)
-    setTimeout(() => {
-        if (typeof quizSetup !== 'undefined') navigate('quiz-setup');
-    }, 2000);
-    // Oferta de boas-vindas só na tela inicial, após o primeiro quiz do usuário
+    // Mostrar bottom-sheet de primeiro quiz diretamente na home (sem setTimeout cego)
+    setTimeout(_showFirstQuizPrompt, 600);
+}
+
+function _showFirstQuizPrompt() {
+    const weakSubjects = state.weakSubjects || [];
+    const disc = weakSubjects[0] || 'misto';
+    const discLabels = { humanas: 'Ciências Humanas', natureza: 'Ciências da Natureza', linguagens: 'Linguagens', matematica: 'Matemática', misto: 'Todas as Áreas' };
+    const sheet = document.getElementById('first-quiz-sheet');
+    if (!sheet) return;
+    const nameEl = document.getElementById('fqs-disc-name');
+    if (nameEl) nameEl.textContent = discLabels[disc] || 'Todas as Áreas';
+    sheet.classList.add('active');
+    if (typeof _trackEvent === 'function') _trackEvent('first_quiz_prompt_shown', { discipline: disc });
+}
+
+function closeFirstQuizSheet() {
+    const sheet = document.getElementById('first-quiz-sheet');
+    if (sheet) sheet.classList.remove('active');
+}
+
+function acceptFirstQuiz() {
+    closeFirstQuizSheet();
+    const disc = (state.weakSubjects || [])[0] || 'misto';
+    if (typeof quizSetup !== 'undefined') {
+        quizSetup.discipline = disc;
+        quizSetup.count = 5;
+    }
+    navigate('quiz-setup');
     setTimeout(showWelcomeOffer, 2500);
 }
 
@@ -1887,6 +1938,7 @@ function init() {
                     _checkReengagementPush();
                     _checkStreakRecovery();
                     _checkWrappedNotification();
+                    _checkENEMCountdownNotifications();
                 });
             } else {
                 // Sem sessão ativa segundo getCurrentUser().
@@ -2593,9 +2645,177 @@ function _checkReengagementPush() {
                     body: `Semana passada: ${weekQ} questões, ${Math.round((weekC / weekQ) * 100)}% de acerto. Bora superar essa semana!`,
                     ctaScreen: 'analise', cta: 'Ver análise',
                 });
+                // Mostrar relatório semanal interativo após a dashboard carregar
+                setTimeout(showWeeklyReport, 1500);
             }
             saveState();
         }
+    }
+}
+
+function showWeeklyReport() {
+    const now = new Date();
+    const weekStart = new Date(now);
+    weekStart.setDate(now.getDate() - 7);
+    const weekHist = (state.quizHistory || []).filter(h => h.date && new Date(h.date) >= weekStart);
+
+    const totalQ   = weekHist.reduce((s, h) => s + (h.total || 0), 0);
+    const totalC   = weekHist.reduce((s, h) => s + (h.correct || 0), 0);
+    const totalXP  = weekHist.reduce((s, h) => s + (h.xp || 0), 0);
+    const sessions = weekHist.length;
+    const pct      = totalQ > 0 ? Math.round((totalC / totalQ) * 100) : 0;
+
+    const emoji = pct >= 70 ? '🏆' : pct >= 50 ? '📈' : '📚';
+    const firstName = (state.user.name || 'Estudante').split(' ')[0];
+    const title = sessions > 0 ? `Ótima semana, ${firstName}!` : 'Sem atividade essa semana';
+    const periodLabel =
+        weekStart.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }) +
+        ' – ' + now.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+
+    document.getElementById('wr-emoji').textContent   = emoji;
+    document.getElementById('wr-title').textContent   = title;
+    document.getElementById('wr-period').textContent  = periodLabel;
+
+    // Grid de stats
+    const statsGrid = document.getElementById('wr-stats-grid');
+    if (statsGrid) {
+        const stats = [
+            { icon: '📋', label: 'Simulados', value: sessions },
+            { icon: '📊', label: 'Questões',  value: totalQ },
+            { icon: '🎯', label: 'Acertos',   value: pct + '%' },
+            { icon: '⚡', label: 'XP ganho',  value: totalXP.toLocaleString('pt-BR') },
+        ];
+        statsGrid.innerHTML = stats.map(s =>
+            `<div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:12px;text-align:center">
+                <div style="font-size:22px">${s.icon}</div>
+                <div style="font-size:18px;font-weight:800;margin:4px 0;color:var(--text-primary)">${s.value}</div>
+                <div style="font-size:11px;color:var(--text-secondary)">${s.label}</div>
+            </div>`
+        ).join('');
+    }
+
+    // Breakdown por área
+    const areaEl = document.getElementById('wr-area-breakdown');
+    if (areaEl) {
+        const byArea = {};
+        weekHist.forEach(h => {
+            const d = h.discipline || 'misto';
+            if (!byArea[d]) byArea[d] = { correct: 0, total: 0 };
+            byArea[d].correct += h.correct || 0;
+            byArea[d].total   += h.total   || 0;
+        });
+        const areaNames = { humanas: 'Humanas', natureza: 'Ciências da Natureza', linguagens: 'Linguagens', matematica: 'Matemática', misto: 'Misto' };
+        const areaIcons = { humanas: '🌍', natureza: '🔬', linguagens: '📝', matematica: '➗', misto: '🎯' };
+        areaEl.innerHTML = Object.keys(byArea).map(d => {
+            const a = byArea[d];
+            const p = a.total > 0 ? Math.round((a.correct / a.total) * 100) : 0;
+            const color = p >= 70 ? '#00b4a6' : p >= 50 ? '#f5c518' : '#ef4444';
+            return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+                <span style="font-size:16px">${areaIcons[d] || '🎯'}</span>
+                <span style="flex:1;font-size:13px;color:var(--text-primary)">${areaNames[d] || d}</span>
+                <div style="width:80px;height:6px;background:rgba(255,255,255,.1);border-radius:3px;overflow:hidden">
+                    <div style="width:${p}%;height:100%;background:${color};border-radius:3px"></div>
+                </div>
+                <span style="font-size:12px;font-weight:700;color:${color};min-width:32px;text-align:right">${p}%</span>
+            </div>`;
+        }).join('');
+    }
+
+    // Upsell premium para usuários free
+    const upsellEl  = document.getElementById('wr-premium-upsell');
+    const lockedEl  = document.getElementById('wr-premium-locked');
+    if (upsellEl && lockedEl) {
+        if (!isPremium()) {
+            const days = _daysToENEM();
+            const lockedItems = [
+                '🔓 Simulados ilimitados — sem corte aos 10 questões',
+                '📝 Correção de redação pelas 5 competências do MEC',
+                '🤖 Tutor IA disponível 24h para tirar dúvidas',
+            ];
+            lockedEl.innerHTML = lockedItems.map(i => `<div>${i}</div>`).join('');
+            if (days > 0) lockedEl.innerHTML += `<div style="margin-top:8px;color:var(--teal);font-weight:600">⏰ ENEM em ${days} dias</div>`;
+            upsellEl.style.display = 'block';
+        } else {
+            upsellEl.style.display = 'none';
+        }
+    }
+
+    const modal = document.getElementById('weekly-report-modal');
+    if (modal) modal.style.display = 'flex';
+    _trackEvent('weekly_report_shown', { sessions, total_q: totalQ, pct });
+}
+
+function closeWeeklyReport() {
+    const modal = document.getElementById('weekly-report-modal');
+    if (modal) modal.style.display = 'none';
+    _trackEvent('weekly_report_dismissed', {});
+}
+
+function _checkPowerUserNudge() {
+    if (isPremium()) return;
+    const quizCount = (state.quizHistory || []).length;
+    const nudgeMilestones = [5, 10, 20];
+    const milestone = nudgeMilestones.find(m => quizCount === m);
+    if (!milestone) return;
+
+    const nudgeKey = `enem_power_nudge_${milestone}`;
+    if (localStorage.getItem(nudgeKey)) return;
+    localStorage.setItem(nudgeKey, '1');
+
+    const totalQ = (state.quizHistory || []).reduce((s, h) => s + (h.total || 0), 0);
+    const totalC = (state.quizHistory || []).reduce((s, h) => s + (h.correct || 0), 0);
+    const overallPct = totalQ > 0 ? Math.round((totalC / totalQ) * 100) : 0;
+    const streak = state.user.streak || 0;
+    const days = _daysToENEM();
+
+    const emoji = overallPct >= 70 ? '🏆' : overallPct >= 50 ? '💪' : '📚';
+    const title = overallPct >= 70 ? `${milestone} simulados — você tem talento!` : `${milestone} simulados — continue crescendo!`;
+    const body = `Em ${milestone} simulados você respondeu ${totalQ} questões com ${overallPct}% de acerto${streak >= 3 ? ` e manteve ${streak} dias seguidos` : ''}.`;
+    const statsHtml = `📊 <strong>${totalQ} questões</strong> respondidas<br>🎯 <strong>${overallPct}%</strong> de acerto geral<br>🔥 <strong>${streak} dias</strong> de sequência${days > 0 ? `<br>⏰ <strong>${days} dias</strong> para o ENEM` : ''}`;
+    const urgency = days > 0 ? `O ENEM 2026 é em ${days} dias — seus concorrentes já estão no Premium.` : '';
+
+    const modal = document.getElementById('power-nudge-modal');
+    if (!modal) return;
+    document.getElementById('pn-emoji').textContent = emoji;
+    document.getElementById('pn-title').textContent = title;
+    document.getElementById('pn-body').textContent = body;
+    document.getElementById('pn-stats').innerHTML = statsHtml;
+    const urgEl = document.getElementById('pn-urgency');
+    if (urgEl) urgEl.textContent = urgency;
+    modal.style.display = 'flex';
+    _trackEvent('power_nudge_shown', { quiz_count: milestone, overall_pct: overallPct });
+}
+
+function closePowerNudge() {
+    const modal = document.getElementById('power-nudge-modal');
+    if (modal) modal.style.display = 'none';
+    _trackEvent('power_nudge_dismissed', {});
+}
+
+function _checkENEMCountdownNotifications() {
+    const days = _daysToENEM();
+    if (days <= 0) return;
+
+    const milestones = [90, 30, 7];
+    const milestone = milestones.find(m => days <= m && days > m - 3);
+    if (!milestone) return;
+
+    const notifKey = `enem_countdown_notif_${milestone}`;
+    if (localStorage.getItem(notifKey)) return;
+    localStorage.setItem(notifKey, '1');
+
+    const msgs = {
+        90: { type: 'blue', icon: '🔥', title: '🔥 90 dias para o ENEM!', body: 'Você ainda tem 90 dias — é muito tempo se você agir agora. Estude 10 questões por dia e chegue preparado!' },
+        30: { type: 'orange', icon: '⏰', title: '⏰ 30 dias para o ENEM — reta final!', body: 'Um mês! Revise os tópicos com menor acerto e simule provas completas.', ctaScreen: 'quiz-setup', cta: 'Simular agora' },
+        7:  { type: 'red',    icon: '🚨', title: '🚨 7 dias para o ENEM!', body: 'Última semana! Revise, descanse e confie no que você estudou.', ctaScreen: 'quiz-setup', cta: 'Revisão final' },
+    };
+
+    const m = msgs[milestone];
+    _pushNotification({ type: m.type, icon: m.icon, title: m.title, body: m.body, ctaScreen: m.ctaScreen || 'home', cta: m.cta || 'Ver progresso' });
+
+    if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+        const n = new Notification(m.title, { body: m.body, icon: '/favicon.ico', tag: `enem-countdown-${milestone}` });
+        n.onclick = () => { window.focus(); n.close(); };
     }
 }
 

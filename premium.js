@@ -468,6 +468,9 @@ function showPaywall(title, body) {
 function closePaywall() {
     const el = document.getElementById('paywall-modal');
     if (el) el.classList.remove('active');
+    if (typeof _trackEvent === 'function') {
+        _trackEvent('paywall_dismissed', { feature: typeof _lastPaywallFeature !== 'undefined' ? _lastPaywallFeature : 'unknown' });
+    }
 }
 
 
