@@ -662,12 +662,7 @@ function renderConteudo() {
             if (saved) _tutorMessages = JSON.parse(saved);
         } catch {}
     }
-    if (_tutorMessages.length === 0) {
-        _tutorMessages = [{
-            role: 'ai',
-            text: 'Olá! Sou o **Professor 24h** do ENEM Master 🎓\n\nPosso te explicar qualquer assunto do ENEM: *Matemática, Física, Química, Biologia, Humanas, Linguagens e Redação*.\n\nUse as sugestões acima ou faça sua pergunta! 👆',
-        }];
-    }
+    // sem mensagem inicial — empty state é renderizado via CSS/tutor-empty-state
     _renderTutorMessages();
 }
 
@@ -1633,38 +1628,52 @@ function _mdToHtml(safe) {
 function _renderTutorMessages() {
     const el = document.getElementById('tutor-messages');
     if (!el) return;
+
+    const msgs = _tutorMessages.filter(m => m.role !== 'typing' || _tutorMessages[_tutorMessages.length - 1] === m);
+
+    if (msgs.length === 0) {
+        const name = (typeof state !== 'undefined' && state?.user?.name) ? state.user.name.split(' ')[0] : 'Estudante';
+        el.innerHTML = `
+            <div class="tutor-empty-state">
+                <div class="tutor-empty-icon">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="26" height="26"><path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z"/></svg>
+                </div>
+                <p class="tutor-empty-greeting">Olá, <strong>${name}</strong></p>
+                <p class="tutor-empty-sub">Qual assunto quer dominar hoje?<br>Escolha uma disciplina acima ou escreva sua dúvida.</p>
+            </div>`;
+        const grid = document.getElementById('tutor-suggestions');
+        if (grid) grid.style.display = 'flex';
+        return;
+    }
+
     el.innerHTML = _tutorMessages.map(m => {
-        if (m.role === 'typing') return `<div class="tutor-msg ai"><div class="tutor-avatar tutor-avatar-ai">🤖</div><div class="tutor-bubble tutor-typing"><span></span><span></span><span></span></div></div>`;
+        if (m.role === 'typing') return `<div class="tutor-msg ai"><span class="tutor-msg-avatar">IA</span><div class="tutor-bubble tutor-typing"><span></span><span></span><span></span></div></div>`;
         // Escape HTML primeiro, depois aplica markdown via _mdToHtml — evita XSS
         const safe = _escapeTutorText(m.text);
         const bubble = _mdToHtml(safe);
         if (m.role === 'ai') {
-            return `<div class="tutor-msg ai"><div class="tutor-avatar tutor-avatar-ai">🤖</div><div class="tutor-bubble">${bubble}</div></div>`;
+            return `<div class="tutor-msg ai"><span class="tutor-msg-avatar">IA</span><div class="tutor-bubble">${bubble}</div></div>`;
         }
-        const userInitial = (typeof state !== 'undefined' && state?.user?.name) ? state.user.name[0].toUpperCase() : 'EU';
-        return `<div class="tutor-msg user"><div class="tutor-bubble">${bubble}</div><div class="tutor-avatar tutor-avatar-user">${userInitial}</div></div>`;
+        return `<div class="tutor-msg user"><div class="tutor-msg-bubble">${bubble}</div></div>`;
     }).join('');
     el.scrollTop = el.scrollHeight;
 
-    // Oculta grid de sugestões após a primeira mensagem do usuário
+    // Oculta pills de disciplina após a primeira mensagem do usuário
     const grid = document.getElementById('tutor-suggestions');
     const hasUserMsg = _tutorMessages.some(m => m.role === 'user');
-    if (grid) grid.style.display = hasUserMsg ? 'none' : 'grid';
+    if (grid) grid.style.display = hasUserMsg ? 'none' : 'flex';
 
     // Persiste histórico na sessionStorage
     try { sessionStorage.setItem('tutor_history', JSON.stringify(_tutorMessages.filter(m => m.role !== 'typing'))); } catch {}
 }
 
 function tutorNovaConversa() {
-    _tutorMessages = [{
-        role: 'ai',
-        text: 'Sou o **Tutor IA** do ENEM Master — especializado exclusivamente no ENEM.\n\nCubro as 5 áreas da prova:\n\n• **Matemática:** funções, geometria, trigonometria, probabilidade, estatística, PA/PG, juros\n• **Física:** mecânica, termodinâmica, óptica, eletricidade, ondas, física moderna\n• **Química:** tabela periódica, ligações, reações, orgânica, eletroquímica\n• **Biologia:** genética, ecologia, fisiologia humana, evolução, biotecnologia\n• **Humanas:** história do Brasil e geral, geografia, filosofia, sociologia\n• **Linguagens:** redação ENEM, literatura, gramática, interpretação de texto\n\nFaça sua pergunta — explico com detalhe e exemplos práticos.',
-    }];
+    _tutorMessages = [];
     try { sessionStorage.removeItem('tutor_history'); } catch {}
     _renderTutorMessages();
-    // Reexibe o grid
+    // Reexibe os pills de disciplina
     const grid = document.getElementById('tutor-suggestions');
-    if (grid) grid.style.display = 'grid';
+    if (grid) grid.style.display = 'flex';
     _showQuickToast('📣 Nova conversa iniciada');
 }
 
