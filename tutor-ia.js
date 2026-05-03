@@ -67,8 +67,8 @@ function _renderTutorWelcome() {
             <div class="tutor-welcome-msg">
                 <span class="tutor-msg-avatar">IA</span>
                 <div class="tutor-welcome-bubble">
-                    <p>Olá, <strong>${name}</strong>! Pode me perguntar qualquer coisa do ENEM.</p>
-                    <p class="tutor-welcome-hint">Matemática, Física, Química, Biologia, Humanas, Linguagens e Redação.</p>
+                    <p>Olá, <strong>${name}</strong>! Sou o <strong>Professor 24h</strong> — aqui pra te ensinar, não só responder.</p>
+                    <p class="tutor-welcome-hint">Pergunte qualquer coisa do ENEM: Matemática, Física, Química, Biologia, Humanas, Linguagens e Redação.</p>
                 </div>
             </div>
             <div class="tutor-suggestions" id="tutor-suggestions">
