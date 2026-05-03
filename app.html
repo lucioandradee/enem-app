@@ -2669,37 +2669,37 @@
             <!-- -- PAINEL: Tutor IA -- -->
             <!-- IMPORTANTE: sem display:flex inline ? controlado pelo JS -->
             <div class="conteudo-panel conteudo-panel-tutor" id="conteudo-panel-tutor">
-                <!-- Cabeçalho: título + botão Nova conversa -->
+                <!-- Cabeçalho -->
                 <div class="tutor-header">
                     <div class="tutor-header-left">
-                        <div class="tutor-header-avatar">IA</div>
+                        <div class="tutor-header-avatar">
+                            <svg viewBox="0 0 24 24" fill="currentColor" width="17" height="17"><path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z"/></svg>
+                        </div>
                         <div class="tutor-header-info">
-                            <span class="tutor-header-title">Professor IA <span class="tutor-online-dot"></span></span>
-                            <span class="tutor-header-sub">Especialista ENEM · disponível agora</span>
+                            <span class="tutor-header-title">Professor 24h <span class="tutor-online-dot"></span></span>
+                            <span class="tutor-header-sub">IA especialista em ENEM</span>
                         </div>
                     </div>
-                    <button class="tutor-new-btn" onclick="tutorNovaConversa()" title="Limpar conversa">Nova conversa</button>
+                    <button class="tutor-new-btn" onclick="tutorNovaConversa()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                        Limpar
+                    </button>
                 </div>
-                <!-- Grid de sugestões rápidas (visível antes da primeira mensagem) -->
-                <div class="tutor-suggestions-grid" id="tutor-suggestions">
-                    <button class="tutor-chip" onclick="sendTutorSuggestion('Como funciona o Teorema de Pitágoras? Explique com exemplos práticos do ENEM.')"><span class="tutor-chip-icon">📐</span><span>Teorema de Pitágoras</span></button>
-                    <button class="tutor-chip" onclick="sendTutorSuggestion('Explique as Leis de Newton com exemplos do cotidiano para o ENEM.')"><span class="tutor-chip-icon">🍎</span><span>Leis de Newton</span></button>
-                    <button class="tutor-chip" onclick="sendTutorSuggestion('Como fazer uma redação ENEM nota 1000? Quais são os segredos de cada competência?')"><span class="tutor-chip-icon">✍️</span><span>Redação nota 1000</span></button>
-                    <button class="tutor-chip" onclick="sendTutorSuggestion('O que é fotossíntese e como funciona? Explique para o ENEM.')"><span class="tutor-chip-icon">🌿</span><span>Fotossíntese</span></button>
-                    <button class="tutor-chip" onclick="sendTutorSuggestion('Explique probabilidade com exemplos práticos para o ENEM.')"><span class="tutor-chip-icon">🎲</span><span>Probabilidade</span></button>
-                    <button class="tutor-chip" onclick="sendTutorSuggestion('O que foi a Revolução Francesa? Quais as causas e consequências para o ENEM?')"><span class="tutor-chip-icon">🗼</span><span>Revolução Francesa</span></button>
-                    <button class="tutor-chip" onclick="sendTutorSuggestion('Como calcular juros compostos? Mostre exemplos e fórmulas para o ENEM.')"><span class="tutor-chip-icon">💰</span><span>Juros Compostos</span></button>
-                    <button class="tutor-chip" onclick="sendTutorSuggestion('Explique as Leis de Mendel e herança genética com exemplos para o ENEM.')"><span class="tutor-chip-icon">🧬</span><span>Genética de Mendel</span></button>
-                    <button class="tutor-chip" onclick="sendTutorSuggestion('O que é a proposta de intervenção na redação do ENEM? Como escrever uma boa proposta?')"><span class="tutor-chip-icon">💡</span><span>Proposta de Intervenção</span></button>
-                    <button class="tutor-chip" onclick="sendTutorSuggestion('Explique reações de química orgânica para o ENEM: funções, nomenclatura e reações.')"><span class="tutor-chip-icon">⚗️</span><span>Química Orgânica</span></button>
-                    <button class="tutor-chip" onclick="sendTutorSuggestion('Qual foi o impacto da Era Vargas no Brasil? O que cai no ENEM sobre esse período?')"><span class="tutor-chip-icon">🏛️</span><span>Era Vargas</span></button>
-                    <button class="tutor-chip" onclick="sendTutorSuggestion('Como resolver questões de geometria plana no ENEM? Explique as principais fórmulas.')"><span class="tutor-chip-icon">📏</span><span>Geometria Plana</span></button>
+                <!-- Faixa de disciplinas -->
+                <div class="tutor-disc-strip" id="tutor-suggestions">
+                    <button class="tutor-disc-pill" onclick="sendTutorSuggestion('Quais os temas de Matemática que mais caem no ENEM e como resolver as questões?')">Matemática</button>
+                    <button class="tutor-disc-pill" onclick="sendTutorSuggestion('Quais os temas de Física mais cobrados no ENEM? Me dê os principais conceitos.')">Física</button>
+                    <button class="tutor-disc-pill" onclick="sendTutorSuggestion('Quais os temas de Química mais importantes no ENEM? Me dê os principais conceitos.')">Química</button>
+                    <button class="tutor-disc-pill" onclick="sendTutorSuggestion('Quais os temas de Biologia mais cobrados no ENEM? Me dê os principais conceitos.')">Biologia</button>
+                    <button class="tutor-disc-pill" onclick="sendTutorSuggestion('Quais os temas de História e Geografia mais cobrados no ENEM?')">Humanas</button>
+                    <button class="tutor-disc-pill" onclick="sendTutorSuggestion('Quais os temas de Linguagens, Literatura e Gramática mais cobrados no ENEM?')">Linguagens</button>
+                    <button class="tutor-disc-pill tutor-disc-pill--highlight" onclick="sendTutorSuggestion('Como fazer uma redação nota 1000 no ENEM? Explique cada competência com exemplos.')">Redação ✦</button>
                 </div>
                 <div class="tutor-messages-scroll" id="tutor-messages"></div>
                 <div class="tutor-input-row">
-                    <input class="tutor-input" id="tutor-input" type="text"
-                        placeholder="Ex: Explique a Revolução Industrial para o ENEM..."
-                        onkeydown="if(event.key==='Enter')sendTutorMessage()" />
+                    <textarea class="tutor-input" id="tutor-input" rows="1"
+                        placeholder="Pergunte qualquer coisa do ENEM…"
+                        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendTutorMessage()}"></textarea>
                     <button class="tutor-send-btn" onclick="sendTutorMessage()">
                         <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
                     </button>

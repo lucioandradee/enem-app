@@ -61,19 +61,13 @@ function _renderTutorMessages() {
 
 function _renderTutorWelcome() {
     const name = (state.user.name || 'Estudante').split(' ')[0];
-    const sug  = _getTutorSuggestions();
     return `
-        <div class="tutor-welcome">
-            <div class="tutor-welcome-msg">
-                <span class="tutor-msg-avatar">IA</span>
-                <div class="tutor-welcome-bubble">
-                    <p>Olá, <strong>${name}</strong>! Sou o <strong>Professor 24h</strong> — aqui pra te ensinar, não só responder.</p>
-                    <p class="tutor-welcome-hint">Pergunte qualquer coisa do ENEM: Matemática, Física, Química, Biologia, Humanas, Linguagens e Redação.</p>
-                </div>
+        <div class="tutor-empty-state">
+            <div class="tutor-empty-icon">
+                <svg viewBox="0 0 24 24" fill="currentColor" width="26" height="26"><path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z"/></svg>
             </div>
-            <div class="tutor-suggestions" id="tutor-suggestions">
-                ${sug.map(s => `<button class="tutor-sug-btn" onclick="sendTutorMessage(${JSON.stringify(s)})">${s}</button>`).join('')}
-            </div>
+            <p class="tutor-empty-greeting">Olá, <strong>${name}</strong></p>
+            <p class="tutor-empty-sub">Qual assunto quer dominar hoje?<br>Escolha uma matéria acima ou escreva sua dúvida.</p>
         </div>
     `;
 }
