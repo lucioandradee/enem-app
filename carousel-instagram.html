@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080">
+<title>ENEM Master – Carrossel Instagram</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+/* ─── APP REAL VARIABLES (de base.css) ─── */
+:root{
+  --bg-primary:#0a1929;--bg-secondary:#0d2137;--bg-card:#112840;
+  --bg-card-hover:#163352;--bg-input:#0d2137;
+  --teal:#00b4a6;--teal-dark:#008f84;--teal-glow:rgba(0,180,166,.18);
+  --gold:#f5c518;--silver:#a8b2c0;--bronze:#cd7f32;
+  --purple:#7c3aed;--green:#22c55e;--red:#ef4444;--orange:#f97316;
+  --text-primary:#e8f4f8;--text-secondary:#7a9ab0;--text-muted:#4a6a80;
+  --border:rgba(0,180,166,.15);--border-subtle:rgba(255,255,255,.06);
+  --radius-sm:10px;--radius-md:16px;--radius-lg:22px;--radius-xl:28px;
+  --shadow:0 4px 24px rgba(0,0,0,.4);--shadow-teal:0 4px 20px rgba(0,180,166,.25);
+}
+
+body{
+  background:#050d17;
+  font-family:'Inter',system-ui,sans-serif;
+  display:flex;flex-direction:column;align-items:center;
+  padding:40px 20px;color:var(--text-primary);min-height:100vh;
+}
+
+h1{font-size:18px;color:var(--teal);margin-bottom:6px;letter-spacing:.5px}
+.hint{color:var(--text-secondary);font-size:12px;margin-bottom:36px;text-align:center;line-height:1.7}
+.hint kbd{background:var(--bg-card);border:1px solid var(--border);color:var(--teal);padding:2px 8px;border-radius:6px;font-size:11px}
+
+/* ─── CAROUSEL ─── */
+.carousel-wrap{width:1080px;height:1080px;overflow:hidden;position:relative;
+  box-shadow:0 0 100px rgba(0,180,166,.1)}
+.slides{display:flex;width:calc(1080px*6);height:1080px;
+  transition:transform .65s cubic-bezier(.77,0,.175,1)}
+.slide{width:1080px;height:1080px;flex-shrink:0;position:relative;overflow:hidden;
+  background:var(--bg-primary)}
+
+/* ─── CONTROLS ─── */
+.controls{display:flex;align-items:center;gap:16px;margin-top:24px}
+.nav-btn{width:48px;height:48px;border-radius:50%;background:var(--bg-card);
+  border:1.5px solid var(--border);color:var(--teal);font-size:20px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:all .2s}
+.nav-btn:hover{background:var(--teal);color:var(--bg-primary)}
+.dots{display:flex;gap:7px}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--text-muted);cursor:pointer;transition:all .25s}
+.dot.on{background:var(--teal);transform:scale(1.35)}
+.counter{font-size:13px;color:var(--text-secondary);min-width:50px;text-align:center}
+
+/* ══════════════════════════════════════════════
+   SHARED COMPONENTS (same as real app)
+══════════════════════════════════════════════ */
+
+/* noise overlay */
+.noise{position:absolute;inset:0;z-index:0;pointer-events:none;opacity:.035;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size:200px}
+
+/* slide number badge */
+.slide-num{position:absolute;top:52px;right:58px;
+  font-size:14px;font-weight:700;color:rgba(0,180,166,.35);letter-spacing:2px;z-index:10}
+
+/* brand footer */
+.brand{position:absolute;bottom:48px;right:58px;z-index:10;
+  font-size:20px;font-weight:800;color:var(--teal);letter-spacing:.5px}
+.brand span{color:var(--text-secondary);font-weight:400}
+
+/* ── phone frame ── */
+.phone{
+  background:var(--bg-secondary);
+  border-radius:44px;
+  border:2px solid rgba(0,180,166,.18);
+  overflow:hidden;
+  box-shadow:0 0 0 1px rgba(0,0,0,.6),0 32px 80px rgba(0,0,0,.6),0 0 60px rgba(0,180,166,.08);
+  position:relative;
+}
+.phone::before{
+  content:'';display:block;
+  width:80px;height:6px;background:rgba(255,255,255,.12);
+  border-radius:3px;margin:14px auto 0;
+}
+
+/* ── pill tag ── */
+.pill{display:inline-flex;align-items:center;gap:6px;
+  font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;
+  padding:7px 16px;border-radius:100px;border:1.5px solid}
+.pill-teal{color:var(--teal);border-color:rgba(0,180,166,.35);background:rgba(0,180,166,.08)}
+.pill-gold{color:var(--gold);border-color:rgba(245,197,24,.35);background:rgba(245,197,24,.08)}
+.pill-purple{color:#a78bfa;border-color:rgba(124,58,237,.35);background:rgba(124,58,237,.08)}
+.pill-green{color:var(--green);border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.08)}
+.pill-orange{color:var(--orange);border-color:rgba(249,115,22,.35);background:rgba(249,115,22,.08)}
+
+/* ── card (same as app) ── */
+.app-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px}
+
+/* shimmer animation */
+@keyframes shimmer{from{transform:translateX(-100%)}to{transform:translateX(200%)} }
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
+@keyframes flicker{from{transform:scale(1) rotate(-4deg)}to{transform:scale(1.18) rotate(4deg)}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}
+@keyframes glow-pulse{from{box-shadow:0 0 30px rgba(0,180,166,.3),0 16px 40px rgba(0,0,0,.4)}to{box-shadow:0 0 70px rgba(0,180,166,.55),0 16px 40px rgba(0,0,0,.4)}}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(10px)}}
+
+/* ══════════════════════════════════════════════
+   SLIDE 1 — HOOK PESSOAL
+══════════════════════════════════════════════ */
+.s1{background:var(--bg-primary)}
+
+.s1-ambient{position:absolute;inset:0;
+  background:radial-gradient(ellipse 70% 50% at 15% 50%,rgba(0,180,166,.13) 0%,transparent 70%),
+             radial-gradient(ellipse 50% 60% at 90% 80%,rgba(124,58,237,.10) 0%,transparent 60%)}
+.s1-grid{position:absolute;inset:0;
+  background-image:repeating-linear-gradient(0deg,rgba(0,180,166,.03) 0px,transparent 1px,transparent 54px,rgba(0,180,166,.03) 55px),
+                   repeating-linear-gradient(90deg,rgba(0,180,166,.03) 0px,transparent 1px,transparent 54px,rgba(0,180,166,.03) 55px)}
+
+.s1-inner{position:relative;z-index:2;height:100%;display:flex;align-items:center;padding:0 80px;gap:60px}
+.s1-left{flex:1;display:flex;flex-direction:column;gap:0}
+
+.s1-eyebrow{font-size:15px;font-weight:700;letter-spacing:4px;text-transform:uppercase;
+  color:var(--teal);margin-bottom:28px;display:flex;align-items:center;gap:10px}
+.s1-eyebrow::after{content:'';display:block;flex:1;height:1px;background:linear-gradient(90deg,rgba(0,180,166,.4),transparent)}
+
+.s1-headline{font-size:80px;font-weight:900;line-height:.93;letter-spacing:-3px;
+  color:var(--text-primary);margin-bottom:32px}
+.s1-headline em{font-style:normal;
+  background:linear-gradient(135deg,var(--teal),#00dfd0);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+
+.s1-body{font-size:22px;color:var(--text-secondary);line-height:1.55;font-weight:500;margin-bottom:44px}
+.s1-body strong{color:var(--text-primary)}
+
+/* mini stats strip */
+.s1-stats{display:flex;flex-direction:column;gap:12px}
+.s1-stat{display:flex;align-items:center;gap:14px;
+  background:var(--bg-card);border:1px solid var(--border);
+  border-radius:var(--radius-md);padding:14px 20px}
+.s1-stat-icon{font-size:22px;width:36px;text-align:center;flex-shrink:0}
+.s1-stat-text{flex:1}
+.s1-stat-label{font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted)}
+.s1-stat-val{font-size:22px;font-weight:900;color:var(--text-primary);line-height:1}
+.s1-stat-delta{font-size:12px;font-weight:700;padding:3px 10px;border-radius:100px;margin-left:auto}
+.delta-green{background:rgba(34,197,94,.12);color:var(--green)}
+.delta-gold{background:rgba(245,197,24,.12);color:var(--gold)}
+.delta-teal{background:rgba(0,180,166,.12);color:var(--teal)}
+
+.s1-right{display:flex;flex-direction:column;align-items:center;gap:16px;flex-shrink:0}
+.s1-swipe{font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;
+  color:var(--teal);display:flex;flex-direction:column;align-items:center;gap:8px}
+.s1-swipe svg{animation:bounce 1.8s ease-in-out infinite}
+
+/* ══════════════════════════════════════════════
+   SLIDE 2 — DASHBOARD REAL
+══════════════════════════════════════════════ */
+.s2-ambient{position:absolute;inset:0;
+  background:linear-gradient(150deg,#0e2540 0%,var(--bg-primary) 55%,#07121f 100%)}
+
+.s2-inner{position:relative;z-index:2;height:100%;display:flex;align-items:center;padding:0 72px;gap:56px}
+
+.s2-left{flex:1;display:flex;flex-direction:column;gap:24px}
+.s2-tag-row{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+.s2-headline{font-size:56px;font-weight:900;line-height:.95;letter-spacing:-2px;color:var(--text-primary)}
+.s2-headline em{font-style:normal;color:var(--teal)}
+.s2-sub{font-size:19px;color:var(--text-secondary);font-weight:500;line-height:1.5;max-width:340px}
+
+.s2-phone{width:320px;flex-shrink:0}.s2-phone .phone{padding:0 0 24px}
+/* screen-home replica */
+.app-dash{padding:16px}
+.app-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.app-avatar-wrap{position:relative;display:inline-flex}
+.app-avatar{width:44px;height:44px;border-radius:50%;
+  background:linear-gradient(135deg,var(--teal),var(--purple));
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;font-weight:900;color:#fff}
+.app-lvl-badge{position:absolute;bottom:-4px;right:-6px;
+  background:var(--gold);color:#000;font-size:9px;font-weight:900;
+  padding:2px 5px;border-radius:100px;white-space:nowrap}
+.app-greeting{font-size:11px;color:var(--text-secondary);font-weight:500}
+.app-goal{font-size:15px;font-weight:800;color:var(--text-primary)}
+.app-bell{width:36px;height:36px;border-radius:50%;background:var(--bg-card);
+  border:1px solid var(--border);display:flex;align-items:center;justify-content:center;
+  font-size:16px;position:relative}
+.app-bell::after{content:'3';position:absolute;top:-3px;right:-3px;
+  background:var(--red);color:#fff;font-size:9px;font-weight:900;
+  width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+
+/* stats row — reais */
+.app-stats-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.app-stat-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px}
+.app-stat-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+.app-stat-lbl{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-secondary)}
+.app-stat-badge{font-size:9px;font-weight:800;padding:2px 7px;border-radius:100px;
+  background:rgba(0,180,166,.12);color:var(--teal)}
+.app-stat-val{font-size:26px;font-weight:900;color:var(--text-primary);line-height:1}
+.app-stat-sub{font-size:10px;color:var(--text-muted);margin-top:2px}
+.app-xp-bar-bg{height:5px;border-radius:5px;background:rgba(0,180,166,.1);margin-top:6px}
+.app-xp-bar{height:100%;border-radius:5px;
+  background:linear-gradient(90deg,var(--teal),#00dfd0);
+  box-shadow:0 0 8px rgba(0,180,166,.4);position:relative;overflow:hidden}
+.app-xp-bar::after{content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.3),transparent);
+  animation:shimmer 2s ease-in-out infinite}
+/* countdown */
+.app-countdown{background:linear-gradient(135deg,rgba(249,115,22,.12),rgba(245,197,24,.08));
+  border:1px solid rgba(249,115,22,.25);border-radius:var(--radius-md);padding:10px 14px;
+  display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.app-cd-label{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--orange)}
+.app-cd-days{font-size:28px;font-weight:900;color:var(--gold);line-height:1}
+.app-cd-unit{font-size:10px;color:var(--text-secondary);font-weight:600}
+.app-cd-motive{font-size:10px;color:var(--text-secondary);font-weight:500;max-width:140px;line-height:1.3}
+
+/* streak mini card */
+.app-streak{background:linear-gradient(135deg,rgba(245,197,24,.12),rgba(249,115,22,.08));
+  border:1px solid rgba(245,197,24,.25);border-radius:var(--radius-md);
+  padding:10px 14px;display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.app-streak-fire{font-size:26px;animation:flicker .9s ease-in-out infinite alternate}
+.app-streak-num{font-size:22px;font-weight:900;color:var(--gold)}
+.app-streak-lbl{font-size:10px;color:var(--text-secondary);font-weight:600}
+.app-streak-mult{font-size:12px;font-weight:800;padding:4px 10px;border-radius:100px;
+  background:rgba(249,115,22,.15);color:var(--orange);border:1px solid rgba(249,115,22,.3);margin-left:auto}
+
+/* today subject card */
+.app-subject{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px;margin-bottom:10px}
+.app-subject-tag{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;
+  color:var(--teal);margin-bottom:4px}
+.app-subject-title{font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:2px}
+.app-subject-sub{font-size:11px;color:var(--text-secondary);margin-bottom:8px}
+.app-prog-row{display:flex;justify-content:space-between;margin-bottom:4px}
+.app-prog-lbl{font-size:10px;color:var(--text-secondary)}
+.app-prog-val{font-size:10px;font-weight:800;color:var(--teal)}
+.app-prog-bg{height:5px;border-radius:5px;background:rgba(0,180,166,.1)}
+.app-prog-fill{height:100%;border-radius:5px;background:linear-gradient(90deg,var(--teal),#00dfd0)}
+
+/* cta button */
+.app-cta{display:flex;align-items:center;gap:10px;
+  background:linear-gradient(135deg,var(--teal),var(--teal-dark));
+  border-radius:var(--radius-md);padding:12px 16px}
+.app-cta-text strong{font-size:14px;font-weight:800;color:#fff;display:block}
+.app-cta-text small{font-size:10px;color:rgba(255,255,255,.75)}
+
+/* ══════════════════════════════════════════════
+   SLIDE 3 — QUESTÃO REAL (Lei Áurea)
+══════════════════════════════════════════════ */
+.s3-ambient{position:absolute;inset:0;
+  background:radial-gradient(ellipse 80% 60% at 80% 20%,rgba(0,180,166,.10) 0%,transparent 60%),
+             var(--bg-primary)}
+
+.s3-inner{position:relative;z-index:2;height:100%;display:flex;align-items:center;padding:0 72px;gap:56px}
+.s3-left{width:330px;flex-shrink:0;display:flex;flex-direction:column;gap:20px}
+.s3-headline{font-size:54px;font-weight:900;line-height:.95;letter-spacing:-2px;color:var(--text-primary)}
+.s3-headline em{font-style:normal;color:var(--teal)}
+.s3-body{font-size:18px;color:var(--text-secondary);line-height:1.55;font-weight:500}
+.s3-proof{display:flex;flex-direction:column;gap:10px}
+.s3-proof-item{display:flex;align-items:center;gap:10px;font-size:15px;color:var(--text-primary);font-weight:600}
+.s3-proof-icon{font-size:18px}
+
+.s3-right{flex:1;display:flex;align-items:center;justify-content:center}
+.s3-phone .phone{padding-bottom:20px}
+
+/* quiz screen replica */
+.quiz-wrap{padding:14px}
+.quiz-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.quiz-back{width:32px;height:32px;border-radius:50%;background:var(--bg-card);
+  border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:14px}
+.quiz-progress-wrap{flex:1;margin:0 10px}
+.quiz-prog-info{display:flex;justify-content:space-between;margin-bottom:4px}
+.quiz-prog-num{font-size:11px;font-weight:800;color:var(--text-primary)}
+.quiz-prog-pct{font-size:11px;font-weight:700;color:var(--teal)}
+.quiz-prog-bg{height:6px;border-radius:6px;background:rgba(0,180,166,.1)}
+.quiz-prog-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--teal),#00dfd0);
+  box-shadow:0 0 8px rgba(0,180,166,.35)}
+.quiz-timer{font-size:16px;font-weight:900;color:var(--orange);
+  background:rgba(249,115,22,.1);border:1px solid rgba(249,115,22,.25);
+  padding:5px 10px;border-radius:var(--radius-sm);display:flex;align-items:center;gap:4px}
+
+.quiz-badges{display:flex;gap:6px;margin-bottom:10px}
+.quiz-badge{font-size:9px;font-weight:700;padding:4px 10px;border-radius:100px;
+  letter-spacing:1px;text-transform:uppercase}
+.qb-disc{background:rgba(0,180,166,.12);color:var(--teal);border:1px solid rgba(0,180,166,.3)}
+.qb-area{background:rgba(245,197,24,.10);color:var(--gold);border:1px solid rgba(245,197,24,.25)}
+.qb-year{background:rgba(124,58,237,.10);color:#a78bfa;border:1px solid rgba(124,58,237,.25)}
+
+.quiz-q-text{font-size:13px;color:var(--text-primary);line-height:1.6;margin-bottom:12px;font-weight:500}
+.quiz-q-context{font-size:11px;color:var(--text-secondary);background:var(--bg-card);
+  border-left:3px solid var(--teal);padding:8px 10px;border-radius:0 var(--radius-sm) var(--radius-sm) 0;
+  margin-bottom:12px;line-height:1.5;font-style:italic}
+
+.quiz-options{display:flex;flex-direction:column;gap:7px}
+.quiz-opt{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:var(--radius-md);
+  border:1.5px solid var(--border-subtle);background:var(--bg-card);
+  font-size:12px;font-weight:500;color:var(--text-secondary);cursor:pointer}
+.quiz-opt-letter{width:24px;height:24px;border-radius:50%;flex-shrink:0;margin-top:0px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:800;background:rgba(255,255,255,.06)}
+.quiz-opt.correct{border-color:rgba(34,197,94,.45);background:rgba(34,197,94,.07);color:var(--green)}
+.quiz-opt.correct .quiz-opt-letter{background:rgba(34,197,94,.2);color:var(--green)}
+.quiz-opt.wrong{border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.06);color:rgba(239,68,68,.7)}
+.quiz-opt.wrong .quiz-opt-letter{background:rgba(239,68,68,.15);color:var(--red)}
+
+/* xp burst */
+.xp-burst{display:inline-flex;align-items:center;gap:6px;
+  background:linear-gradient(135deg,rgba(245,197,24,.15),rgba(249,115,22,.10));
+  border:1px solid rgba(245,197,24,.3);border-radius:100px;
+  font-size:12px;font-weight:800;color:var(--gold);padding:5px 12px;
+  margin-top:8px}
+
+/* ══════════════════════════════════════════════
+   SLIDE 4 — RESULTADO DO QUIZ
+══════════════════════════════════════════════ */
+.s4-ambient{position:absolute;inset:0;
+  background:radial-gradient(ellipse 60% 60% at 75% 40%,rgba(34,197,94,.08) 0%,transparent 60%),
+             radial-gradient(ellipse 50% 50% at 20% 70%,rgba(0,180,166,.08) 0%,transparent 60%),
+             var(--bg-primary)}
+
+.s4-inner{position:relative;z-index:2;height:100%;display:flex;align-items:center;padding:0 72px;gap:56px}
+.s4-left{flex:1;display:flex;flex-direction:column;gap:20px}
+.s4-headline{font-size:60px;font-weight:900;line-height:.93;letter-spacing:-2px;color:var(--text-primary)}
+.s4-headline em{font-style:normal;color:var(--green)}
+.s4-body{font-size:19px;color:var(--text-secondary);line-height:1.55;font-weight:500}
+.s4-tri{background:linear-gradient(135deg,rgba(0,180,166,.12),rgba(124,58,237,.08));
+  border:1px solid rgba(0,180,166,.25);border-radius:var(--radius-lg);padding:20px 24px}
+.s4-tri-label{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+  color:var(--teal);margin-bottom:4px}
+.s4-tri-val{font-size:52px;font-weight:900;color:var(--text-primary);line-height:1;letter-spacing:-2px}
+.s4-tri-desc{font-size:14px;color:var(--text-secondary);margin-top:4px;font-weight:500}
+
+.s4-phone{width:300px;flex-shrink:0}
+/* result screen replica */
+.result-wrap{padding:14px}
+.result-emoji{font-size:44px;display:block;text-align:center;margin-bottom:8px}
+.result-title{font-size:20px;font-weight:900;color:var(--text-primary);text-align:center;margin-bottom:2px}
+.result-sub{font-size:12px;color:var(--text-secondary);text-align:center;margin-bottom:14px}
+.result-score-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.result-score-card{background:var(--bg-card);border:1px solid var(--border);
+  border-radius:var(--radius-md);padding:10px;text-align:center}
+.rsc-val{font-size:26px;font-weight:900;line-height:1}
+.rsc-lbl{font-size:10px;color:var(--text-secondary);font-weight:600;margin-top:2px}
+.result-pct-bar{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px;margin-bottom:10px}
+.rpb-head{display:flex;justify-content:space-between;margin-bottom:6px}
+.rpb-lbl{font-size:10px;font-weight:700;color:var(--text-secondary)}
+.rpb-pct{font-size:14px;font-weight:900;color:var(--green)}
+.rpb-bg{height:8px;border-radius:8px;background:rgba(34,197,94,.1)}
+.rpb-fill{height:100%;border-radius:8px;background:linear-gradient(90deg,var(--green),#4ade80);
+  box-shadow:0 0 10px rgba(34,197,94,.3)}
+.result-areas{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+.result-area{background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);
+  padding:9px 12px;display:flex;align-items:center;gap:8px}
+.ra-icon{font-size:16px}
+.ra-name{font-size:11px;font-weight:700;color:var(--text-primary);flex:1}
+.ra-score{font-size:14px;font-weight:900;color:var(--teal)}
+.ra-of{font-size:10px;color:var(--text-muted)}
+.result-xp-row{display:flex;align-items:center;justify-content:space-between;
+  background:linear-gradient(135deg,rgba(245,197,24,.1),rgba(249,115,22,.08));
+  border:1px solid rgba(245,197,24,.25);border-radius:var(--radius-md);padding:10px 14px}
+.rxp-label{font-size:12px;font-weight:700;color:var(--gold)}
+.rxp-val{font-size:22px;font-weight:900;color:var(--gold)}
+
+/* ══════════════════════════════════════════════
+   SLIDE 5 — TUTOR IA REAL CHAT
+══════════════════════════════════════════════ */
+.s5-ambient{position:absolute;inset:0;
+  background:radial-gradient(ellipse 70% 70% at 50% 0%,rgba(124,58,237,.14) 0%,transparent 60%),
+             var(--bg-primary)}
+
+.s5-inner{position:relative;z-index:2;height:100%;display:flex;align-items:center;padding:0 72px;gap:56px}
+.s5-left{flex:1;display:flex;flex-direction:column;gap:20px}
+.s5-headline{font-size:58px;font-weight:900;line-height:.93;letter-spacing:-2px;color:var(--text-primary)}
+.s5-headline em{font-style:normal;color:#a78bfa}
+.s5-body{font-size:19px;color:var(--text-secondary);line-height:1.55;font-weight:500}
+.s5-features{display:flex;flex-direction:column;gap:10px}
+.s5-feat{display:flex;align-items:flex-start;gap:12px;
+  background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);padding:14px 16px}
+.s5-feat-icon{font-size:22px;flex-shrink:0;margin-top:1px}
+.s5-feat-title{font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:2px}
+.s5-feat-desc{font-size:12px;color:var(--text-secondary);line-height:1.4}
+.s5-feat-tag{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
+  padding:3px 9px;border-radius:100px;margin-top:6px;display:inline-block}
+.ft-premium{background:rgba(245,197,24,.12);color:var(--gold);border:1px solid rgba(245,197,24,.3)}
+.ft-ai{background:rgba(124,58,237,.12);color:#a78bfa;border:1px solid rgba(124,58,237,.3)}
+
+.s5-phone{width:310px;flex-shrink:0}
+/* tutor IA screen replica */
+.tutor-wrap{padding:14px}
+.tutor-header{display:flex;align-items:center;gap:10px;margin-bottom:14px;
+  background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);padding:10px 14px}
+.tutor-ai-icon{width:36px;height:36px;border-radius:50%;
+  background:linear-gradient(135deg,var(--purple),#a78bfa);
+  display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.tutor-ai-name{font-size:14px;font-weight:800;color:var(--text-primary)}
+.tutor-ai-status{font-size:10px;color:var(--green);font-weight:600;display:flex;align-items:center;gap:4px}
+.tutor-ai-status::before{content:'';display:block;width:6px;height:6px;border-radius:50%;background:var(--green)}
+.tutor-premium-tag{margin-left:auto}
+
+.chat-msgs{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+.chat-msg{max-width:88%;font-size:12px;padding:10px 14px;border-radius:18px;line-height:1.55;font-weight:500}
+.chat-bot{background:var(--bg-card);border:1px solid var(--border);color:var(--text-primary);
+  align-self:flex-start;border-radius:4px 18px 18px 18px}
+.chat-user{background:linear-gradient(135deg,rgba(0,180,166,.2),rgba(0,180,166,.12));
+  border:1px solid rgba(0,180,166,.3);color:var(--teal);
+  align-self:flex-end;border-radius:18px 4px 18px 18px}
+.chat-typing{display:flex;align-items:center;gap:5px;
+  background:var(--bg-card);border:1px solid var(--border);
+  padding:10px 16px;border-radius:4px 18px 18px 18px;align-self:flex-start}
+.typing-dot{width:6px;height:6px;border-radius:50%;background:var(--text-secondary)}
+.typing-dot:nth-child(1){animation:pulse .9s ease-in-out infinite}
+.typing-dot:nth-child(2){animation:pulse .9s ease-in-out .2s infinite}
+.typing-dot:nth-child(3){animation:pulse .9s ease-in-out .4s infinite}
+
+.chat-input-bar{display:flex;align-items:center;gap:8px;
+  background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);
+  padding:10px 12px}
+.chat-input-text{font-size:12px;color:var(--text-muted);flex:1}
+.chat-send{width:28px;height:28px;border-radius:50%;
+  background:linear-gradient(135deg,var(--teal),var(--teal-dark));
+  display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+
+/* ══════════════════════════════════════════════
+   SLIDE 6 — CTA FINAL
+══════════════════════════════════════════════ */
+.s6{background:var(--bg-primary)}
+.s6-ambient{position:absolute;inset:0;
+  background:radial-gradient(ellipse 80% 80% at 50% 50%,rgba(0,180,166,.10) 0%,transparent 65%)}
+.s6-ring1{position:absolute;width:820px;height:820px;border-radius:50%;
+  border:1px solid rgba(0,180,166,.06);top:50%;left:50%;transform:translate(-50%,-50%);
+  animation:spin 25s linear infinite}
+.s6-ring2{position:absolute;width:600px;height:600px;border-radius:50%;
+  border:1px solid rgba(0,180,166,.05);top:50%;left:50%;transform:translate(-50%,-50%);
+  animation:spin 18s linear infinite reverse}
+@keyframes spin{from{rotate:0deg}to{rotate:360deg}}
+
+.s6-inner{position:relative;z-index:2;height:100%;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:80px;text-align:center;gap:0}
+
+.s6-warning{display:flex;align-items:center;gap:8px;
+  background:rgba(249,115,22,.1);border:1px solid rgba(249,115,22,.3);
+  border-radius:100px;padding:8px 20px;font-size:13px;font-weight:700;color:var(--orange);
+  margin-bottom:36px;letter-spacing:.5px}
+
+.s6-crown{font-size:72px;margin-bottom:20px;animation:float 3.5s ease-in-out infinite;display:block}
+
+.s6-headline{font-size:90px;font-weight:900;line-height:.9;letter-spacing:-4px;
+  color:var(--text-primary);margin-bottom:16px}
+.s6-headline span{display:block;
+  background:linear-gradient(135deg,var(--teal) 20%,#00dfd0 80%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+
+.s6-tagline{font-size:26px;font-weight:600;color:var(--text-secondary);margin-bottom:36px;line-height:1.4}
+.s6-tagline strong{color:var(--text-primary)}
+
+/* paywall quote */
+.s6-paywall-quote{background:var(--bg-card);border:1px solid var(--border);
+  border-radius:var(--radius-lg);padding:18px 28px;margin-bottom:36px;
+  max-width:640px;font-size:17px;color:var(--text-secondary);
+  line-height:1.55;font-style:italic;font-weight:500}
+.s6-paywall-quote strong{color:var(--text-primary);font-style:normal}
+
+/* price */
+.s6-price-row{display:flex;align-items:baseline;gap:6px;justify-content:center;margin-bottom:28px}
+.s6-price-from{font-size:22px;color:var(--text-secondary);font-weight:500}
+.s6-price-val{font-size:88px;font-weight:900;color:var(--gold);line-height:1;letter-spacing:-3px}
+.s6-price-per{font-size:22px;color:var(--text-secondary);font-weight:500}
+
+.s6-features{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-bottom:44px}
+.s6-feat-item{display:flex;align-items:center;gap:6px;
+  font-size:15px;font-weight:600;color:var(--text-primary)}
+
+.s6-cta-btn{
+  background:linear-gradient(135deg,var(--teal),var(--teal-dark));
+  color:#fff;font-size:26px;font-weight:900;letter-spacing:.5px;
+  padding:26px 80px;border-radius:100px;text-transform:uppercase;
+  box-shadow:0 0 60px rgba(0,180,166,.35),0 20px 40px rgba(0,0,0,.4);
+  animation:glow-pulse 2s ease-in-out infinite alternate;
+  position:relative;overflow:hidden;margin-bottom:20px;cursor:pointer;border:none}
+.s6-cta-btn::after{content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.18),transparent);
+  animation:shimmer 2.5s ease-in-out infinite}
+
+.s6-url{font-size:20px;font-weight:700;color:var(--teal);letter-spacing:1.5px;opacity:.75;margin-bottom:8px}
+.s6-fine{font-size:14px;color:var(--text-muted);font-weight:500}
+</style>
+</head>
+<body>
+
+<h1>ENEM Master — Carrossel Instagram</h1>
+<p class="hint">
+  Navegue com as setas ou teclado ← →. Para exportar:<br>
+  Abra DevTools (<kbd>F12</kbd>), clique com botão direito no elemento <code>.carousel-wrap</code> → <em>Capture node screenshot</em>.
+</p>
+
+<div class="carousel-wrap">
+<div class="slides" id="slides">
+
+<!-- ═══════════════════════════════════
+     SLIDE 1 — HOOK PESSOAL COM DADOS REAIS
+═══════════════════════════════════ -->
+<div class="slide">
+  <div class="noise"></div>
+  <div class="s1-ambient"></div>
+  <div class="s1-grid"></div>
+
+  <div class="s1-inner">
+    <div class="s1-left">
+      <div class="s1-eyebrow">30 dias de ENEM Master</div>
+
+      <div class="s1-headline">
+        Esses são<br>meus<br><em>números</em><br>reais.
+      </div>
+
+      <div class="s1-body">
+        Não é anúncio, não é fake.<br>
+        <strong>São os dados que o app salva da minha rotina de estudos.</strong>
+      </div>
+
+      <div class="s1-stats">
+        <div class="s1-stat">
+          <div class="s1-stat-icon">🔥</div>
+          <div class="s1-stat-text">
+            <div class="s1-stat-label">Ofensiva ativa</div>
+            <div class="s1-stat-val">23 dias</div>
+          </div>
+          <div class="s1-stat-delta delta-gold">×1.5 XP</div>
+        </div>
+        <div class="s1-stat">
+          <div class="s1-stat-icon">✅</div>
+          <div class="s1-stat-text">
+            <div class="s1-stat-label">Questões respondidas</div>
+            <div class="s1-stat-val">847 questões</div>
+          </div>
+          <div class="s1-stat-delta delta-green">+12 hoje</div>
+        </div>
+        <div class="s1-stat">
+          <div class="s1-stat-icon">⭐</div>
+          <div class="s1-stat-text">
+            <div class="s1-stat-label">XP acumulado · Nível 7</div>
+            <div class="s1-stat-val">3.720 XP</div>
+          </div>
+          <div class="s1-stat-delta delta-teal">Ouro 🥇</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="s1-right">
+      <div class="s1-swipe">
+        <span>Arrasta pra ver</span>
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+          <path d="M12 5v14M5 12l7 7 7-7" stroke="#00b4a6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide-num">01 / 06</div>
+  <div class="brand">ENEM<span>master</span></div>
+</div>
+
+<!-- ═══════════════════════════════════
+     SLIDE 2 — DASHBOARD REAL DO APP
+═══════════════════════════════════ -->
+<div class="slide">
+  <div class="noise"></div>
+  <div class="s2-ambient"></div>
+
+  <div class="s2-inner">
+    <div class="s2-left">
+      <div class="s2-tag-row">
+        <div class="pill pill-teal">Painel real</div>
+      </div>
+      <div class="s2-headline">
+        Cada dia<br><em>conta</em>.<br>O app<br>prova isso.
+      </div>
+      <div class="s2-sub">
+        Streak de dias, XP com multiplicador,
+        countdown pro ENEM e a matéria do dia —
+        tudo no seu painel.
+      </div>
+    </div>
+
+    <!-- Phone: replica do screen-home real -->
+    <div class="s2-phone">
+      <div class="phone">
+        <div class="app-dash">
+          <!-- Header igual ao app -->
+          <div class="app-header">
+            <div style="display:flex;align-items:center;gap:10px">
+              <div class="app-avatar-wrap">
+                <div class="app-avatar">A</div>
+                <div class="app-lvl-badge">NV 7</div>
+              </div>
+              <div>
+                <div class="app-greeting">Bom dia, <strong style="color:var(--text-primary)">Ana</strong> 👋</div>
+                <div class="app-goal">Rumo à Federal</div>
+              </div>
+            </div>
+            <div class="app-bell">🔔</div>
+          </div>
+
+          <!-- Stats row (igual ao stat-card-xp e stat-card-rank) -->
+          <div class="app-stats-row">
+            <div class="app-stat-card">
+              <div class="app-stat-head">
+                <div class="app-stat-lbl">⭐ Total XP</div>
+                <div class="app-stat-badge">NV 7</div>
+              </div>
+              <div class="app-stat-val">3.720</div>
+              <div class="app-stat-sub">280 p/ nível 8</div>
+              <div class="app-xp-bar-bg">
+                <div class="app-xp-bar" style="width:74%"></div>
+              </div>
+            </div>
+            <div class="app-stat-card">
+              <div class="app-stat-head">
+                <div class="app-stat-lbl">• Ranking</div>
+                <div class="app-stat-badge" style="background:rgba(245,197,24,.12);color:var(--gold)">🥇 Ouro</div>
+              </div>
+              <div class="app-stat-val" style="color:var(--teal)">14°</div>
+              <div class="app-stat-sub">posição global</div>
+            </div>
+          </div>
+
+          <!-- ENEM countdown -->
+          <div class="app-countdown">
+            <div>
+              <div class="app-cd-label">ENEM 2026</div>
+              <div class="app-cd-days">184 <span class="app-cd-unit">dias</span></div>
+            </div>
+            <div class="app-cd-motive">Cada questão hoje = pontos a mais em novembro.</div>
+          </div>
+
+          <!-- Streak mini card com multiplicador real -->
+          <div class="app-streak">
+            <div class="app-streak-fire">🔥</div>
+            <div>
+              <div class="app-streak-num">23 dias</div>
+              <div class="app-streak-lbl">Ofensiva ativa</div>
+            </div>
+            <div class="app-streak-mult">⚡ ×1.5 XP em cada quiz</div>
+          </div>
+
+          <!-- Today subject card (igual ao subject-card real) -->
+          <div class="app-subject">
+            <div class="app-subject-tag">Ciências da Natureza</div>
+            <div class="app-subject-title">Biologia: Genética</div>
+            <div class="app-subject-sub">Leis de Mendel e Heredogramas</div>
+            <div class="app-prog-row">
+              <div class="app-prog-lbl">Progresso do dia</div>
+              <div class="app-prog-val">4/10 Questões</div>
+            </div>
+            <div class="app-prog-bg">
+              <div class="app-prog-fill" style="width:40%"></div>
+            </div>
+          </div>
+
+          <!-- CTA button -->
+          <div class="app-cta">
+            <span style="font-size:20px">▶️</span>
+            <div class="app-cta-text">
+              <strong>Praticar Agora</strong>
+              <small>Suas questões do dia estão esperando</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide-num">02 / 06</div>
+  <div class="brand">ENEM<span>master</span></div>
+</div>
+
+<!-- ═══════════════════════════════════
+     SLIDE 3 — QUESTÃO REAL DO ENEM
+═══════════════════════════════════ -->
+<div class="slide">
+  <div class="noise"></div>
+  <div class="s3-ambient"></div>
+
+  <div class="s3-inner">
+    <div class="s3-left">
+      <div>
+        <div class="pill pill-teal" style="margin-bottom:20px">Questão real</div>
+        <div class="s3-headline">
+          3.000+<br>questões<br><em>reais</em><br>do ENEM.
+        </div>
+      </div>
+
+      <div class="s3-body">
+        Não é banco genérico.<br>
+        São as questões que já caíram — com explicação completa de cada alternativa.
+      </div>
+
+      <div class="s3-proof">
+        <div class="s3-proof-item">
+          <span class="s3-proof-icon">📚</span>
+          Ciências Humanas, Natureza, Linguagens e Matemática
+        </div>
+        <div class="s3-proof-item">
+          <span class="s3-proof-icon">⏱️</span>
+          Modo ENEM: 90 questões · 5h30min cronometrado
+        </div>
+        <div class="s3-proof-item">
+          <span class="s3-proof-icon">💡</span>
+          Dica + explicação detalhada após cada resposta
+        </div>
+      </div>
+    </div>
+
+    <!-- Phone: replica do quiz screen com questão real -->
+    <div class="s3-right">
+      <div class="s3-phone" style="width:330px">
+        <div class="phone" style="padding-bottom:18px">
+          <div class="quiz-wrap">
+            <!-- header do quiz -->
+            <div class="quiz-header">
+              <div class="quiz-back">←</div>
+              <div class="quiz-progress-wrap">
+                <div class="quiz-prog-info">
+                  <span class="quiz-prog-num">Questão 3 de 10</span>
+                  <span class="quiz-prog-pct">30%</span>
+                </div>
+                <div class="quiz-prog-bg">
+                  <div class="quiz-prog-fill" style="width:30%"></div>
+                </div>
+              </div>
+              <div class="quiz-timer">⏱ 03:41</div>
+            </div>
+
+            <!-- badges da questão -->
+            <div class="quiz-badges">
+              <div class="quiz-badge qb-disc">Ciências Humanas</div>
+              <div class="quiz-badge qb-area">História</div>
+              <div class="quiz-badge qb-year">ENEM</div>
+            </div>
+
+            <!-- texto real da questão -->
+            <div class="quiz-q-text">
+              A Lei Áurea, assinada em 13 de maio de 1888, aboliu formalmente a escravidão no Brasil. Historiadores, no entanto, argumentam que a abolição não promoveu a integração social dos libertos. Qual medida teria sido mais eficaz para garantir a inclusão real dos ex-escravizados?
+            </div>
+
+            <!-- alternativas com resposta marcada -->
+            <div class="quiz-options">
+              <div class="quiz-opt">
+                <div class="quiz-opt-letter">A</div>
+                <span>Manter o sistema de parceria nas fazendas para garantir emprego.</span>
+              </div>
+              <div class="quiz-opt correct">
+                <div class="quiz-opt-letter">B</div>
+                <span>✓ Distribuir terras e oferecer acesso à educação e ao trabalho digno.</span>
+              </div>
+              <div class="quiz-opt wrong">
+                <div class="quiz-opt-letter">C</div>
+                <span>Criar reservas exclusivas nas bordas das grandes cidades.</span>
+              </div>
+              <div class="quiz-opt">
+                <div class="quiz-opt-letter">D</div>
+                <span>Estabelecer indenização paga aos ex-proprietários de escravos.</span>
+              </div>
+            </div>
+
+            <div class="xp-burst">⚡ +10 XP · Combo ×3 +2 XP bônus</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide-num">03 / 06</div>
+  <div class="brand">ENEM<span>master</span></div>
+</div>
+
+<!-- ═══════════════════════════════════
+     SLIDE 4 — RESULTADO REAL COM TRI
+═══════════════════════════════════ -->
+<div class="slide">
+  <div class="noise"></div>
+  <div class="s4-ambient"></div>
+
+  <div class="s4-inner">
+    <div class="s4-left">
+      <div>
+        <div class="pill pill-green" style="margin-bottom:16px">Resultado do simulado</div>
+        <div class="s4-headline">
+          Saiba<br>sua nota<br><em>TRI</em> antes<br>do ENEM.
+        </div>
+      </div>
+
+      <div class="s4-body">
+        O app estima sua nota pelo método TRI — o mesmo que o MEC usa — depois de cada simulado.
+      </div>
+
+      <div class="s4-tri">
+        <div class="s4-tri-label">TRI Estimado — Ciências Humanas</div>
+        <div class="s4-tri-val">750 pts</div>
+        <div class="s4-tri-desc">Acima da média · aprovação em muitos cursos federais.</div>
+      </div>
+    </div>
+
+    <!-- Phone: replica do screen-result -->
+    <div class="s4-phone">
+      <div class="phone" style="padding-bottom:18px">
+        <div class="result-wrap">
+          <span class="result-emoji">🎉</span>
+          <div class="result-title">Excelente Resultado!</div>
+          <div class="result-sub">Você acertou 8 de 10 questões</div>
+
+          <div class="result-score-row">
+            <div class="result-score-card">
+              <div class="rsc-val" style="color:var(--green)">8</div>
+              <div class="rsc-lbl">Acertos</div>
+            </div>
+            <div class="result-score-card">
+              <div class="rsc-val" style="color:var(--red)">2</div>
+              <div class="rsc-lbl">Erros</div>
+            </div>
+            <div class="result-score-card">
+              <div class="rsc-val" style="color:var(--gold)">+92</div>
+              <div class="rsc-lbl">XP ganhos</div>
+            </div>
+          </div>
+
+          <div class="result-pct-bar">
+            <div class="rpb-head">
+              <div class="rpb-lbl">Taxa de acerto</div>
+              <div class="rpb-pct">80%</div>
+            </div>
+            <div class="rpb-bg">
+              <div class="rpb-fill" style="width:80%"></div>
+            </div>
+          </div>
+
+          <div class="result-areas">
+            <div class="result-area">
+              <div class="ra-icon">🌍</div>
+              <div class="ra-name">Ciências Humanas</div>
+              <div class="ra-score">4<span class="ra-of">/5</span></div>
+            </div>
+            <div class="result-area">
+              <div class="ra-icon">📖</div>
+              <div class="ra-name">Linguagens</div>
+              <div class="ra-score">3<span class="ra-of">/3</span></div>
+            </div>
+            <div class="result-area">
+              <div class="ra-icon">🔢</div>
+              <div class="ra-name">Matemática</div>
+              <div class="ra-score">1<span class="ra-of">/2</span></div>
+            </div>
+          </div>
+
+          <div class="result-xp-row">
+            <div class="rxp-label">⚡ XP ganhos nessa sessão</div>
+            <div class="rxp-val">+92 XP</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide-num">04 / 06</div>
+  <div class="brand">ENEM<span>master</span></div>
+</div>
+
+<!-- ═══════════════════════════════════
+     SLIDE 5 — PROFESSOR 24H REAL CHAT
+═══════════════════════════════════ -->
+<div class="slide">
+  <div class="noise"></div>
+  <div class="s5-ambient"></div>
+
+  <div class="s5-inner">
+    <div class="s5-left">
+      <div>
+        <div class="pill pill-purple" style="margin-bottom:16px">Professor 24h — IA</div>
+        <div class="s5-headline">
+          Dúvida<br>às 2h da<br><em>manhã</em>?<br>Ele tá on.
+        </div>
+      </div>
+
+      <div class="s5-body">
+        Tutor IA treinado no conteúdo do ENEM. Explica, dá exemplos, resolve passo a passo — sem julgamento, na hora que você precisar.
+      </div>
+
+      <div class="s5-features">
+        <div class="s5-feat">
+          <div class="s5-feat-icon">📝</div>
+          <div>
+            <div class="s5-feat-title">Redação com IA</div>
+            <div class="s5-feat-desc">Correção pelas 5 competências do MEC. Nota + feedback em segundos. Vale até 200 pts no ENEM.</div>
+            <span class="s5-feat-tag ft-premium">👑 Premium</span>
+          </div>
+        </div>
+        <div class="s5-feat">
+          <div class="s5-feat-icon">🤖</div>
+          <div>
+            <div class="s5-feat-title">Tutor IA</div>
+            <div class="s5-feat-desc">Tire dúvidas sobre qualquer assunto do ENEM a qualquer hora.</div>
+            <span class="s5-feat-tag ft-ai">✦ Groq · Llama 3.3</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Phone: replica do tutor-ia screen -->
+    <div class="s5-phone">
+      <div class="phone" style="padding-bottom:18px">
+        <div class="tutor-wrap">
+          <!-- header do tutor (igual ao real) -->
+          <div class="tutor-header">
+            <div class="tutor-ai-icon">🤖</div>
+            <div>
+              <div class="tutor-ai-name">Professor 24h</div>
+              <div class="tutor-ai-status">Online agora</div>
+            </div>
+            <span class="s5-feat-tag ft-premium tutor-premium-tag">👑</span>
+          </div>
+
+          <!-- conversa real -->
+          <div class="chat-msgs">
+            <div class="chat-msg chat-bot">
+              Olá! Sou seu professor particular de ENEM. Sobre o que você quer estudar agora? 📚
+            </div>
+
+            <div class="chat-msg chat-user">
+              Não tô entendendo Bhaskara, me ajuda?
+            </div>
+
+            <div class="chat-msg chat-bot">
+              Claro! Vamos do início. 🧠<br><br>
+              A fórmula de Bhaskara resolve <strong style="color:var(--teal)">ax² + bx + c = 0</strong>:<br><br>
+              <strong style="color:var(--gold)">Δ = b² − 4ac</strong><br><br>
+              Se Δ ≥ 0, existe solução real. Vamos resolver um exemplo juntos?
+            </div>
+
+            <div class="chat-msg chat-user">
+              Sim! x² − 5x + 6 = 0
+            </div>
+
+            <div class="chat-typing">
+              <div class="typing-dot"></div>
+              <div class="typing-dot"></div>
+              <div class="typing-dot"></div>
+            </div>
+          </div>
+
+          <div class="chat-input-bar">
+            <div class="chat-input-text">Pergunte qualquer coisa...</div>
+            <div class="chat-send">↑</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide-num">05 / 06</div>
+  <div class="brand">ENEM<span>master</span></div>
+</div>
+
+<!-- ═══════════════════════════════════
+     SLIDE 6 — CTA COM COPY REAL DO APP
+═══════════════════════════════════ -->
+<div class="slide s6">
+  <div class="noise"></div>
+  <div class="s6-ambient"></div>
+  <div class="s6-ring1"></div>
+  <div class="s6-ring2"></div>
+
+  <div class="s6-inner">
+    <div class="s6-warning">
+      ⚠️ ENEM 2026 · 03 de novembro · 184 dias restantes
+    </div>
+
+    <span class="s6-crown">👑</span>
+
+    <div class="s6-headline">
+      Passe no<br><span>ENEM.</span>
+    </div>
+
+    <div class="s6-tagline">
+      Seus concorrentes <strong>não estão esperando</strong>.<br>
+      Você vai ficar pra trás por R$0,65/dia?
+    </div>
+
+    <!-- copy exata do paywall do app -->
+    <div class="s6-paywall-quote">
+      "Seus concorrentes continuam estudando. 🔥 Por <strong>R$0,65/dia</strong>, estude sem limites."
+    </div>
+
+    <div class="s6-price-row">
+      <span class="s6-price-from">Por apenas</span>
+      <span class="s6-price-val">R$0,65</span>
+      <span class="s6-price-per">/dia</span>
+    </div>
+
+    <div class="s6-features">
+      <div class="s6-feat-item">✅ 3.000+ questões ENEM</div>
+      <div class="s6-feat-item">✅ Tutor IA 24h</div>
+      <div class="s6-feat-item">✅ Redação com IA</div>
+      <div class="s6-feat-item">✅ Simulado completo 90q · 5h30</div>
+      <div class="s6-feat-item">✅ Nota TRI estimada</div>
+      <div class="s6-feat-item">✅ Ranking nacional</div>
+    </div>
+
+    <button class="s6-cta-btn">🚀 Começar Grátis Agora</button>
+    <div class="s6-url">enemmaster.com.br</div>
+    <div class="s6-fine">Sem cartão de crédito · Cancele quando quiser</div>
+  </div>
+
+  <div class="slide-num">06 / 06</div>
+  <div class="brand">ENEM<span>master</span></div>
+</div>
+
+</div><!-- /slides -->
+</div><!-- /carousel-wrap -->
+
+<div class="controls">
+  <button class="nav-btn" id="prev">←</button>
+  <div class="dots" id="dots">
+    <div class="dot on" data-i="0"></div>
+    <div class="dot" data-i="1"></div>
+    <div class="dot" data-i="2"></div>
+    <div class="dot" data-i="3"></div>
+    <div class="dot" data-i="4"></div>
+    <div class="dot" data-i="5"></div>
+  </div>
+  <button class="nav-btn" id="next">→</button>
+  <span class="counter" id="counter">1 / 6</span>
+</div>
+
+<script>
+const track = document.getElementById('slides');
+const dots  = document.querySelectorAll('.dot');
+const ctr   = document.getElementById('counter');
+let cur = 0;
+
+function go(i){
+  cur = Math.max(0, Math.min(5, i));
+  track.style.transform = `translateX(-${cur * 1080}px)`;
+  dots.forEach((d,j) => d.classList.toggle('on', j === cur));
+  ctr.textContent = `${cur+1} / 6`;
+}
+
+document.getElementById('prev').onclick = () => go(cur-1);
+document.getElementById('next').onclick = () => go(cur+1);
+dots.forEach(d => d.addEventListener('click', () => go(+d.dataset.i)));
+document.addEventListener('keydown', e => {
+  if(e.key === 'ArrowLeft') go(cur-1);
+  if(e.key === 'ArrowRight') go(cur+1);
+});
+</script>
+</body>
+</html>
