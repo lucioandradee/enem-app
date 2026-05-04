@@ -1909,6 +1909,48 @@ function init() {
         return;
     }
 
+    // ── Acesso direto ao login (?ref=login): mostrar imediatamente, verificar sessão em background ──
+    if (_forceLogin) {
+        document.getElementById('screen-login').classList.add('active');
+        if (nav) nav.style.display = 'none';
+        state.currentScreen = 'login';
+        const emailEl = document.getElementById('login-email');
+        if (emailEl && state.user.email && state.user.email !== 'alex@estudo.com') {
+            emailEl.value = state.user.email;
+        }
+        // Verificar sessão em background: se já logado, redireciona para home
+        if (typeof getCurrentUser !== 'undefined') {
+            getCurrentUser().then(user => {
+                if (!user) return;
+                const meta = user.user_metadata || {};
+                const oauthName = meta.full_name || meta.name || meta.display_name || '';
+                if (oauthName && oauthName.trim()) state.user.name = oauthName.trim();
+                state.user.id    = user.id;
+                state.user.email = user.email;
+                state.onboardingDone = true;
+                return Promise.all([
+                    loadUserData(user.id),
+                    typeof loadUserPlan !== 'undefined' ? loadUserPlan(user.id) : Promise.resolve(),
+                ]).catch(() => {}).then(() => {
+                    document.querySelectorAll('.screen.active').forEach(s => s.classList.remove('active'));
+                    document.getElementById('screen-home').classList.add('active');
+                    state.currentScreen = 'home';
+                    nav.style.display = 'flex';
+                    updateNavActive('home');
+                    renderDashboard();
+                    saveState();
+                    if (typeof startSyncLoop !== 'undefined') startSyncLoop(user.id);
+                    _resumePendingPayment();
+                    _checkReengagementPush();
+                    _checkStreakRecovery();
+                    _checkWrappedNotification();
+                    _checkENEMCountdownNotifications();
+                });
+            }).catch(() => {});
+        }
+        return;
+    }
+
     // ── Verificar sessão Supabase SEMPRE antes de decidir qual tela mostrar ──
     if (typeof getCurrentUser !== 'undefined') {
         getCurrentUser().then(user => {
