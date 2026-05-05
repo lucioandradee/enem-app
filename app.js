@@ -182,6 +182,7 @@ function _daysToENEM() {
 }
 
 let _woTimerInterval = null;
+let _woScheduled = false;
 
 /** Mostra o modal de oferta pós-onboarding (somente para não-premium) */
 function showWelcomeOffer() {
@@ -1797,6 +1798,10 @@ function _showFirstQuizPrompt() {
 function closeFirstQuizSheet() {
     const sheet = document.getElementById('first-quiz-sheet');
     if (sheet) sheet.classList.remove('active');
+    if (!_woScheduled && !isPremium()) {
+        _woScheduled = true;
+        setTimeout(showWelcomeOffer, 1500);
+    }
 }
 
 function acceptFirstQuiz() {
@@ -1807,7 +1812,6 @@ function acceptFirstQuiz() {
         quizSetup.count = 5;
     }
     navigate('quiz-setup');
-    setTimeout(showWelcomeOffer, 2500);
 }
 
 // =====================================================
