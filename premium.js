@@ -137,12 +137,38 @@ function _renderCheckoutPromo() {
     const banner = document.getElementById('checkout-promo-banner');
     const header = document.querySelector('#screen-checkout .inner-title');
 
-    const expiresAt  = parseInt(localStorage.getItem('enem_wo_expires') || '0', 10);
-    const expired    = expiresAt > 0 && Date.now() > expiresAt;
-    const isPromo    = _checkoutFromWelcome && !expired;
+    // Garante que o timer de 24h está iniciado — mesmo que o usuário chegue direto aqui
+    let expiresAt = parseInt(localStorage.getItem('enem_wo_expires') || '0', 10);
+    if (_checkoutFromWelcome && (!expiresAt || expiresAt < Date.now())) {
+        expiresAt = Date.now() + 24 * 60 * 60 * 1000;
+        localStorage.setItem('enem_wo_expires', String(expiresAt));
+    }
+
+    const expired = expiresAt > 0 && Date.now() > expiresAt;
+    const isPromo = _checkoutFromWelcome && !expired;
 
     if (banner) banner.style.display = isPromo ? '' : 'none';
     if (header) header.textContent   = isPromo ? 'Oferta de Boas-Vindas 🎁' : 'Finalizar Assinatura';
+
+    if (isPromo) {
+        // Sobrescrever summary para mostrar o mesmo preço que o modal exibiu
+        const cpsTitle    = document.getElementById('cps-title');
+        const cpsSub      = document.getElementById('cps-sub');
+        const cpsPrice    = document.getElementById('cps-price');
+        const cpsPriceSub = document.getElementById('cps-price-sub');
+        if (cpsTitle)    cpsTitle.textContent    = 'Premium Anual 🎁';
+        if (cpsSub)      cpsSub.textContent      = 'cobrado como R$149/ano · cancele quando quiser';
+        if (cpsPrice)    cpsPrice.textContent    = 'R$ 12,42';
+        if (cpsPriceSub) cpsPriceSub.textContent = '/mês';
+
+        // Sobrescrever preço no PIX para manter consistência com o modal
+        const pixEl = document.getElementById('pix-price-display');
+        if (pixEl) {
+            pixEl.innerHTML =
+                '<span style="display:block;font-size:11px;color:var(--text-secondary);font-weight:500;margin-bottom:2px">cobrado como R$149,00/ano</span>' +
+                'R$&nbsp;12,42<span style="font-size:15px;font-weight:600">/mês</span>';
+        }
+    }
 
     if (_checkoutPromoInterval) { clearInterval(_checkoutPromoInterval); _checkoutPromoInterval = null; }
     if (!isPromo) return;
