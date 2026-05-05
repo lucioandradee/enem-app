@@ -181,8 +181,9 @@ function _daysToENEM() {
     return diff > 0 ? diff : 0;
 }
 
-let _woTimerInterval = null;
-let _woScheduled = false;
+let _woTimerInterval    = null;
+let _woScheduled        = false;
+let _woReminderInterval = null;
 
 /** Mostra o modal de oferta pós-onboarding (somente para não-premium) */
 function showWelcomeOffer() {
@@ -978,6 +979,7 @@ function renderDashboard() {
     _renderWrappedBanner();
     _renderPremiumPreviewBanner();
     _renderEssayDiscoveryCard();
+    _renderWelcomeOfferReminder();
 
     // Posição no ranking global (assíncrono, não bloqueia a UI)
     const rankEl  = document.getElementById('dash-ranking');
@@ -1007,6 +1009,37 @@ function _renderPremiumPreviewBanner() {
     const banner = document.getElementById('premium-preview-banner');
     if (!banner) return;
     banner.style.display = isPremium() ? 'none' : 'block';
+}
+
+function _renderWelcomeOfferReminder() {
+    const reminder     = document.getElementById('welcome-offer-reminder');
+    const premiumBanner = document.getElementById('premium-preview-banner');
+    if (!reminder) return;
+
+    const expiresAt = parseInt(localStorage.getItem('enem_wo_expires') || '0', 10);
+    const isActive  = !isPremium() && expiresAt > 0 && Date.now() < expiresAt;
+
+    reminder.style.display = isActive ? 'flex' : 'none';
+    if (premiumBanner) premiumBanner.style.display = (!isPremium() && !isActive) ? 'block' : 'none';
+
+    if (_woReminderInterval) { clearInterval(_woReminderInterval); _woReminderInterval = null; }
+    if (!isActive) return;
+
+    _woReminderInterval = setInterval(() => {
+        const el = document.getElementById('wo-reminder-timer');
+        if (!el) { clearInterval(_woReminderInterval); return; }
+        const remaining = Math.max(0, expiresAt - Date.now());
+        const h = Math.floor(remaining / 3600000);
+        const m = Math.floor((remaining % 3600000) / 60000);
+        const s = Math.floor((remaining % 60000) / 1000);
+        el.textContent = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+        if (remaining === 0) {
+            clearInterval(_woReminderInterval);
+            const rem = document.getElementById('welcome-offer-reminder');
+            if (rem) rem.style.display = 'none';
+            _renderPremiumPreviewBanner();
+        }
+    }, 1000);
 }
 
 function _renderEssayDiscoveryCard() {
