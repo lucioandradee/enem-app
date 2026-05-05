@@ -10,8 +10,10 @@
 'use strict';
 
 // ── Configuração Cakto ────────────────────────────────────────────────────────
-let _checkoutPlan   = 'mensal';
-let _checkoutMethod = 'pix';
+let _checkoutPlan          = 'mensal';
+let _checkoutMethod        = 'pix';
+let _checkoutFromWelcome   = false;
+let _checkoutPromoInterval = null;
 
 const CAKTO_CHECKOUT_URLS = {
     mensal: 'https://pay.cakto.com.br/o7mc37q_835667',
@@ -99,6 +101,8 @@ function renderCheckout() {
     if (fb) { fb.style.display = 'none'; fb.textContent = ''; }
     const inp = document.getElementById('activation-code-input');
     if (inp) inp.value = '';
+    _renderCheckoutPromo();
+    _checkoutFromWelcome = false;
 }
 
 function selectCheckoutPlan(plan) {
@@ -120,6 +124,43 @@ function selectCheckoutPlan(plan) {
 
     const pixPriceEl = document.getElementById('pix-price-display');
     if (pixPriceEl) pixPriceEl.textContent = prices.label;
+}
+
+function activateWelcomeCheckout() {
+    _checkoutFromWelcome = true;
+    selectCheckoutPlan('anual');
+    navigate('checkout');
+    if (typeof closeWelcomeOffer === 'function') closeWelcomeOffer();
+}
+
+function _renderCheckoutPromo() {
+    const banner = document.getElementById('checkout-promo-banner');
+    const header = document.querySelector('#screen-checkout .inner-title');
+
+    const expiresAt  = parseInt(localStorage.getItem('enem_wo_expires') || '0', 10);
+    const expired    = expiresAt > 0 && Date.now() > expiresAt;
+    const isPromo    = _checkoutFromWelcome && !expired;
+
+    if (banner) banner.style.display = isPromo ? '' : 'none';
+    if (header) header.textContent   = isPromo ? 'Oferta de Boas-Vindas 🎁' : 'Finalizar Assinatura';
+
+    if (_checkoutPromoInterval) { clearInterval(_checkoutPromoInterval); _checkoutPromoInterval = null; }
+    if (!isPromo) return;
+
+    _checkoutPromoInterval = setInterval(() => {
+        const el = document.getElementById('checkout-promo-timer');
+        if (!el) { clearInterval(_checkoutPromoInterval); return; }
+        const remaining = Math.max(0, expiresAt - Date.now());
+        const h = Math.floor(remaining / 3600000);
+        const m = Math.floor((remaining % 3600000) / 60000);
+        const s = Math.floor((remaining % 60000) / 1000);
+        el.textContent = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+        if (remaining === 0) {
+            clearInterval(_checkoutPromoInterval);
+            if (banner) banner.style.display = 'none';
+            if (header) header.textContent = 'Finalizar Assinatura';
+        }
+    }, 1000);
 }
 
 function selectPaymentMethod(method) {

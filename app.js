@@ -187,6 +187,8 @@ let _woScheduled = false;
 /** Mostra o modal de oferta pós-onboarding (somente para não-premium) */
 function showWelcomeOffer() {
     if (isPremium()) return;
+    const expiresAt = parseInt(localStorage.getItem('enem_wo_expires') || '0', 10);
+    if (expiresAt > 0 && Date.now() > expiresAt) return;
     const modal = document.getElementById('welcome-offer-modal');
     if (modal) modal.classList.add('active');
     _trackEvent('welcome_offer_shown', {});
@@ -211,7 +213,11 @@ function _startWelcomeOfferTimer() {
         const m = Math.floor((remaining % 3600000) / 60000);
         const s = Math.floor((remaining % 60000) / 1000);
         el.textContent = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-        if (remaining === 0) clearInterval(_woTimerInterval);
+        if (remaining === 0) {
+            clearInterval(_woTimerInterval);
+            const modal = document.getElementById('welcome-offer-modal');
+            if (modal) modal.classList.remove('active');
+        }
     }, 1000);
 }
 

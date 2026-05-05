@@ -2198,8 +2198,8 @@
                     <div class="paywall-feature">• Nota 1000 na redação com análise completa</div>
                     <div class="paywall-feature">• Modo ENEM completo (90 questões)</div>
                 </div>
-                <button class="cta-btn" style="margin-top:14px" onclick="selectCheckoutPlan && selectCheckoutPlan('anual'); navigate('checkout'); closeWelcomeOffer()">
-                    • Quero o desconto de boas-vindas 🎉
+                <button class="cta-btn" style="margin-top:14px" onclick="activateWelcomeCheckout()">
+                    🎉 Quero o desconto de boas-vindas
                 </button>
                 <button class="paywall-dismiss" onclick="closeWelcomeOffer()" style="margin-top:8px">Continuar no plano gratuito</button>
             </div>
@@ -2248,6 +2248,17 @@
                 <div></div>
             </div>
             <div class="screen-scroll" style="padding:16px;display:flex;flex-direction:column;gap:14px;">
+
+                <!-- Banner oferta de boas-vindas (visível apenas quando vindo do welcome offer) -->
+                <div id="checkout-promo-banner" style="display:none;background:linear-gradient(135deg,rgba(245,197,24,.13),rgba(245,197,24,.05));border:1px solid rgba(245,197,24,.32);border-radius:14px;padding:14px 16px;text-align:center">
+                    <div style="font-size:30px;margin-bottom:4px">🎁</div>
+                    <p style="font-size:15px;font-weight:800;color:var(--gold);margin:0 0 2px;letter-spacing:-.2px">Oferta de Boas-Vindas</p>
+                    <p style="font-size:12px;color:var(--text-secondary);margin:0 0 10px">Exclusiva para novos assinantes · plano anual pré-selecionado</p>
+                    <div style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);border-radius:8px;padding:6px 14px;display:inline-flex;flex-direction:column;align-items:center;gap:2px">
+                        <span style="font-size:10px;color:#f87171;font-weight:700;letter-spacing:.6px;text-transform:uppercase">⏰ Oferta expira em</span>
+                        <span id="checkout-promo-timer" style="font-size:20px;font-weight:900;color:#f87171;font-variant-numeric:tabular-nums">23:59:59</span>
+                    </div>
+                </div>
 
                 <!-- Resumo do plano selecionado -->
                 <div class="checkout-plan-summary" id="checkout-plan-summary" aria-label="Plano selecionado">
@@ -2299,9 +2310,6 @@
                         <button class="checkout-tab" id="tab-card" role="tab" aria-selected="false" aria-controls="method-card" onclick="selectPaymentMethod('card')">
                             <span aria-hidden="true">💳</span> Cartão
                         </button>
-                        <button class="checkout-tab" id="tab-code" role="tab" aria-selected="false" aria-controls="method-code" onclick="selectPaymentMethod('code')">
-                            <span aria-hidden="true">🔑</span> Código
-                        </button>
                     </div>
 
                     <!-- PIX -->
@@ -2309,14 +2317,14 @@
                         <div class="pix-card">
                             <p style="text-align:center;font-size:13px;color:var(--text-secondary);margin:0 0 10px;line-height:1.6">
                                 Você será redirecionado para o checkout seguro da <strong>Cakto</strong>.<br>
-                                O QR Code PIX ? gerado automaticamente — é só escanear e pagar.
+                                O QR Code PIX é gerado automaticamente — é só escanear e pagar.
                             </p>
                             <p id="pix-price-display" style="font-size:26px;font-weight:900;color:var(--teal);text-align:center;margin:0 0 14px" aria-live="polite">R$ 19,90</p>
                             <button class="cta-btn" onclick="goToCaktoCheckout('pix')">
                                 • Pagar com PIX →
                             </button>
                             <button class="outline-btn" id="pix-verify-btn" onclick="verifyPayment()" style="margin-top:10px;display:none;">
-                                ? Já paguei ? verificar acesso
+                                ✓ Já paguei — verificar acesso
                             </button>
                             <p class="pix-hint">Acesso liberado automaticamente após confirmação · geralmente em minutos</p>
                         </div>
@@ -2339,30 +2347,9 @@
                                 • Pagar com Cartão →
                             </button>
                             <button class="outline-btn" id="card-verify-btn" onclick="verifyPayment()" style="margin-top:10px;display:none;">
-                                ? Já paguei ? verificar acesso
+                                ✓ Já paguei — verificar acesso
                             </button>
                             <p class="card-info-sub">• Criptografia SSL · Seus dados nunca são armazenados</p>
-                        </div>
-                    </div>
-
-                    <!-- Código de Ativação -->
-                    <div class="checkout-method-content" id="method-code" style="display:none" role="tabpanel">
-                        <div class="code-card">
-                            <p class="code-label">• Código de ativação</p>
-                            <p class="code-hint">Recebeu um código no WhatsApp ou e-mail após o pagamento? Digite aqui para ativar o Premium instantaneamente.</p>
-                            <div class="code-input-row">
-                                <input type="text" id="activation-code-input" class="code-input"
-                                       placeholder="ENEM-XXXX-XXXX"
-                                       maxlength="14"
-                                       aria-label="Código de ativação Premium"
-                                       autocomplete="off"
-                                       oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9-]/g,'')" />
-                            </div>
-                            <button class="cta-btn" id="activate-btn" onclick="activateWithCode()">
-                                • Ativar Premium Agora
-                            </button>
-                            <p id="code-feedback" class="code-feedback" style="display:none" aria-live="polite"></p>
-                            <p class="code-hint" style="margin-top:8px">Não recebeu o código? <button class="link-inline" onclick="navigate('support')">Falar com o suporte</button></p>
                         </div>
                     </div>
                 </div>
