@@ -1,0 +1,12 @@
+{
+  "name": "enem-master-carousel-generator",
+  "version": "1.0.0",
+  "description": "Gera PNGs dos carrosséis virais do ENEM Master via Puppeteer",
+  "private": true,
+  "scripts": {
+    "generate": "node generate-images.js"
+  },
+  "dependencies": {
+    "puppeteer": "^22.0.0"
+  }
+}

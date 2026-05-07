@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Você Está Estudando Errado — ENEM Master</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* ─── Paleta oficial ENEM Master ─────────────── */
+:root {
+  --bg:        #0a1929;
+  --bg2:       #0d2137;
+  --card:      #112840;
+  --teal:      #00b4a6;
+  --teal-dark: #008f84;
+  --tg:        rgba(0,180,166,.18);
+  --gold:      #f5c518;
+  --red:       #ef4444;
+  --green:     #22c55e;
+  --orange:    #f97316;
+  --text:      #e8f4f8;
+  --text2:     #7a9ab0;
+  --border:    rgba(0,180,166,.15);
+}
+
+* { margin:0; padding:0; box-sizing:border-box }
+
+body {
+  background: #020d1a;
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Poppins', sans-serif;
+  overflow: hidden;
+  touch-action: none;
+  user-select: none;
+}
+
+/* ─── Card ───────────────────────────────────── */
+.card {
+  position: relative;
+  width: min(430px, 100vw);
+  aspect-ratio: 4 / 5;
+  background: var(--bg);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  box-shadow: 0 0 60px rgba(0,180,166,.08);
+}
+
+/* ─── Progress ───────────────────────────────── */
+.progress {
+  position: absolute;
+  top: 0; left: 0;
+  height: 3px;
+  background: linear-gradient(to right, var(--red), #ff6b6b);
+  transition: width .4s ease;
+  z-index: 20;
+  box-shadow: 0 0 12px rgba(239,68,68,.5);
+}
+
+/* ─── Header ─────────────────────────────────── */
+.hdr {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 22px;
+  z-index: 10;
+  background: linear-gradient(to bottom, rgba(10,25,41,.95), transparent);
+}
+.brand {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--teal);
+  background: rgba(0,180,166,.1);
+  border: 1px solid rgba(0,180,166,.3);
+  padding: 5px 13px;
+  border-radius: 20px;
+}
+.snum { font-size: 11px; font-weight: 600; color: var(--text2); }
+
+/* ─── Slides ─────────────────────────────────── */
+.slides { position: absolute; inset: 0; }
+
+.slide {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 78px 34px 78px;
+  opacity: 0; pointer-events: none;
+  transition: opacity .35s ease;
+}
+.slide.active { opacity: 1; pointer-events: all; }
+
+/* ─── Animations ─────────────────────────────── */
+@keyframes fadeUp  { from { opacity:0; transform:translateY(34px) } to { opacity:1; transform:translateY(0) } }
+@keyframes scaleIn { from { opacity:0; transform:scale(.62) }        to { opacity:1; transform:scale(1) } }
+
+.anim { opacity: 0; }
+.slide.active .anim        { animation: fadeUp  .6s cubic-bezier(.16,1,.3,1) forwards; }
+.slide.active .anim.scale  { animation: scaleIn .65s cubic-bezier(.16,1,.3,1) forwards; }
+.slide.active .anim:nth-child(1) { animation-delay:.06s }
+.slide.active .anim:nth-child(2) { animation-delay:.16s }
+.slide.active .anim:nth-child(3) { animation-delay:.26s }
+.slide.active .anim:nth-child(4) { animation-delay:.36s }
+.slide.active .anim:nth-child(5) { animation-delay:.46s }
+.slide.active .anim:nth-child(6) { animation-delay:.56s }
+.slide.active .anim:nth-child(7) { animation-delay:.66s }
+
+/* ─── Nav ────────────────────────────────────── */
+.nav {
+  position: absolute; bottom:0; left:0; right:0;
+  display: flex; align-items:center; justify-content:space-between;
+  padding: 14px 18px 20px;
+  background: linear-gradient(to top, rgba(10,25,41,.95), transparent);
+  z-index: 10;
+}
+.nbtn {
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 50%; width:38px; height:38px;
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; color:var(--text); font-size:18px;
+  transition:background .2s, opacity .2s; font-family:inherit;
+}
+.nbtn:hover  { background: rgba(255,255,255,.16); }
+.nbtn:disabled { opacity:.2; cursor:not-allowed; }
+.dots { display:flex; gap:5px; align-items:center; }
+.dot  { width:5px; height:5px; border-radius:3px; background:rgba(255,255,255,.2); transition:all .3s; cursor:pointer; }
+.dot.active { width:20px; background:var(--red); box-shadow:0 0 8px rgba(239,68,68,.5); }
+
+/* ─── Swipe hint ─────────────────────────────── */
+.hint {
+  position:absolute; bottom:64px; left:50%; transform:translateX(-50%);
+  font-size:10px; font-weight:600; letter-spacing:2px; text-transform:uppercase;
+  color:rgba(255,255,255,.18); white-space:nowrap; transition:opacity .5s;
+}
+.hint.gone { opacity:0; pointer-events:none; }
+
+/* ─── Type scale ─────────────────────────────── */
+.eye     { font-size:clamp(9px,2.2vw,11px); font-weight:700; letter-spacing:3px; text-transform:uppercase; color:var(--red); margin-bottom:10px; }
+.mega    { font-size:clamp(56px,14vw,76px); font-weight:900; line-height:.9;  text-align:center; color:var(--text); letter-spacing:-3px; }
+.title   { font-size:clamp(38px,9.5vw,52px); font-weight:900; line-height:1.0; text-align:center; color:var(--text); letter-spacing:-1.5px; }
+.heading { font-size:clamp(26px,6.5vw,36px); font-weight:800; line-height:1.1; text-align:center; color:var(--text); }
+.sub     { font-size:clamp(14px,3.5vw,17px); font-weight:600; line-height:1.6; text-align:center; color:var(--text2); }
+.sep     { width:44px; height:3px; border-radius:2px; margin:14px auto; }
+
+.teal  { color:var(--teal); }
+.gold  { color:var(--gold); }
+.red   { color:var(--red); }
+.green { color:var(--green); }
+.t2    { color:var(--text2); }
+
+/* ─── Slide backgrounds ──────────────────────── */
+#s1 { background: linear-gradient(180deg, rgba(239,68,68,.07) 0%, transparent 55%), var(--bg); }
+#s1::after { content:''; position:absolute; top:0; left:0; right:0; height:1px; background:rgba(239,68,68,.4); }
+#s2 { background: var(--bg); }
+#s3 { background: linear-gradient(180deg, rgba(245,197,24,.06) 0%, transparent 55%), var(--bg); }
+#s4 { background: var(--bg); }
+#s5 { background: linear-gradient(180deg, rgba(0,180,166,.07) 0%, transparent 55%), var(--bg); }
+#s6 { background: var(--bg); }
+#s7 { background: linear-gradient(145deg, #0d2a46 0%, #091e35 100%); }
+#s7::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 50% 20%, rgba(0,180,166,.14) 0%, transparent 65%); }
+
+/* ─── List (Slide 2) ─────────────────────────── */
+.list      { list-style:none; width:100%; }
+.list li   { font-size:clamp(20px,5vw,26px); font-weight:700; color:rgba(232,244,248,.5); text-align:center; padding:9px 0; border-bottom:1px solid rgba(255,255,255,.05); }
+.list li.hit { color:var(--red); font-size:clamp(30px,7.5vw,42px); font-weight:900; border-bottom:none; border-top:2px solid rgba(239,68,68,.2); padding-top:16px; margin-top:4px; }
+
+/* ─── Gold term (Slide 3) ────────────────────── */
+.gold-term { font-size:clamp(32px,8vw,44px); font-weight:900; color:var(--gold); text-align:center; line-height:1.05; letter-spacing:-1px; text-shadow:0 0 28px rgba(245,197,24,.2); }
+
+/* ─── Compare (Slide 4) ──────────────────────── */
+.cmp     { display:flex; gap:10px; width:100%; margin-top:8px; }
+.cmp-col { flex:1; display:flex; flex-direction:column; gap:7px; }
+.chip    { border-radius:10px; padding:10px 8px; font-size:clamp(12px,3vw,15px); font-weight:700; text-align:center; line-height:1.3; }
+.chip.no  { background:rgba(239,68,68,.07); border:1px solid rgba(239,68,68,.2); color:rgba(232,244,248,.3); text-decoration:line-through; text-decoration-color:rgba(239,68,68,.4); }
+.chip.yes { background:rgba(0,180,166,.1); border:1px solid rgba(0,180,166,.3); color:var(--teal); flex:1; display:flex; align-items:center; justify-content:center; font-size:clamp(13px,3.3vw,16px); }
+.vsmid { display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:900; color:rgba(255,255,255,.12); padding:0 4px; }
+
+/* ─── Stat card (Slide 5) ────────────────────── */
+.stat-card { background:var(--card); border:1px solid rgba(0,180,166,.25); border-radius:16px; padding:22px 20px; text-align:center; width:100%; position:relative; overflow:hidden; }
+.stat-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(to right, var(--teal), var(--teal-dark)); }
+.stat-num   { font-size:clamp(64px,16vw,88px); font-weight:900; color:var(--teal); line-height:1; letter-spacing:-4px; text-shadow:0 0 30px var(--tg); }
+.stat-label { font-size:clamp(13px,3.2vw,16px); font-weight:700; color:var(--text); margin-top:4px; }
+.stat-sub   { font-size:clamp(11px,2.7vw,14px); font-weight:600; color:var(--text2); margin-top:6px; line-height:1.5; }
+
+/* ─── Quote card (Slide 6) ───────────────────── */
+.quote-card  { background:var(--card); border:1px solid rgba(245,197,24,.2); border-radius:16px; padding:20px; width:100%; }
+.quote-mark  { font-size:44px; color:rgba(245,197,24,.22); line-height:1; margin-bottom:4px; font-family:Georgia,serif; }
+.quote-text  { font-size:clamp(15px,3.8vw,19px); font-weight:700; color:var(--text); line-height:1.5; }
+.quote-meta  { font-size:clamp(11px,2.8vw,14px); font-weight:600; color:var(--text2); margin-top:10px; }
+.badge       { display:inline-flex; align-items:center; gap:5px; background:rgba(245,197,24,.1); border:1px solid rgba(245,197,24,.25); color:var(--gold); font-size:10px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; padding:4px 10px; border-radius:20px; margin-top:10px; }
+
+/* ─── CTA (Slide 7) ──────────────────────────── */
+.cta-h { font-size:clamp(30px,7.5vw,42px); font-weight:900; text-align:center; color:var(--text); line-height:1.05; letter-spacing:-1px; position:relative; }
+.feat-list { display:flex; flex-direction:column; gap:7px; width:100%; margin-top:14px; position:relative; }
+.feat-item { display:flex; align-items:center; gap:9px; font-size:clamp(12px,3vw,15px); font-weight:600; color:var(--text2); }
+.feat-item::before { content:'✓'; color:var(--teal); font-weight:900; font-size:13px; flex-shrink:0; }
+
+@keyframes ctaGlow {
+  0%,100% { box-shadow: 0 0 28px rgba(0,180,166,.35), 0 4px 16px rgba(0,0,0,.5); }
+  50%      { box-shadow: 0 0 55px rgba(0,180,166,.6),  0 4px 16px rgba(0,0,0,.5); }
+}
+.cta-btn {
+  margin-top:20px; display:block;
+  background: linear-gradient(135deg, var(--teal), var(--teal-dark));
+  color:#fff; font-family:'Poppins',sans-serif;
+  font-size:clamp(15px,3.8vw,19px); font-weight:800;
+  padding:14px 36px; border-radius:50px; border:none;
+  cursor:pointer; text-align:center; text-decoration:none;
+  animation: ctaGlow 2.5s ease-in-out infinite; position:relative; letter-spacing:.3px;
+}
+.cta-url { font-size:clamp(11px,2.5vw,13px); font-weight:600; color:var(--text2); text-align:center; margin-top:10px; position:relative; }
+.cta-url span { color:var(--teal); }
+.guarantee { display:flex; align-items:center; gap:7px; background:rgba(34,197,94,.06); border:1px solid rgba(34,197,94,.2); border-radius:8px; padding:8px 12px; margin-top:8px; position:relative; }
+.guarantee p { font-size:clamp(10px,2.5vw,13px); font-weight:600; color:var(--green); }
+</style>
+</head>
+<body>
+<div class="card" id="card">
+  <div class="progress" id="prog"></div>
+
+  <div class="hdr">
+    <div class="brand">🎓 ENEM Master</div>
+    <div class="snum" id="snum">1 / 7</div>
+  </div>
+
+  <div class="slides">
+
+    <!-- ── SLIDE 1 — Hook ─────────────────────── -->
+    <div class="slide active" id="s1">
+      <p class="eye anim">⚠ atenção</p>
+      <h1 class="title anim">Você não é<br>burro.</h1>
+      <div class="sep anim" style="background:var(--red); box-shadow:0 0 10px rgba(239,68,68,.5)"></div>
+      <h1 class="title anim">Você está<br>estudando</h1>
+      <h1 class="mega red anim" style="margin-top:6px">errado.</h1>
+    </div>
+
+    <!-- ── SLIDE 2 — Padrão ───────────────────── -->
+    <div class="slide" id="s2">
+      <ul class="list">
+        <li class="anim">Você lê o assunto.</li>
+        <li class="anim">Acha que entendeu.</li>
+        <li class="anim">Faz a prova.</li>
+        <li class="anim hit">Erra tudo.</li>
+      </ul>
+      <p class="sub anim" style="margin-top:22px">Isso te soa familiar?</p>
+    </div>
+
+    <!-- ── SLIDE 3 — Ciência ──────────────────── -->
+    <div class="slide" id="s3">
+      <p class="eye anim" style="color:var(--gold)">o nome do seu problema</p>
+      <p class="gold-term anim">Ilusão de<br>Competência.</p>
+      <div class="sep anim" style="background:var(--gold); box-shadow:0 0 10px rgba(245,197,24,.4)"></div>
+      <p class="heading anim t2">Seu cérebro confunde</p>
+      <p class="heading anim">
+        <span style="color:rgba(232,244,248,.28);text-decoration:line-through;text-decoration-color:rgba(239,68,68,.5)">ver</span>
+        &nbsp;com&nbsp;
+        <span class="gold">saber.</span>
+      </p>
+      <p class="sub anim" style="margin-top:12px">Só resolver questões reais ensina de verdade.</p>
+    </div>
+
+    <!-- ── SLIDE 4 — Comparação ───────────────── -->
+    <div class="slide" id="s4">
+      <p class="eye anim">o que realmente funciona</p>
+      <div class="cmp anim">
+        <div class="cmp-col">
+          <div class="chip no">Ler resumo</div>
+          <div class="chip no">Assistir aula</div>
+          <div class="chip no">Marcar PDF</div>
+        </div>
+        <div class="vsmid">≠</div>
+        <div class="cmp-col">
+          <div class="chip yes">Resolver<br>questões<br>reais do INEP</div>
+        </div>
+      </div>
+      <p class="heading anim teal" style="margin-top:20px">Só isso funciona.</p>
+      <p class="sub anim" style="margin-top:6px">O ENEM Master usa questões reais do INEP.</p>
+    </div>
+
+    <!-- ── SLIDE 5 — Evidência ────────────────── -->
+    <div class="slide" id="s5">
+      <p class="eye anim">resultado real · método ativo</p>
+      <div class="stat-card anim scale">
+        <p class="stat-num">+200</p>
+        <p class="stat-label">pontos a mais em média</p>
+        <p class="stat-sub">em 90 dias · 45 min/dia de treino ativo<br>O app força você a <strong style="color:var(--teal)">resolver · errar · aprender</strong></p>
+      </div>
+      <p class="sub anim" style="margin-top:14px">Não é ler. Não é assistir. É resolver e corrigir — com IA.</p>
+    </div>
+
+    <!-- ── SLIDE 6 — Prova social ─────────────── -->
+    <div class="slide" id="s6">
+      <p class="eye anim" style="color:var(--gold)">caso real · 4 meses de uso</p>
+      <div class="quote-card anim">
+        <p class="quote-mark">"</p>
+        <p class="quote-text">Fui de 648 para 824 em Ciências da Natureza. Passei em Medicina na UFPE.</p>
+        <p class="quote-meta">Estudou com o ENEM Master por 4 meses.</p>
+        <span class="badge">✓ Medicina UFPE aprovado</span>
+      </div>
+      <p class="sub anim" style="margin-top:14px">Questões reais do INEP. IA que analisa seus erros.</p>
+    </div>
+
+    <!-- ── SLIDE 7 — CTA ──────────────────────── -->
+    <div class="slide" id="s7">
+      <p class="eye anim" style="color:var(--teal)">pare de estudar no escuro</p>
+      <p class="cta-h anim">Chega de ilusão.<br>O ENEM Master mostra<br>onde você realmente erra.</p>
+      <div class="feat-list anim">
+        <div class="feat-item">Responde questão INEP → IA identifica o conceito falho</div>
+        <div class="feat-item">Relatório de desempenho por assunto após cada treino</div>
+        <div class="feat-item">Ranking por escola — veja onde você está vs os outros</div>
+        <div class="feat-item">Modo ENEM completo: 90q em 5h30min real</div>
+      </div>
+      <a class="cta-btn anim" href="https://enemmaster.com.br">→ Descobre onde você erra agora</a>
+      <p class="cta-url anim"><span>enemmaster.com.br</span> · IA analisa cada erro automaticamente</p>
+    </div>
+
+  </div><!-- /slides -->
+
+  <div class="hint" id="hint">← deslize →</div>
+
+  <div class="nav">
+    <button class="nbtn" id="prev">&#8249;</button>
+    <div class="dots" id="dots"></div>
+    <button class="nbtn" id="next">&#8250;</button>
+  </div>
+</div>
+
+<script>
+(function () {
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const prog = document.getElementById('prog');
+  const snum = document.getElementById('snum');
+  const dotsEl = document.getElementById('dots');
+  const hint = document.getElementById('hint');
+  const prev = document.getElementById('prev');
+  const next = document.getElementById('next');
+  let cur = 0, n = slides.length, hintHidden = false;
+
+  slides.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i === 0 ? ' active' : '');
+    d.addEventListener('click', () => go(i));
+    dotsEl.appendChild(d);
+  });
+
+  function go(to) {
+    if (to < 0 || to >= n || to === cur) return;
+    slides[cur].classList.remove('active');
+    const tgt = slides[to];
+    tgt.querySelectorAll('.anim').forEach(el => {
+      el.style.animationName = 'none';
+      el.style.opacity = '0';
+    });
+    cur = to;
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      tgt.querySelectorAll('.anim').forEach(el => {
+        el.style.animationName = '';
+        el.style.opacity = '';
+      });
+      tgt.classList.add('active');
+      updateUI();
+    }));
+    if (!hintHidden) { hintHidden = true; hint.classList.add('gone'); }
+  }
+
+  function updateUI() {
+    prog.style.width = ((cur + 1) / n * 100) + '%';
+    snum.textContent = (cur + 1) + ' / ' + n;
+    prev.disabled = cur === 0;
+    next.disabled = cur === n - 1;
+    document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === cur));
+  }
+
+  prev.addEventListener('click', () => go(cur - 1));
+  next.addEventListener('click', () => go(cur + 1));
+
+  let tx = 0;
+  const card = document.getElementById('card');
+  card.addEventListener('touchstart', e => { tx = e.changedTouches[0].screenX; }, { passive: true });
+  card.addEventListener('touchend', e => {
+    const dx = tx - e.changedTouches[0].screenX;
+    if (Math.abs(dx) > 45) go(cur + (dx > 0 ? 1 : -1));
+  });
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight') go(cur + 1);
+    if (e.key === 'ArrowLeft') go(cur - 1);
+  });
+
+  updateUI();
+})();
+</script>
+</body>
+</html>

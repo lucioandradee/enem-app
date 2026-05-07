@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Medicina Federal Exige 750+ — ENEM Master</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:        #0a1929;
+  --bg2:       #0d2137;
+  --card:      #112840;
+  --teal:      #00b4a6;
+  --teal-dark: #008f84;
+  --tg:        rgba(0,180,166,.18);
+  --gold:      #f5c518;
+  --gold-dark: #c9a000;
+  --red:       #ef4444;
+  --green:     #22c55e;
+  --orange:    #f97316;
+  --text:      #e8f4f8;
+  --text2:     #7a9ab0;
+  --border:    rgba(0,180,166,.15);
+}
+
+* { margin:0; padding:0; box-sizing:border-box }
+body { background:#020d1a; min-height:100dvh; display:flex; align-items:center; justify-content:center; font-family:'Poppins',sans-serif; overflow:hidden; touch-action:none; user-select:none; }
+.card { position:relative; width:min(430px,100vw); aspect-ratio:4/5; background:var(--bg); overflow:hidden; border:1px solid var(--border); box-shadow:0 0 60px rgba(0,180,166,.08); }
+.progress { position:absolute; top:0; left:0; height:3px; background:linear-gradient(to right,var(--gold),var(--gold-dark)); transition:width .4s ease; z-index:20; box-shadow:0 0 12px rgba(245,197,24,.5); }
+.hdr { position:absolute; top:0; left:0; right:0; display:flex; align-items:center; justify-content:space-between; padding:18px 22px; z-index:10; background:linear-gradient(to bottom,rgba(10,25,41,.95),transparent); }
+.brand { font-size:11px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--teal); background:rgba(0,180,166,.1); border:1px solid rgba(0,180,166,.3); padding:5px 13px; border-radius:20px; }
+.snum { font-size:11px; font-weight:600; color:var(--text2); }
+.slides { position:absolute; inset:0; }
+.slide { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:78px 34px 78px; opacity:0; pointer-events:none; transition:opacity .35s ease; }
+.slide.active { opacity:1; pointer-events:all; }
+@keyframes fadeUp  { from { opacity:0; transform:translateY(34px) } to { opacity:1; transform:translateY(0) } }
+@keyframes scaleIn { from { opacity:0; transform:scale(.62) }        to { opacity:1; transform:scale(1) } }
+@keyframes countUp { from { opacity:0; transform:scale(.5) translateY(20px) } to { opacity:1; transform:scale(1) translateY(0) } }
+.anim { opacity:0; }
+.slide.active .anim        { animation:fadeUp  .6s cubic-bezier(.16,1,.3,1) forwards; }
+.slide.active .anim.scale  { animation:scaleIn .65s cubic-bezier(.16,1,.3,1) forwards; }
+.slide.active .anim.count  { animation:countUp .75s cubic-bezier(.16,1,.3,1) forwards; }
+.slide.active .anim:nth-child(1) { animation-delay:.06s }
+.slide.active .anim:nth-child(2) { animation-delay:.16s }
+.slide.active .anim:nth-child(3) { animation-delay:.26s }
+.slide.active .anim:nth-child(4) { animation-delay:.36s }
+.slide.active .anim:nth-child(5) { animation-delay:.46s }
+.slide.active .anim:nth-child(6) { animation-delay:.56s }
+.slide.active .anim:nth-child(7) { animation-delay:.66s }
+.nav { position:absolute; bottom:0; left:0; right:0; display:flex; align-items:center; justify-content:space-between; padding:14px 18px 20px; background:linear-gradient(to top,rgba(10,25,41,.95),transparent); z-index:10; }
+.nbtn { background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.12); border-radius:50%; width:38px; height:38px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--text); font-size:18px; transition:background .2s,opacity .2s; font-family:inherit; }
+.nbtn:hover { background:rgba(255,255,255,.16); } .nbtn:disabled { opacity:.2; cursor:not-allowed; }
+.dots { display:flex; gap:5px; align-items:center; }
+.dot { width:5px; height:5px; border-radius:3px; background:rgba(255,255,255,.2); transition:all .3s; cursor:pointer; }
+.dot.active { width:20px; background:var(--gold); box-shadow:0 0 8px rgba(245,197,24,.5); }
+.hint { position:absolute; bottom:64px; left:50%; transform:translateX(-50%); font-size:10px; font-weight:600; letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,.18); white-space:nowrap; transition:opacity .5s; }
+.hint.gone { opacity:0; pointer-events:none; }
+
+/* ─── Type ───────────────────────────────────── */
+.eye     { font-size:clamp(9px,2.2vw,11px); font-weight:700; letter-spacing:3px; text-transform:uppercase; color:var(--gold); margin-bottom:10px; }
+.mega    { font-size:clamp(56px,14vw,76px); font-weight:900; line-height:.9;  text-align:center; color:var(--text); letter-spacing:-3px; }
+.title   { font-size:clamp(38px,9.5vw,52px); font-weight:900; line-height:1.0; text-align:center; color:var(--text); letter-spacing:-1.5px; }
+.heading { font-size:clamp(26px,6.5vw,36px); font-weight:800; line-height:1.1; text-align:center; color:var(--text); }
+.sub     { font-size:clamp(14px,3.5vw,17px); font-weight:600; line-height:1.6; text-align:center; color:var(--text2); }
+.sep     { width:44px; height:3px; border-radius:2px; margin:14px auto; }
+.teal { color:var(--teal); } .gold { color:var(--gold); } .red { color:var(--red); } .green { color:var(--green); } .t2 { color:var(--text2); }
+
+/* ─── Slide backgrounds ──────────────────────── */
+#s1 { background:linear-gradient(180deg,rgba(245,197,24,.07) 0%,transparent 55%),var(--bg); }
+#s1::after { content:''; position:absolute; top:0; left:0; right:0; height:1px; background:rgba(245,197,24,.4); }
+#s2 { background:radial-gradient(ellipse at 50% 50%,rgba(245,197,24,.08) 0%,transparent 65%),var(--bg); }
+#s3 { background:var(--bg); }
+#s4 { background:linear-gradient(180deg,rgba(0,180,166,.06) 0%,transparent 55%),var(--bg); }
+#s5 { background:var(--bg); }
+#s6 { background:linear-gradient(180deg,rgba(34,197,94,.06) 0%,transparent 55%),var(--bg); }
+#s7 { background:linear-gradient(145deg,#0d2a46 0%,#091e35 100%); }
+#s7::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 50% 20%,rgba(0,180,166,.14) 0%,transparent 65%); }
+
+/* ─── Big score (S2) ─────────────────────────── */
+.score-wrap { text-align:center; }
+.score-num { font-size:clamp(90px,22vw,120px); font-weight:900; color:var(--gold); line-height:1; letter-spacing:-6px; text-shadow:0 0 40px rgba(245,197,24,.3); }
+.score-tag { font-size:clamp(13px,3.3vw,16px); font-weight:700; letter-spacing:2px; text-transform:uppercase; color:rgba(245,197,24,.6); margin-top:2px; }
+
+/* ─── Timeline (S2) ─────────────────────────── */
+.timeline { display:flex; flex-direction:column; gap:0; width:100%; margin-top:10px; }
+.tl { display:flex; align-items:center; gap:14px; padding:10px 0; border-bottom:1px solid rgba(255,255,255,.05); }
+.tl:last-child { border-bottom:none; }
+.tl-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+.tl-text { font-size:clamp(14px,3.5vw,17px); font-weight:700; }
+
+/* ─── Quote (S3) ─────────────────────────────── */
+.quote-card { background:var(--card); border:1px solid rgba(245,197,24,.2); border-radius:16px; padding:20px; width:100%; }
+.quote-from { font-size:clamp(16px,4vw,20px); font-weight:900; color:var(--gold); line-height:1.05; letter-spacing:-0.5px; margin-bottom:8px; }
+.quote-to { font-size:clamp(26px,6.5vw,36px); font-weight:900; color:var(--teal); line-height:1; letter-spacing:-1px; }
+.quote-arrow { font-size:22px; color:var(--text2); margin:0 6px; }
+.quote-disc { font-size:clamp(13px,3.3vw,16px); font-weight:600; color:var(--text2); margin-top:8px; }
+.badge { display:inline-flex; align-items:center; gap:5px; background:rgba(245,197,24,.1); border:1px solid rgba(245,197,24,.25); color:var(--gold); font-size:10px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; padding:4px 10px; border-radius:20px; margin-top:10px; }
+
+/* ─── Formula (S4) ───────────────────────────── */
+.formula { display:flex; align-items:center; gap:8px; width:100%; margin-top:10px; }
+.f-box { flex:1; background:var(--card); border:1px solid rgba(255,255,255,.06); border-radius:12px; padding:14px 8px; text-align:center; }
+.f-num { font-size:clamp(22px,5.5vw,30px); font-weight:900; color:var(--teal); }
+.f-label { font-size:clamp(9px,2.2vw,11px); font-weight:700; color:var(--text2); text-transform:uppercase; letter-spacing:1px; margin-top:3px; }
+.f-mul { font-size:clamp(20px,5vw,28px); font-weight:900; color:rgba(255,255,255,.18); flex-shrink:0; }
+
+/* ─── Feature list (S5) ──────────────────────── */
+.feat-cards { display:flex; flex-direction:column; gap:8px; width:100%; margin-top:10px; }
+.feat-card { background:var(--card); border:1px solid rgba(0,180,166,.15); border-radius:12px; padding:13px 15px; display:flex; align-items:center; gap:12px; }
+.feat-card-icon { font-size:20px; flex-shrink:0; }
+.feat-card-info .fcl { font-size:clamp(13px,3.3vw,16px); font-weight:700; color:var(--text); }
+.feat-card-info .fcs { font-size:clamp(10px,2.5vw,12px); font-weight:600; color:var(--text2); margin-top:2px; }
+
+/* ─── Guarantee (S6) ─────────────────────────── */
+.price-row { display:flex; gap:10px; width:100%; margin-top:10px; }
+.price-box { flex:1; border-radius:12px; padding:14px 10px; text-align:center; }
+.price-box.cursinho { background:rgba(239,68,68,.07); border:1px solid rgba(239,68,68,.18); }
+.price-box.app { background:rgba(0,180,166,.08); border:1px solid rgba(0,180,166,.3); }
+.price-box .pb-tag { font-size:clamp(9px,2.2vw,11px); font-weight:700; letter-spacing:2px; text-transform:uppercase; margin-bottom:6px; }
+.price-box.cursinho .pb-tag { color:rgba(239,68,68,.6); }
+.price-box.app .pb-tag { color:var(--teal); }
+.price-box .pb-val { font-size:clamp(20px,5vw,28px); font-weight:900; line-height:1; }
+.price-box.cursinho .pb-val { color:rgba(239,68,68,.7); text-decoration:line-through; text-decoration-color:rgba(239,68,68,.4); }
+.price-box.app .pb-val { color:var(--teal); }
+.price-box .pb-sub { font-size:clamp(10px,2.5vw,12px); font-weight:600; color:var(--text2); margin-top:4px; }
+
+/* ─── CTA (S7) ───────────────────────────────── */
+.cta-h { font-size:clamp(30px,7.5vw,42px); font-weight:900; text-align:center; color:var(--text); line-height:1.05; letter-spacing:-1px; position:relative; }
+.feat-list { display:flex; flex-direction:column; gap:7px; width:100%; margin-top:14px; position:relative; }
+.feat-item { display:flex; align-items:center; gap:9px; font-size:clamp(12px,3vw,15px); font-weight:600; color:var(--text2); }
+.feat-item::before { content:'✓'; color:var(--teal); font-weight:900; font-size:13px; flex-shrink:0; }
+@keyframes ctaGlow { 0%,100% { box-shadow:0 0 28px rgba(0,180,166,.35),0 4px 16px rgba(0,0,0,.5) } 50% { box-shadow:0 0 55px rgba(0,180,166,.6),0 4px 16px rgba(0,0,0,.5) } }
+.cta-btn { margin-top:20px; display:block; background:linear-gradient(135deg,var(--teal),var(--teal-dark)); color:#fff; font-family:'Poppins',sans-serif; font-size:clamp(15px,3.8vw,19px); font-weight:800; padding:14px 36px; border-radius:50px; border:none; cursor:pointer; text-align:center; text-decoration:none; animation:ctaGlow 2.5s ease-in-out infinite; position:relative; letter-spacing:.3px; }
+.cta-url { font-size:clamp(11px,2.5vw,13px); font-weight:600; color:var(--text2); text-align:center; margin-top:10px; position:relative; }
+.cta-url span { color:var(--teal); }
+.guarantee { display:flex; align-items:center; gap:7px; background:rgba(34,197,94,.06); border:1px solid rgba(34,197,94,.2); border-radius:8px; padding:8px 12px; margin-top:8px; position:relative; }
+.guarantee p { font-size:clamp(10px,2.5vw,13px); font-weight:600; color:var(--green); }
+</style>
+</head>
+<body>
+<div class="card" id="card">
+  <div class="progress" id="prog"></div>
+  <div class="hdr"><div class="brand">🎓 ENEM Master</div><div class="snum" id="snum">1 / 7</div></div>
+
+  <div class="slides">
+
+    <!-- ── S1 — Hook ─────────────────────────── -->
+    <div class="slide active" id="s1">
+      <div class="anim" style="font-size:52px;text-align:center;margin-bottom:10px">🩺</div>
+      <p class="title anim">Todo mundo<br>quer Medicina.</p>
+      <div class="sep anim" style="background:var(--gold);box-shadow:0 0 10px rgba(245,197,24,.4)"></div>
+      <p class="heading anim t2">Quase ninguém faz</p>
+      <p class="heading gold anim" style="font-size:clamp(28px,7vw,40px);font-weight:900">o que precisa.</p>
+    </div>
+
+    <!-- ── S2 — 750+ pontos ───────────────────── -->
+    <div class="slide" id="s2">
+      <p class="eye anim" style="color:var(--red)">a realidade brutal</p>
+      <p class="heading anim t2">Medicina federal exige</p>
+      <div class="score-wrap anim count">
+        <p class="score-num">750<span style="font-size:clamp(40px,10vw,56px)">+</span></p>
+        <p class="score-tag">pontos no ENEM</p>
+      </div>
+      <p class="sub anim" style="margin-top:10px;color:rgba(239,68,68,.8)">Você sabe quanto está tirando agora?</p>
+    </div>
+
+    <!-- ── S3 — Prova real ────────────────────── -->
+    <div class="slide" id="s3">
+      <p class="eye anim">caso real · 4 meses com o app</p>
+      <div class="quote-card anim">
+        <p class="quote-disc">Ciências da Natureza</p>
+        <div style="display:flex;align-items:center;margin-top:8px">
+          <p class="quote-from">648</p>
+          <span class="quote-arrow">→</span>
+          <p class="quote-to">824</p>
+        </div>
+        <p class="quote-disc" style="margin-top:8px">Aprovado em Medicina na UFPE.</p>
+        <span class="badge">✓ Medicina UFPE</span>
+      </div>
+      <p class="sub anim" style="margin-top:14px">+176 pontos em uma disciplina.<br>Em 4 meses. Estudando 45 min/dia.</p>
+    </div>
+
+    <!-- ── S4 — Fórmula ───────────────────────── -->
+    <div class="slide" id="s4">
+      <p class="eye anim" style="color:var(--teal)">a fórmula que funciona</p>
+      <p class="heading anim t2">Não é talento.</p>
+      <p class="heading anim t2">Não é cursinho de R$800/mês.</p>
+      <div class="sep anim" style="background:var(--teal)"></div>
+      <div class="formula anim">
+        <div class="f-box"><p class="f-num">45</p><p class="f-label">min/dia</p></div>
+        <p class="f-mul">×</p>
+        <div class="f-box"><p class="f-num">90</p><p class="f-label">dias</p></div>
+        <p class="f-mul">=</p>
+        <div class="f-box" style="background:rgba(0,180,166,.1);border-color:rgba(0,180,166,.3)"><p class="f-num" style="font-size:clamp(18px,4.5vw,24px)">+200</p><p class="f-label">pontos</p></div>
+      </div>
+      <p class="sub anim" style="margin-top:14px">É o resultado médio dos alunos do ENEM Master.</p>
+    </div>
+
+    <!-- ── S5 — Features premium ─────────────── -->
+    <div class="slide" id="s5">
+      <p class="eye anim" style="color:var(--teal)">o que te leva aos 750+</p>
+      <div class="feat-cards anim">
+        <div class="feat-card">
+          <span class="feat-card-icon">🏆</span>
+          <div class="feat-card-info"><p class="fcl">Modo ENEM Completo</p><p class="fcs">A prova que vai enfrentar — 90q · 5h30min · INEP real</p></div>
+        </div>
+        <div class="feat-card">
+          <span class="feat-card-icon">🤖</span>
+          <div class="feat-card-info"><p class="fcl">Redação corrigida por IA</p><p class="fcs">Competências 1–5 · feedback detalhado · nota até 1000</p></div>
+        </div>
+        <div class="feat-card">
+          <span class="feat-card-icon">📊</span>
+          <div class="feat-card-info"><p class="fcl">Análise de Erros por Disciplina</p><p class="fcs">IA mapeia onde você perde pontos e ajusta seu plano</p></div>
+        </div>
+        <div class="feat-card">
+          <span class="feat-card-icon">💬</span>
+          <div class="feat-card-info"><p class="fcl">Professor IA 24h</p><p class="fcs">Explica a questão que você errou — na hora</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── S6 — Preço vs garantia ─────────────── -->
+    <div class="slide" id="s6">
+      <p class="eye anim">o melhor custo-benefício</p>
+      <p class="heading anim" style="color:rgba(232,244,248,.6)">Cursinhos cobram</p>
+      <div class="price-row anim">
+        <div class="price-box cursinho"><p class="pb-tag">Cursinho</p><p class="pb-val">R$ 800</p><p class="pb-sub">por mês</p></div>
+        <div class="price-box app"><p class="pb-tag">ENEM Master</p><p class="pb-val">R$ 0,65</p><p class="pb-sub">por dia · R$ 19,90/mês</p></div>
+      </div>
+      <div class="sep anim" style="background:var(--green)"></div>
+      <p class="heading green anim" style="font-size:clamp(18px,4.5vw,24px)">Se sua nota não melhorar em 30 dias,<br>devolvemos 100% do valor.</p>
+    </div>
+
+    <!-- ── S7 — CTA ───────────────────────────── -->
+    <div class="slide" id="s7">
+      <p class="eye anim" style="color:var(--teal)">o treino mais próximo da prova real</p>
+      <p class="cta-h anim">Com o ENEM Master,<br>o treino é idêntico<br>à prova de verdade.</p>
+      <div class="feat-list anim">
+        <div class="feat-item">Simulado INEP: 90q · 5h30min real · exato como na prova</div>
+        <div class="feat-item">Redação corrigida por IA · 5 competências · nota até 1000</div>
+        <div class="feat-item">IA analisa erros por disciplina e ajusta seu treino</div>
+        <div class="feat-item">Professor IA 24h: explica o que você errou na hora</div>
+      </div>
+      <a class="cta-btn anim" href="https://enemmaster.com.br">→ Simula o ENEM. Sobe sua nota.</a>
+      <p class="cta-url anim"><span>enemmaster.com.br</span> · Premium por R$ 12,42/mês</p>
+    </div>
+
+  </div><!-- /slides -->
+
+  <div class="hint" id="hint">← deslize →</div>
+  <div class="nav">
+    <button class="nbtn" id="prev">&#8249;</button>
+    <div class="dots" id="dots"></div>
+    <button class="nbtn" id="next">&#8250;</button>
+  </div>
+</div>
+
+<script>
+(function () {
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const prog = document.getElementById('prog'), snum = document.getElementById('snum');
+  const dotsEl = document.getElementById('dots'), hint = document.getElementById('hint');
+  const prev = document.getElementById('prev'), next = document.getElementById('next');
+  let cur = 0, n = slides.length, hintHidden = false;
+  slides.forEach((_, i) => { const d = document.createElement('div'); d.className = 'dot' + (i === 0 ? ' active' : ''); d.addEventListener('click', () => go(i)); dotsEl.appendChild(d); });
+  function go(to) {
+    if (to < 0 || to >= n || to === cur) return;
+    slides[cur].classList.remove('active');
+    const tgt = slides[to];
+    tgt.querySelectorAll('.anim').forEach(el => { el.style.animationName = 'none'; el.style.opacity = '0'; });
+    cur = to;
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      tgt.querySelectorAll('.anim').forEach(el => { el.style.animationName = ''; el.style.opacity = ''; });
+      tgt.classList.add('active'); updateUI();
+    }));
+    if (!hintHidden) { hintHidden = true; hint.classList.add('gone'); }
+  }
+  function updateUI() {
+    prog.style.width = ((cur + 1) / n * 100) + '%'; snum.textContent = (cur + 1) + ' / ' + n;
+    prev.disabled = cur === 0; next.disabled = cur === n - 1;
+    document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === cur));
+  }
+  prev.addEventListener('click', () => go(cur - 1)); next.addEventListener('click', () => go(cur + 1));
+  let tx = 0; const card = document.getElementById('card');
+  card.addEventListener('touchstart', e => { tx = e.changedTouches[0].screenX; }, { passive: true });
+  card.addEventListener('touchend', e => { const dx = tx - e.changedTouches[0].screenX; if (Math.abs(dx) > 45) go(cur + (dx > 0 ? 1 : -1)); });
+  document.addEventListener('keydown', e => { if (e.key === 'ArrowRight') go(cur + 1); if (e.key === 'ArrowLeft') go(cur - 1); });
+  updateUI();
+})();
+</script>
+</body>
+</html>

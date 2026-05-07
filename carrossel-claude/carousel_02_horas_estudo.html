@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Por Que Sua Nota Não Sobe — ENEM Master</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:        #0a1929;
+  --bg2:       #0d2137;
+  --card:      #112840;
+  --teal:      #00b4a6;
+  --teal-dark: #008f84;
+  --tg:        rgba(0,180,166,.18);
+  --gold:      #f5c518;
+  --red:       #ef4444;
+  --green:     #22c55e;
+  --orange:    #f97316;
+  --text:      #e8f4f8;
+  --text2:     #7a9ab0;
+  --border:    rgba(0,180,166,.15);
+}
+
+* { margin:0; padding:0; box-sizing:border-box }
+body { background:#020d1a; min-height:100dvh; display:flex; align-items:center; justify-content:center; font-family:'Poppins',sans-serif; overflow:hidden; touch-action:none; user-select:none; }
+
+.card { position:relative; width:min(430px,100vw); aspect-ratio:4/5; background:var(--bg); overflow:hidden; border:1px solid var(--border); box-shadow:0 0 60px rgba(0,180,166,.08); }
+.progress { position:absolute; top:0; left:0; height:3px; background:linear-gradient(to right,var(--orange),#ffb347); transition:width .4s ease; z-index:20; box-shadow:0 0 12px rgba(249,115,22,.5); }
+.hdr { position:absolute; top:0; left:0; right:0; display:flex; align-items:center; justify-content:space-between; padding:18px 22px; z-index:10; background:linear-gradient(to bottom,rgba(10,25,41,.95),transparent); }
+.brand { font-size:11px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--teal); background:rgba(0,180,166,.1); border:1px solid rgba(0,180,166,.3); padding:5px 13px; border-radius:20px; }
+.snum { font-size:11px; font-weight:600; color:var(--text2); }
+.slides { position:absolute; inset:0; }
+.slide { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:78px 34px 78px; opacity:0; pointer-events:none; transition:opacity .35s ease; }
+.slide.active { opacity:1; pointer-events:all; }
+@keyframes fadeUp  { from { opacity:0; transform:translateY(34px) } to { opacity:1; transform:translateY(0) } }
+@keyframes scaleIn { from { opacity:0; transform:scale(.62) }        to { opacity:1; transform:scale(1) } }
+.anim { opacity:0; }
+.slide.active .anim       { animation:fadeUp  .6s cubic-bezier(.16,1,.3,1) forwards; }
+.slide.active .anim.scale { animation:scaleIn .65s cubic-bezier(.16,1,.3,1) forwards; }
+.slide.active .anim:nth-child(1) { animation-delay:.06s }
+.slide.active .anim:nth-child(2) { animation-delay:.16s }
+.slide.active .anim:nth-child(3) { animation-delay:.26s }
+.slide.active .anim:nth-child(4) { animation-delay:.36s }
+.slide.active .anim:nth-child(5) { animation-delay:.46s }
+.slide.active .anim:nth-child(6) { animation-delay:.56s }
+.slide.active .anim:nth-child(7) { animation-delay:.66s }
+.nav { position:absolute; bottom:0; left:0; right:0; display:flex; align-items:center; justify-content:space-between; padding:14px 18px 20px; background:linear-gradient(to top,rgba(10,25,41,.95),transparent); z-index:10; }
+.nbtn { background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.12); border-radius:50%; width:38px; height:38px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--text); font-size:18px; transition:background .2s,opacity .2s; font-family:inherit; }
+.nbtn:hover { background:rgba(255,255,255,.16); }
+.nbtn:disabled { opacity:.2; cursor:not-allowed; }
+.dots { display:flex; gap:5px; align-items:center; }
+.dot  { width:5px; height:5px; border-radius:3px; background:rgba(255,255,255,.2); transition:all .3s; cursor:pointer; }
+.dot.active { width:20px; background:var(--orange); box-shadow:0 0 8px rgba(249,115,22,.5); }
+.hint { position:absolute; bottom:64px; left:50%; transform:translateX(-50%); font-size:10px; font-weight:600; letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,.18); white-space:nowrap; transition:opacity .5s; }
+.hint.gone { opacity:0; pointer-events:none; }
+
+/* ─── Type ───────────────────────────────────── */
+.eye     { font-size:clamp(9px,2.2vw,11px); font-weight:700; letter-spacing:3px; text-transform:uppercase; color:var(--orange); margin-bottom:10px; }
+.mega    { font-size:clamp(56px,14vw,76px); font-weight:900; line-height:.9;  text-align:center; color:var(--text); letter-spacing:-3px; }
+.title   { font-size:clamp(38px,9.5vw,52px); font-weight:900; line-height:1.0; text-align:center; color:var(--text); letter-spacing:-1.5px; }
+.heading { font-size:clamp(26px,6.5vw,36px); font-weight:800; line-height:1.1; text-align:center; color:var(--text); }
+.sub     { font-size:clamp(14px,3.5vw,17px); font-weight:600; line-height:1.6; text-align:center; color:var(--text2); }
+.sep     { width:44px; height:3px; border-radius:2px; margin:14px auto; }
+.teal { color:var(--teal); } .gold { color:var(--gold); } .red { color:var(--red); } .green { color:var(--green); } .orange { color:var(--orange); } .t2 { color:var(--text2); }
+
+/* ─── Slide backgrounds ──────────────────────── */
+#s1 { background:linear-gradient(180deg,rgba(249,115,22,.07) 0%,transparent 55%),var(--bg); }
+#s1::after { content:''; position:absolute; top:0; left:0; right:0; height:1px; background:rgba(249,115,22,.4); }
+#s2,#s4 { background:var(--bg); }
+#s3 { background:linear-gradient(180deg,rgba(249,115,22,.05) 0%,transparent 55%),var(--bg); }
+#s5 { background:var(--bg); }
+#s6 { background:linear-gradient(180deg,rgba(0,180,166,.06) 0%,transparent 55%),var(--bg); }
+#s7 { background:linear-gradient(145deg,#0d2a46 0%,#091e35 100%); }
+#s7::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 50% 20%,rgba(0,180,166,.14) 0%,transparent 65%); }
+
+/* ─── Clock number (S1) ──────────────────────── */
+.clock-bg { position:relative; margin-bottom:4px; }
+.clock-num { font-size:clamp(72px,18vw,100px); font-weight:900; color:var(--orange); letter-spacing:-6px; line-height:1; opacity:.15; }
+.clock-over { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:clamp(14px,3.5vw,17px); font-weight:800; color:rgba(249,115,22,.7); letter-spacing:2px; text-transform:uppercase; }
+
+/* ─── Info row (S3) ──────────────────────────── */
+.info-row { display:flex; gap:8px; width:100%; margin-top:10px; }
+.info-box { flex:1; background:var(--card); border:1px solid rgba(255,255,255,.06); border-radius:12px; padding:12px 8px; text-align:center; }
+.info-box .ib-n { font-size:clamp(22px,5.5vw,30px); font-weight:900; color:var(--teal); }
+.info-box .ib-l { font-size:clamp(9px,2.3vw,11px); font-weight:700; color:var(--text2); text-transform:uppercase; letter-spacing:1px; margin-top:2px; }
+
+/* ─── Path compare (S4) ──────────────────────── */
+.paths { display:flex; gap:10px; width:100%; margin-top:8px; }
+.path { flex:1; border-radius:12px; padding:14px 10px; display:flex; flex-direction:column; gap:6px; }
+.path.wrong { background:rgba(239,68,68,.07); border:1px solid rgba(239,68,68,.18); }
+.path.right { background:rgba(0,180,166,.07); border:1px solid rgba(0,180,166,.25); }
+.path-label { font-size:clamp(10px,2.4vw,12px); font-weight:700; letter-spacing:2px; text-transform:uppercase; text-align:center; }
+.path.wrong .path-label { color:rgba(239,68,68,.6); }
+.path.right .path-label { color:rgba(0,180,166,.7); }
+.path-item { font-size:clamp(12px,3vw,14px); font-weight:600; text-align:center; }
+.path.wrong .path-item { color:rgba(232,244,248,.35); }
+.path.right .path-item { color:var(--text2); }
+
+/* ─── Discipline list (S5) ───────────────────── */
+.disc-list { display:flex; flex-direction:column; gap:8px; width:100%; margin-top:10px; }
+.disc-item { display:flex; align-items:center; gap:12px; background:var(--card); border:1px solid rgba(255,255,255,.06); border-radius:10px; padding:11px 14px; }
+.disc-icon { font-size:18px; flex-shrink:0; }
+.disc-info { flex:1; }
+.disc-name { font-size:clamp(13px,3.3vw,16px); font-weight:700; color:var(--text); }
+.disc-sub  { font-size:clamp(10px,2.5vw,12px); font-weight:600; color:var(--text2); margin-top:1px; }
+
+/* ─── Limit badge (S6) ───────────────────────── */
+.plan-row { display:flex; gap:10px; width:100%; margin-top:10px; }
+.plan-box { flex:1; border-radius:12px; padding:14px 10px; text-align:center; }
+.plan-box.free     { background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); }
+.plan-box.premium  { background:rgba(0,180,166,.08); border:1px solid rgba(0,180,166,.3); }
+.plan-box .pb-tag  { font-size:clamp(9px,2.2vw,11px); font-weight:700; letter-spacing:2px; text-transform:uppercase; margin-bottom:6px; }
+.plan-box.free    .pb-tag  { color:var(--text2); }
+.plan-box.premium .pb-tag  { color:var(--teal); }
+.plan-box .pb-val  { font-size:clamp(22px,5.5vw,30px); font-weight:900; line-height:1; }
+.plan-box.free    .pb-val  { color:var(--text2); }
+.plan-box.premium .pb-val  { color:var(--teal); }
+.plan-box .pb-sub  { font-size:clamp(10px,2.5vw,12px); font-weight:600; color:var(--text2); margin-top:4px; }
+
+/* ─── CTA (S7) ───────────────────────────────── */
+.cta-h { font-size:clamp(30px,7.5vw,42px); font-weight:900; text-align:center; color:var(--text); line-height:1.05; letter-spacing:-1px; position:relative; }
+.feat-list { display:flex; flex-direction:column; gap:7px; width:100%; margin-top:14px; position:relative; }
+.feat-item { display:flex; align-items:center; gap:9px; font-size:clamp(12px,3vw,15px); font-weight:600; color:var(--text2); }
+.feat-item::before { content:'✓'; color:var(--teal); font-weight:900; font-size:13px; flex-shrink:0; }
+@keyframes ctaGlow { 0%,100% { box-shadow:0 0 28px rgba(0,180,166,.35),0 4px 16px rgba(0,0,0,.5) } 50% { box-shadow:0 0 55px rgba(0,180,166,.6),0 4px 16px rgba(0,0,0,.5) } }
+.cta-btn { margin-top:20px; display:block; background:linear-gradient(135deg,var(--teal),var(--teal-dark)); color:#fff; font-family:'Poppins',sans-serif; font-size:clamp(15px,3.8vw,19px); font-weight:800; padding:14px 36px; border-radius:50px; border:none; cursor:pointer; text-align:center; text-decoration:none; animation:ctaGlow 2.5s ease-in-out infinite; position:relative; letter-spacing:.3px; }
+.cta-url { font-size:clamp(11px,2.5vw,13px); font-weight:600; color:var(--text2); text-align:center; margin-top:10px; position:relative; }
+.cta-url span { color:var(--teal); }
+.guarantee { display:flex; align-items:center; gap:7px; background:rgba(34,197,94,.06); border:1px solid rgba(34,197,94,.2); border-radius:8px; padding:8px 12px; margin-top:8px; position:relative; }
+.guarantee p { font-size:clamp(10px,2.5vw,13px); font-weight:600; color:var(--green); }
+</style>
+</head>
+<body>
+<div class="card" id="card">
+  <div class="progress" id="prog"></div>
+
+  <div class="hdr">
+    <div class="brand">🎓 ENEM Master</div>
+    <div class="snum" id="snum">1 / 7</div>
+  </div>
+
+  <div class="slides">
+
+    <!-- ── S1 — Hook ─────────────────────────── -->
+    <div class="slide active" id="s1">
+      <p class="eye anim">⏱ mito</p>
+      <div class="clock-bg anim">
+        <p class="clock-num">8h</p>
+        <p class="clock-over">de estudo</p>
+      </div>
+      <p class="title anim" style="margin-top:-4px">e sua nota<br>não sobe.</p>
+      <div class="sep anim" style="background:var(--orange);box-shadow:0 0 10px rgba(249,115,22,.5)"></div>
+      <p class="heading anim orange" style="font-size:clamp(22px,5.5vw,30px)">Por quê?</p>
+    </div>
+
+    <!-- ── S2 — Direção ───────────────────────── -->
+    <div class="slide" id="s2">
+      <p class="eye anim" style="color:var(--text2)">a verdade</p>
+      <p class="heading anim t2">Não é falta</p>
+      <p class="heading anim t2">de esforço.</p>
+      <div class="sep anim" style="background:var(--orange);box-shadow:0 0 10px rgba(249,115,22,.5)"></div>
+      <p class="heading anim">É falta de</p>
+      <p class="mega orange anim" style="font-size:clamp(48px,12vw,66px)">direção.</p>
+    </div>
+
+    <!-- ── S3 — O que o ENEM mede ─────────────── -->
+    <div class="slide" id="s3">
+      <p class="eye anim">o que o ENEM realmente mede</p>
+      <p class="heading anim t2">Sua nota não mede</p>
+      <p class="heading anim" style="text-decoration:line-through;text-decoration-color:rgba(239,68,68,.4);color:var(--text2)">quanto você estudou.</p>
+      <div class="sep anim" style="background:var(--orange);box-shadow:0 0 10px rgba(249,115,22,.4)"></div>
+      <p class="heading anim">Mede quanto você</p>
+      <p class="heading orange anim" style="font-size:clamp(28px,7vw,40px);font-weight:900">aprendeu de verdade.</p>
+      <div class="info-row anim">
+        <div class="info-box"><p class="ib-n">90</p><p class="ib-l">questões</p></div>
+        <div class="info-box"><p class="ib-n">5h30</p><p class="ib-l">duração real</p></div>
+        <div class="info-box"><p class="ib-n">4</p><p class="ib-l">disciplinas</p></div>
+      </div>
+    </div>
+
+    <!-- ── S4 — Dois caminhos ─────────────────── -->
+    <div class="slide" id="s4">
+      <p class="eye anim">dois caminhos</p>
+      <div class="paths anim">
+        <div class="path wrong">
+          <p class="path-label">o que você faz</p>
+          <p class="path-item">Estuda Humanas</p>
+          <p class="path-item">que já domina</p>
+          <p class="path-item">por horas</p>
+        </div>
+        <div class="path right">
+          <p class="path-label">o que funciona</p>
+          <p class="path-item">Foca nas</p>
+          <p class="path-item">fraquezas reais</p>
+          <p class="path-item">por 45 min</p>
+        </div>
+      </div>
+      <div class="sep anim" style="background:var(--teal)"></div>
+      <p class="heading anim teal" style="font-size:clamp(20px,5vw,28px)">A IA do ENEM Master identifica<br>suas fraquezas automaticamente.</p>
+    </div>
+
+    <!-- ── S5 — Disciplinas reais ─────────────── -->
+    <div class="slide" id="s5">
+      <p class="eye anim">4 disciplinas · IA que te direciona</p>
+      <div class="disc-list anim">
+        <div class="disc-item">
+          <span class="disc-icon">🌍</span>
+          <div class="disc-info"><p class="disc-name">Humanas</p><p class="disc-sub">História · Geografia · Filosofia · Sociologia</p></div>
+        </div>
+        <div class="disc-item">
+          <span class="disc-icon">🔬</span>
+          <div class="disc-info"><p class="disc-name">Ciências da Natureza</p><p class="disc-sub">Física · Química · Biologia</p></div>
+        </div>
+        <div class="disc-item">
+          <span class="disc-icon">📝</span>
+          <div class="disc-info"><p class="disc-name">Linguagens</p><p class="disc-sub">Português · Literatura · Inglês</p></div>
+        </div>
+        <div class="disc-item">
+          <span class="disc-icon">➗</span>
+          <div class="disc-info"><p class="disc-name">Matemática</p><p class="disc-sub">Álgebra · Geometria · Estatística</p></div>
+        </div>
+      </div>
+      <p class="sub anim" style="margin-top:10px">Após cada quiz, a IA mostra em qual disciplina você mais perde — e te manda treinar ela.</p>
+    </div>
+
+    <!-- ── S6 — Limites dos planos ───────────── -->
+    <div class="slide" id="s6">
+      <p class="eye anim" style="color:var(--teal)">estude sem limite</p>
+      <p class="heading anim">Quanto você<br>vai treinar?</p>
+      <div class="plan-row anim">
+        <div class="plan-box free">
+          <p class="pb-tag">Grátis</p>
+          <p class="pb-val">10</p>
+          <p class="pb-sub">questões/dia</p>
+        </div>
+        <div class="plan-box premium">
+          <p class="pb-tag">Premium 👑</p>
+          <p class="pb-val">∞</p>
+          <p class="pb-sub">sem limite diário</p>
+        </div>
+      </div>
+      <p class="sub anim" style="margin-top:14px">Premium: Modo ENEM completo · 90 questões · 5h30min</p>
+    </div>
+
+    <!-- ── S7 — CTA ───────────────────────────── -->
+    <div class="slide" id="s7">
+      <p class="eye anim" style="color:var(--teal)">sem desperdiçar mais uma hora</p>
+      <p class="cta-h anim">Em minutos, o ENEM<br>Master sabe onde<br>você perde pontos.</p>
+      <div class="feat-list anim">
+        <div class="feat-item">Treina por disciplina → IA mapeia suas fraquezas</div>
+        <div class="feat-item">Relatório personalizado: onde focar a seguir</div>
+        <div class="feat-item">Questões por nível: do básico ao real do INEP</div>
+        <div class="feat-item">10q grátis hoje · ilimitado no Premium R$ 0,65/dia</div>
+      </div>
+      <a class="cta-btn anim" href="https://enemmaster.com.br">→ Mapeia suas fraquezas agora</a>
+      <p class="cta-url anim"><span>enemmaster.com.br</span> · IA que sabe onde você está perdendo</p>
+    </div>
+
+  </div><!-- /slides -->
+
+  <div class="hint" id="hint">← deslize →</div>
+
+  <div class="nav">
+    <button class="nbtn" id="prev">&#8249;</button>
+    <div class="dots" id="dots"></div>
+    <button class="nbtn" id="next">&#8250;</button>
+  </div>
+</div>
+
+<script>
+(function () {
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const prog = document.getElementById('prog'), snum = document.getElementById('snum');
+  const dotsEl = document.getElementById('dots'), hint = document.getElementById('hint');
+  const prev = document.getElementById('prev'), next = document.getElementById('next');
+  let cur = 0, n = slides.length, hintHidden = false;
+  slides.forEach((_, i) => { const d = document.createElement('div'); d.className = 'dot' + (i === 0 ? ' active' : ''); d.addEventListener('click', () => go(i)); dotsEl.appendChild(d); });
+  function go(to) {
+    if (to < 0 || to >= n || to === cur) return;
+    slides[cur].classList.remove('active');
+    const tgt = slides[to];
+    tgt.querySelectorAll('.anim').forEach(el => { el.style.animationName = 'none'; el.style.opacity = '0'; });
+    cur = to;
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      tgt.querySelectorAll('.anim').forEach(el => { el.style.animationName = ''; el.style.opacity = ''; });
+      tgt.classList.add('active'); updateUI();
+    }));
+    if (!hintHidden) { hintHidden = true; hint.classList.add('gone'); }
+  }
+  function updateUI() {
+    prog.style.width = ((cur + 1) / n * 100) + '%'; snum.textContent = (cur + 1) + ' / ' + n;
+    prev.disabled = cur === 0; next.disabled = cur === n - 1;
+    document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === cur));
+  }
+  prev.addEventListener('click', () => go(cur - 1)); next.addEventListener('click', () => go(cur + 1));
+  let tx = 0; const card = document.getElementById('card');
+  card.addEventListener('touchstart', e => { tx = e.changedTouches[0].screenX; }, { passive: true });
+  card.addEventListener('touchend', e => { const dx = tx - e.changedTouches[0].screenX; if (Math.abs(dx) > 45) go(cur + (dx > 0 ? 1 : -1)); });
+  document.addEventListener('keydown', e => { if (e.key === 'ArrowRight') go(cur + 1); if (e.key === 'ArrowLeft') go(cur - 1); });
+  updateUI();
+})();
+</script>
+</body>
+</html>
