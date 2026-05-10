@@ -3,7 +3,7 @@
    Cache-first para assets • Network-first para API
    ===================================================== */
 
-const CACHE_NAME = 'enem-master-v24';
+const CACHE_NAME = 'enem-master-v25';
 const STATIC_ASSETS = [
     '/app',
     '/style.css',
@@ -102,7 +102,7 @@ async function networkFirst(request) {
 
 /* ---- Push Notifications ---- */
 self.addEventListener('push', (event) => {
-    let data = { title: 'ENEM Master', body: 'Hora de estudar! 💡', icon: '/favicon.ico' };
+    let data = { title: 'ENEM Master', body: 'Hora de estudar! 💡', icon: '/icon-192.png' };
     try {
         if (event.data) data = { ...data, ...event.data.json() };
     } catch { /* noop */ }
@@ -110,10 +110,29 @@ self.addEventListener('push', (event) => {
     event.waitUntil(
         self.registration.showNotification(data.title, {
             body: data.body,
-            icon: data.icon || '/favicon.ico',
-            badge: '/favicon.ico',
+            icon: data.icon || '/icon-192.png',
+            badge: '/icon-192.png',
             tag: data.tag || 'enem-master',
-            data: { url: data.url || '/' },
+            data: { url: data.url || '/app' },
+        })
+    );
+});
+
+/* ---- Notification click: abre ou foca o app ---- */
+self.addEventListener('notificationclick', (event) => {
+    event.notification.close();
+    const targetUrl = event.notification.data?.url || '/app';
+
+    event.waitUntil(
+        clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+            // Se já há uma janela do app aberta, foca nela
+            for (const client of clientList) {
+                if (client.url.includes('/app') && 'focus' in client) {
+                    return client.focus();
+                }
+            }
+            // Caso contrário, abre uma nova janela
+            return clients.openWindow(targetUrl);
         })
     );
 });

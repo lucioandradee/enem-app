@@ -324,8 +324,29 @@ async function getClassStudents(classCode) {
 }
 
 // =====================================================
-// FUNÇÕES DE RANKING
+// PUSH SUBSCRIPTIONS — Web Push
 // =====================================================
+
+// Salva ou atualiza a PushSubscription do usuário para notificações background.
+// Chamado pelo frontend após obter a assinatura via PushManager.subscribe().
+async function savePushSubscription(userId, subscription) {
+    try {
+        const { error } = await supabase
+            .from('push_subscriptions')
+            .upsert(
+                { user_id: userId, subscription, active: true, updated_at: new Date().toISOString() },
+                { onConflict: 'user_id' },
+            );
+        if (error) throw error;
+        _DEV && console.log('✅ Push subscription salva');
+        return { success: true };
+    } catch (error) {
+        _DEV && console.error('❌ Erro ao salvar push subscription:', error.message);
+        return { success: false };
+    }
+}
+
+
 
 // Obter ranking escolar
 async function getSchoolRanking(school) {

@@ -56,20 +56,34 @@ function renderENEMCountdown() {
 }
 
 // =====================================================
-// PUSH NOTIFICATIONS — lembretes diários de estudo
+// PUSH NOTIFICATIONS — Web Push real (Edge Function + pg_cron)
 // =====================================================
+// A chave pública VAPID é segura para expor no frontend.
+const VAPID_PUBLIC_KEY = 'BISoqBThoTZ9VZoRctL0iVcVvKJA8-DNgpddPoWHc34sInxgSBpZK1B3Sq09amulzSy2PasEcQPqhZ_3LDBncPg';
+
+function _urlBase64ToUint8Array(b64) {
+    const pad    = '='.repeat((4 - b64.length % 4) % 4);
+    const base64 = (b64 + pad).replace(/-/g, '+').replace(/_/g, '/');
+    return Uint8Array.from(atob(base64), c => c.charCodeAt(0));
+}
+
 async function requestPushPermission() {
     const btn      = document.getElementById('push-notif-btn');
     const statusEl = document.getElementById('push-notif-status');
 
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+        if (statusEl) statusEl.textContent = 'Seu navegador não suporta notificações push';
+        return;
+    }
     if (!('Notification' in window)) {
         if (statusEl) statusEl.textContent = 'Seu navegador não suporta notificações';
         return;
     }
+
     if (Notification.permission === 'granted') {
         if (statusEl) statusEl.textContent = '✅ Notificações já estão ativadas!';
         if (btn) { btn.textContent = 'Ativado ✓'; btn.disabled = true; }
-        _scheduleDailyStudyReminder();
+        await _subscribePush();
         return;
     }
 
@@ -79,92 +93,54 @@ async function requestPushPermission() {
         if (btn) { btn.textContent = 'Ativado ✓'; btn.disabled = true; }
         state.user.pushEnabled = true;
         saveState();
-        _showQuickToast('🔔 Notificações push ativadas!');
-        _scheduleDailyStudyReminder();
+        _showQuickToast('🔔 Notificações ativadas! Você receberá lembretes às 8h e 20h.');
+        await _subscribePush();
     } else {
         if (statusEl) statusEl.textContent = 'Permissão negada — ative nas configurações do navegador';
     }
 }
 
-// Agenda lembretes diários de estudo: matinal às 8h e noturno às 20h
-function _scheduleDailyStudyReminder() {
-    if (Notification.permission !== 'granted') return;
+/**
+ * Cria/renova a PushSubscription no navegador e salva no Supabase.
+ * O servidor (Edge Function send-push + pg_cron) dispara as notificações
+ * às 8h e 20h (BRT), mesmo com o app completamente fechado.
+ */
+async function _subscribePush() {
+    if (Notification.permission !== 'granted') return null;
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return null;
 
-    const todayKey = new Date().toDateString();
-    const now = new Date();
+    try {
+        const reg = await navigator.serviceWorker.ready;
+        let sub   = await reg.pushManager.getSubscription();
 
-    // ── Lembrete matinal (8h) ──────────────────────────────────────────────────
-    const morningKey = 'enem_push_morning_' + todayKey;
-    if (!localStorage.getItem(morningKey)) {
-        const morning = new Date(); morning.setHours(8, 0, 0, 0);
-        const morningDelay = morning - now;
-        if (morningDelay > 0) {
-            setTimeout(() => {
-                const studiedToday = (typeof state !== 'undefined') &&
-                    state.user.questoesHojeData === new Date().toDateString() &&
-                    (state.user.questoesHoje || 0) > 0;
-                if (!studiedToday && Notification.permission === 'granted') {
-                    const n = new Notification('🌅 Bom dia! Hora de estudar!', {
-                        body: 'Comece o dia com 5 questões rápidas do ENEM. Leva menos de 10 minutos!',
-                        icon: '/favicon.ico', tag: 'enem-morning-reminder',
-                    });
-                    n.onclick = () => { window.focus(); n.close(); };
-                }
-                localStorage.setItem(morningKey, '1');
-            }, morningDelay);
-        }
-    }
-
-    // ── Lembrete noturno (20h) ─────────────────────────────────────────────────
-    const eveningKey = 'enem_push_evening_' + todayKey;
-    // Também aceitar a key antiga para não agendar duplo no primeiro dia após a atualização
-    const legacyKey  = localStorage.getItem('enem_push_scheduled');
-    if (localStorage.getItem(eveningKey) || legacyKey === todayKey) return;
-
-    const target = new Date(); target.setHours(20, 0, 0, 0);
-    let delay = target - now;
-    if (delay < 0) delay = 60 * 1000;
-
-    // Detectar matéria mais fraca para personalizar a notificação
-    const stats = (typeof state !== 'undefined' && state?.progress?.stats) || {};
-    const discNames = { humanas: 'Ciências Humanas', natureza: 'Ciências da Natureza', linguagens: 'Linguagens', matematica: 'Matemática' };
-    let weakestDisc = null;
-    let lowestPct = Infinity;
-    for (const [key, val] of Object.entries(stats)) {
-        if (val.total >= 5) {
-            const pct = val.correct / val.total;
-            if (pct < lowestPct) { lowestPct = pct; weakestDisc = key; }
-        }
-    }
-    const weakName = weakestDisc ? discNames[weakestDisc] : null;
-    const weakPct  = weakestDisc ? Math.round((stats[weakestDisc].correct / stats[weakestDisc].total) * 100) : null;
-
-    const genericMsgs = [
-        { title:'📚 Hora de estudar!',           body:'Você tem questões te esperando. Bora revisar antes de dormir?' },
-        { title:'🔥 Mantenha seu streak!',        body:'Estude pelo menos 10 minutos hoje para não perder sua sequência!' },
-        { title:'🎯 ENEM cada vez mais perto!',   body:'Que tal um simulado rápido agora? Cada questão conta!' },
-        { title:'⚡ Revise um flashcard hoje!',   body:'5 minutinhos de revisão no ENEM Master — vá lá!' },
-        { title:'🏆 Ranking espera por você!',    body:'Outros estudantes estão avançando. Jogue algumas questões!' },
-    ];
-    const personalizedMsgs = weakName ? [
-        { title:`📐 ${weakName} precisa de atenção!`, body:`Você acertou ${weakPct}% em ${weakName}. 5 minutos de treino hoje fazem diferença.` },
-        { title:`⚠️ Ponto fraco detectado!`,          body:`${weakName} está com ${weakPct}% de acerto. Bora virar a chave antes do ENEM?` },
-    ] : [];
-    const msgs = [...personalizedMsgs, ...genericMsgs];
-    const msg = msgs[Math.floor(Math.random() * msgs.length)];
-
-    setTimeout(() => {
-        if (Notification.permission === 'granted') {
-            const n = new Notification(msg.title, {
-                body: msg.body,
-                icon: '/favicon.ico',
-                badge: '/favicon.ico',
-                tag: 'enem-daily-reminder',
+        if (!sub) {
+            sub = await reg.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: _urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
             });
-            n.onclick = () => { window.focus(); n.close(); };
         }
-        localStorage.setItem(eveningKey, '1');
-    }, delay);
+
+        // Salva no Supabase para o backend poder enviar no momento certo
+        if (typeof savePushSubscription !== 'undefined' && state.user?.id) {
+            await savePushSubscription(state.user.id, sub.toJSON());
+        }
+
+        return sub;
+    } catch (err) {
+        _DEV && console.error('❌ Erro ao assinar push:', err);
+        return null;
+    }
+}
+
+/**
+ * Mantido por compatibilidade com chamadas existentes.
+ * Agora apenas garante que a assinatura está salva no backend —
+ * o agendamento real é feito via pg_cron no servidor.
+ */
+function _scheduleDailyStudyReminder() {
+    if (Notification.permission === 'granted') {
+        _subscribePush();
+    }
 }
 
 function _renderPushNotifCard() {
@@ -173,10 +149,10 @@ function _renderPushNotifCard() {
     if (!btn || !statusEl || !('Notification' in window)) return;
 
     if (Notification.permission === 'granted') {
-        statusEl.textContent = '✅ Lembretes de estudo ativados!';
+        statusEl.textContent = '✅ Lembretes de estudo ativados! (8h e 20h)';
         btn.textContent = 'Ativado ✓';
         btn.disabled = true;
-        _scheduleDailyStudyReminder(); // reagenda ao abrir o app
+        _subscribePush(); // garante assinatura atualizada
     } else if (Notification.permission === 'denied') {
         statusEl.textContent = 'Bloqueado — ative nas configurações do navegador';
         btn.textContent = 'Bloqueado';

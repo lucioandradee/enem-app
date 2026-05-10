@@ -108,6 +108,22 @@ DROP POLICY IF EXISTS "Authenticated can update own redemption" ON activation_co
 CREATE POLICY "Authenticated can read codes"            ON activation_codes FOR SELECT TO authenticated USING (true);
 CREATE POLICY "Authenticated can update own redemption" ON activation_codes FOR UPDATE TO authenticated USING (used = false);
 
+-- ─── Tabela: push_subscriptions (Web Push real) ──────
+-- Armazena as PushSubscription de cada usuário para o
+-- servidor enviar notificações mesmo com o app fechado.
+CREATE TABLE IF NOT EXISTS push_subscriptions (
+  id           BIGSERIAL   PRIMARY KEY,
+  user_id      UUID        NOT NULL UNIQUE REFERENCES auth.users(id) ON DELETE CASCADE,
+  subscription JSONB       NOT NULL,   -- PushSubscription.toJSON()
+  active       BOOLEAN     DEFAULT true,
+  created_at   TIMESTAMPTZ DEFAULT NOW(),
+  updated_at   TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS push_sub_user ON push_subscriptions (user_id);
+ALTER TABLE push_subscriptions ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "service_role_only" ON push_subscriptions;
+CREATE POLICY "service_role_only" ON push_subscriptions USING (false);
+
 -- ─── Tabela: tutor_logs (rate limiting Tutor IA) ─────
 CREATE TABLE IF NOT EXISTS tutor_logs (
   id         BIGSERIAL   PRIMARY KEY,
@@ -477,3 +493,57 @@ END;
 $$;
 
 GRANT EXECUTE ON FUNCTION public.get_class_students(TEXT) TO authenticated;
+
+-- ═══════════════════════════════════════════════════════════════
+-- WEB PUSH — pg_cron para enviar notificações às 8h e 20h (BRT)
+-- ───────────────────────────────────────────────────────────────
+-- Pré-requisitos (fazer UMA VEZ no Supabase Dashboard):
+--   1. Ativar extensões: Database → Extensions → pg_cron, pg_net
+--   2. Definir secret na Edge Function:
+--        supabase secrets set VAPID_PRIVATE_KEY=3cRwMZ8bxxfulywkxD2K8CVVFTiQJGHy-Xax8V1qXx4
+--        supabase secrets set VAPID_PUBLIC_KEY=BISoqBThoTZ9VZoRctL0iVcVvKJA8-DNgpddPoWHc34sInxgSBpZK1B3Sq09amulzSy2PasEcQPqhZ_3LDBncPg
+--   3. Substituir <SERVICE_ROLE_KEY> abaixo pela chave do projeto
+--        (Supabase Dashboard → Project Settings → API → service_role)
+--   4. Rodar o bloco abaixo no SQL Editor
+-- ───────────────────────────────────────────────────────────────
+
+-- Habilitar extensões necessárias
+CREATE EXTENSION IF NOT EXISTS pg_cron;
+CREATE EXTENSION IF NOT EXISTS pg_net;
+
+-- Remover agendamentos antigos (idempotente)
+SELECT cron.unschedule('push-morning') WHERE EXISTS (SELECT 1 FROM cron.job WHERE jobname = 'push-morning');
+SELECT cron.unschedule('push-evening') WHERE EXISTS (SELECT 1 FROM cron.job WHERE jobname = 'push-evening');
+
+-- Lembrete matinal — 8h BRT = 11h UTC
+SELECT cron.schedule(
+  'push-morning',
+  '0 11 * * *',
+  $$
+  SELECT net.http_post(
+    url     := 'https://nkuiwdolkluetsadauwb.supabase.co/functions/v1/send-push',
+    headers := jsonb_build_object(
+      'Authorization', 'Bearer <SERVICE_ROLE_KEY>',
+      'Content-Type',  'application/json'
+    ),
+    body    := '{"type":"morning"}'::jsonb
+  );
+  $$
+);
+
+-- Lembrete noturno — 20h BRT = 23h UTC
+SELECT cron.schedule(
+  'push-evening',
+  '0 23 * * *',
+  $$
+  SELECT net.http_post(
+    url     := 'https://nkuiwdolkluetsadauwb.supabase.co/functions/v1/send-push',
+    headers := jsonb_build_object(
+      'Authorization', 'Bearer <SERVICE_ROLE_KEY>',
+      'Content-Type',  'application/json'
+    ),
+    body    := '{"type":"evening"}'::jsonb
+  );
+  $$
+);
+
