@@ -20,15 +20,27 @@ interface CorrecaoResult extends Record<CompKey, Competencia> {
 }
 
 // ── Helpers HTTP ───────────────────────────────────────────────────────────────
-const CORS = {
-  'Access-Control-Allow-Origin':  '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-} as const;
+const ALLOWED_ORIGINS = [
+  'https://enemmaster.com.br',
+  'https://www.enemmaster.com.br',
+  'http://localhost:3000',
+  'http://localhost:8080',
+  'http://127.0.0.1:3000',
+];
 
-const jsonHeaders = { ...CORS, 'Content-Type': 'application/json' } as const;
-const ok  = (data: unknown)             => new Response(JSON.stringify(data), { status: 200, headers: jsonHeaders });
-const err = (msg: string, status = 400) => new Response(JSON.stringify({ error: msg }), { status, headers: jsonHeaders });
+function getCorsHeaders(req: Request) {
+  const origin = req.headers.get('origin') ?? '';
+  const allowedOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  return {
+    'Access-Control-Allow-Origin': allowedOrigin,
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Vary': 'Origin',
+  } as const;
+}
+
+const ok  = (data: unknown, req: Request)       => new Response(JSON.stringify(data), { status: 200, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' } });
+const err = (msg: string, status = 400, req?: Request) => new Response(JSON.stringify({ error: msg }), { status, headers: { ...(req ? getCorsHeaders(req) : { 'Access-Control-Allow-Origin': ALLOWED_ORIGINS[0] }), 'Content-Type': 'application/json' } });
 const sleep = (ms: number)              => new Promise<void>(r => setTimeout(r, ms));
 
 // ── Chamada Groq (retry + fallback de modelo) ─────────────────────────────────
@@ -113,28 +125,29 @@ Mencione aspectos CONCRETOS do texto. Retorne SOMENTE JSON válido (sem markdown
 
 // ── Handler principal ─────────────────────────────────────────────────────────
 Deno.serve(async (req: Request) => {
+  const CORS = getCorsHeaders(req);
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
 
   try {
-    if (req.method !== 'POST') return err('Method not allowed', 405);
+    if (req.method !== 'POST') return err('Method not allowed', 405, req);
 
     // 1. Guardrails de configuração
     if (!GROQ_KEY || !SVC_ROLE || !SUPABASE_URL)
-      return err('Configuração do servidor incompleta. Contate o suporte.', 503);
+      return err('Configuração do servidor incompleta. Contate o suporte.', 503, req);
 
     // 2. Validar body
     let body: { theme?: unknown; text?: unknown; userId?: unknown };
     try { body = await req.json(); }
-    catch { return err('Corpo da requisição inválido.', 400); }
+    catch { return err('Corpo da requisição inválido.', 400, req); }
 
     const userId    = String(body.userId ?? '').trim();
     const textClean = String(body.text   ?? '').trim();
     const theme     = String(body.theme  ?? '').trim();
 
-    if (!userId || userId.length < 30)   return err('Sessão inválida. Faça login novamente.', 401);
-    if (!theme)                           return err('Tema é obrigatório.', 400);
-    if (textClean.length < MIN_CHARS)    return err(`Redação muito curta (mínimo ${MIN_CHARS} caracteres).`, 400);
-    if (textClean.length > MAX_CHARS)    return err(`Redação muito longa (máximo ${MAX_CHARS} caracteres).`, 400);
+    if (!userId || userId.length < 30)   return err('Sessão inválida. Faça login novamente.', 401, req);
+    if (!theme)                           return err('Tema é obrigatório.', 400, req);
+    if (textClean.length < MIN_CHARS)    return err(`Redação muito curta (mínimo ${MIN_CHARS} caracteres).`, 400, req);
+    if (textClean.length > MAX_CHARS)    return err(`Redação muito longa (máximo ${MAX_CHARS} caracteres).`, 400, req);
 
     // 3. Verificar usuário e plano
     const db = createClient(SUPABASE_URL, SVC_ROLE, { auth: { persistSession: false } });
@@ -147,16 +160,16 @@ Deno.serve(async (req: Request) => {
 
     if (profileErr) {
       console.error('[redacao] buscar perfil:', profileErr.message);
-      return err('Erro ao verificar perfil. Tente novamente.', 500);
+      return err('Erro ao verificar perfil. Tente novamente.', 500, req);
     }
     if (!profile) {
       db.from('users').insert({ id: userId, name: 'Usuário', email: '', plan: 'free' }).catch(() => {});
-      return err('Plano Premium necessário para corrigir redações com IA.', 403);
+      return err('Plano Premium necessário para corrigir redações com IA.', 403, req);
     }
 
     const premiumAtivo = profile.plan === 'premium' &&
       (!profile.plan_expires_at || new Date(profile.plan_expires_at) > new Date());
-    if (!premiumAtivo) return err('Recurso exclusivo do plano Premium. Assine para corrigir redações com IA.', 403);
+    if (!premiumAtivo) return err('Recurso exclusivo do plano Premium. Assine para corrigir redações com IA.', 403, req);
 
     // 4. Rate limiting diário
     const today = new Date().toISOString().slice(0, 10);
@@ -167,7 +180,7 @@ Deno.serve(async (req: Request) => {
       .gte('created_at', `${today}T00:00:00Z`);
 
     if ((count ?? 0) >= DAILY_LIMIT)
-      return err(`Limite de ${DAILY_LIMIT} correções por dia atingido. Volte amanhã!`, 429);
+      return err(`Limite de ${DAILY_LIMIT} correções por dia atingido. Volte amanhã!`, 429, req);
 
     // 5. Chamar IA
     const safeTheme = theme.slice(0, 300).replace(/[`"]/g, "'");
@@ -176,13 +189,13 @@ Deno.serve(async (req: Request) => {
     try {
       result = await callGroq(buildPrompt(safeTheme, textClean));
     } catch (e: unknown) {
-      if ((e as Error).message === 'invalid_key') return err('Chave de IA inválida. Contate o suporte.', 503);
+      if ((e as Error).message === 'invalid_key') return err('Chave de IA inválida. Contate o suporte.', 503, req);
       throw e;
     }
 
     if (!result) {
       console.error('[redacao] falha em todos os modelos Groq.');
-      return err('O serviço de correção está instável agora. Tente novamente em alguns instantes.', 503);
+      return err('O serviço de correção está instável agora. Tente novamente em alguns instantes.', 503, req);
     }
 
     // 6. Registrar uso (não crítico)
@@ -190,11 +203,11 @@ Deno.serve(async (req: Request) => {
       .insert({ user_id: userId, theme: safeTheme.slice(0, 200), score: result.total ?? null })
       .catch(() => {});
 
-    return ok(result);
+    return ok(result, req);
 
   } catch (fatal: unknown) {
     const msg = fatal instanceof Error ? fatal.message : String(fatal);
     console.error('[redacao] ERRO FATAL:', msg);
-    return err(`Erro inesperado: ${msg}`, 500);
+    return err(`Erro inesperado: ${msg}`, 500, req);
   }
 });

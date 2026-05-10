@@ -173,11 +173,11 @@ function showFeaturePaywall(feature) {
     _trackEvent('paywall_shown', { feature });
 }
 
-/** Retorna o número de dias até o ENEM 2026 (2ª semana de novembro) */
+/** Retorna o número de dias até o ENEM (data configurada centralmente) */
+const ENEM_DATE = new Date('2026-11-03T08:00:00-03:00');
+
 function _daysToENEM() {
-    const enem = new Date('2026-11-03T08:00:00-03:00');
-    const now  = new Date();
-    const diff = Math.ceil((enem - now) / (1000 * 60 * 60 * 24));
+    const diff = Math.ceil((ENEM_DATE - new Date()) / (1000 * 60 * 60 * 24));
     return diff > 0 ? diff : 0;
 }
 
@@ -281,13 +281,7 @@ const defaultState = {
         especialista: [],
         maratonista: [],
     },
-    notifications: [
-        { id: 1, type: 'blue', icon: '📝', title: 'Simulado disponível', body: 'Novo Simulado: Ciências da Natureza já está aberto para você. Prepare-se e comece agora!', time: '6h', unread: true, cta: 'Fazer Simulado', ctaScreen: 'quiz-setup', date: 'today' },
-        { id: 2, type: 'orange', icon: '📊', title: 'Ranking Semanal', body: 'Eita! João Silva ultrapassou você no Ranking. Volte aos estudos para recuperar sua posição!', time: '1h', unread: true, date: 'today' },
-        { id: 3, type: 'purple', icon: '🏅', title: 'Nova Conquista', body: 'Parabéns! Você desbloqueou o badge "Mestre da Redação" por 5 notas acima de 900.', time: '3h', unread: true, date: 'today' },
-        { id: 4, type: 'green', icon: '📅', title: 'Lembrete de Estudo', body: 'Hora do Estudo: Seguindo seu cronograma, agora é vez de Matemática (Funções).', time: '6h', unread: false, date: 'today' },
-        { id: 5, type: 'yellow', icon: '🔥', title: 'Maratona 7 Dias', body: 'Incrível! Você manteve seu ritmo de estudos por uma semana inteira.', time: 'Ontem', unread: false, date: 'yesterday' },
-    ],
+    notifications: [],
     currentScreen: 'home',
 };
 
@@ -784,6 +778,13 @@ function navigate(screenName) {
 
     state.currentScreen = screenName;
     saveState();
+
+    // Cleanup de timers ao sair de telas específicas
+    const leaving = state.currentScreen;
+    if (leaving === 'ranking' && typeof _rankingAutoRefreshTimer !== 'undefined' && _rankingAutoRefreshTimer) {
+        clearInterval(_rankingAutoRefreshTimer);
+        _rankingAutoRefreshTimer = null;
+    }
 
     // Show/hide bottom nav
     const nav = document.getElementById('bottom-nav');

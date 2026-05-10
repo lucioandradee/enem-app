@@ -12,6 +12,30 @@ const TUTOR_EDGE_URL = 'https://nkuiwdolkluetsadauwb.supabase.co/functions/v1/tu
 // ── Estado do chat ───────────────────────────────────────────────────────────
 let _tutorHistory = [];          // [{ role:'user'|'assistant', content }]
 let _tutorLoading = false;
+let _tutorInputBound = false;    // evita registrar listeners duplicados
+
+const TUTOR_HISTORY_KEY = 'enem_tutor_history';
+const TUTOR_HISTORY_MAX = 40;    // mensagens máximas persistidas
+
+function _loadTutorHistory() {
+    try {
+        const raw = localStorage.getItem(TUTOR_HISTORY_KEY);
+        if (raw) _tutorHistory = JSON.parse(raw);
+    } catch { _tutorHistory = []; }
+}
+
+function _saveTutorHistory() {
+    try {
+        const trimmed = _tutorHistory.slice(-TUTOR_HISTORY_MAX);
+        localStorage.setItem(TUTOR_HISTORY_KEY, JSON.stringify(trimmed));
+    } catch { /* storage cheio: ignora */ }
+}
+
+function clearTutorHistory() {
+    _tutorHistory = [];
+    try { localStorage.removeItem(TUTOR_HISTORY_KEY); } catch { /* noop */ }
+    _renderTutorMessages();
+}
 
 // ── Sugestões de abertura por disciplina ─────────────────────────────────────
 const TUTOR_SUGGESTIONS = [
@@ -32,6 +56,7 @@ function renderTutorIA() {
         navigate('home');
         return;
     }
+    if (_tutorHistory.length === 0) _loadTutorHistory();
     _renderTutorMessages();
     _setupTutorInput();
     _focusTutorInput();
@@ -75,17 +100,30 @@ function _renderTutorWelcome() {
 function _getTutorSuggestions() {
     // Personaliza sugestões baseado nas matérias fracas do onboarding
     const weak = state.weakSubjects || [];
-    const seed = new Date().getDay();
-    const shuffled = [...TUTOR_SUGGESTIONS].sort((_, b) => (seed * b.length) % 3 - 1);
-    return shuffled.slice(0, 4);
+    // Embaralhar com Fisher-Yates usando semente baseada na data do dia
+    const arr = [...TUTOR_SUGGESTIONS];
+    const seed = new Date().toDateString(); // muda por dia
+    let h = 0;
+    for (let i = 0; i < seed.length; i++) { h = Math.imul(31, h) + seed.charCodeAt(i) | 0; }
+    let rng = Math.abs(h);
+    for (let i = arr.length - 1; i > 0; i--) {
+        rng = (rng * 1664525 + 1013904223) >>> 0;
+        const j = rng % (i + 1);
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr.slice(0, 4);
 }
 
 function _setupTutorInput() {
     const input = document.getElementById('tutor-input');
     if (!input) return;
 
+    // Evita listeners duplicados ao revisitar a tela
+    if (_tutorInputBound) return;
+    _tutorInputBound = true;
+
     // Enter para enviar (Shift+Enter = nova linha)
-    input.addEventListener('keydown', function handler(e) {
+    input.addEventListener('keydown', function(e) {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
             submitTutorMessage();
@@ -132,8 +170,7 @@ async function sendTutorMessage(text) {
 
     // Adiciona mensagem do usuário
     _tutorHistory.push({ role: 'user', content: text });
-    _renderTutorMessages();
-
+        _saveTutorHistory();
     // Mostra loading
     _tutorLoading = true;
     _showTutorLoading();
@@ -168,6 +205,7 @@ async function sendTutorMessage(text) {
         if (!reply) throw new Error('Resposta vazia do tutor');
 
         _tutorHistory.push({ role: 'assistant', content: reply });
+        _saveTutorHistory();
         _renderTutorMessages();
 
         // Track evento
@@ -181,6 +219,7 @@ async function sendTutorMessage(text) {
                 ? 'Você precisa estar logado para usar o Tutor IA.'
                 : 'Desculpe, houve um erro ao processar sua pergunta. Tente novamente em instantes.',
         });
+        _saveTutorHistory();
         _renderTutorMessages();
     } finally {
         _tutorLoading = false;

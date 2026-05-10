@@ -108,6 +108,17 @@ DROP POLICY IF EXISTS "Authenticated can update own redemption" ON activation_co
 CREATE POLICY "Authenticated can read codes"            ON activation_codes FOR SELECT TO authenticated USING (true);
 CREATE POLICY "Authenticated can update own redemption" ON activation_codes FOR UPDATE TO authenticated USING (used = false);
 
+-- ─── Tabela: tutor_logs (rate limiting Tutor IA) ─────
+CREATE TABLE IF NOT EXISTS tutor_logs (
+  id         BIGSERIAL   PRIMARY KEY,
+  user_id    UUID        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS tutor_logs_user_date ON tutor_logs (user_id, created_at);
+ALTER TABLE tutor_logs ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "service_role_only" ON tutor_logs;
+CREATE POLICY "service_role_only" ON tutor_logs USING (false);
+
 -- ─── Tabela: analytics_events ────────────────────────
 CREATE TABLE IF NOT EXISTS analytics_events (
   id          BIGSERIAL PRIMARY KEY,

@@ -39,10 +39,10 @@ async function signUpUser(email, password, fullName) {
         
         if (error) throw error;
         
-        console.log('? Usuério registrado com sucesso');
+        _DEV && console.log('✅ Usuário registrado com sucesso');
         return { success: true, user: data.user };
     } catch (error) {
-        console.error('? Erro ao registrar:', error.message);
+        _DEV && console.error('❌ Erro ao registrar:', error.message);
         return { success: false, error: error.message };
     }
 }
@@ -57,11 +57,11 @@ async function loginUser(email, password) {
         
         if (error) throw error;
         
-        console.log('… Login bem-sucedido');
+        _DEV && console.log('✅ Login bem-sucedido');
         // onAuthStateChange(SIGNED_IN) cuida de: state, loadUserData, navigate('home'), sync
         return { success: true, user: data.user };
     } catch (error) {
-        console.error('Œ Erro ao fazer login:', error.message);
+        _DEV && console.error('❌ Erro ao fazer login:', error.message);
         return { success: false, error: error.message };
     }
 }
@@ -72,7 +72,7 @@ async function logoutUser() {
         const { error } = await supabase.auth.signOut();
         if (error) throw error;
         
-        console.log('? Logout bem-sucedido');
+        _DEV && console.log('✅ Logout bem-sucedido');
         state = JSON.parse(JSON.stringify(defaultState));
         saveState();
         
@@ -123,10 +123,10 @@ async function saveUserData(userId) {
             });
         
         if (error) throw error;
-        console.log('? Dados do usuário salvos');
+        _DEV && console.log('✅ Dados do usuário salvos');
         return { success: true };
     } catch (error) {
-        console.error('? Erro ao salvar dados:', error.message);
+        _DEV && console.error('❌ Erro ao salvar dados:', error.message);
         return { success: false, error: error.message };
     }
 }
@@ -175,7 +175,7 @@ async function loadUserData(userId) {
                 }
             }
             saveState();
-            console.log('? Dados do usuário carregados');
+        _DEV && console.log('✅ Dados do usuário carregados');
             // Atualizar nome real no banco se estava como placeholder
             if (nameIsPlaceholder && state.user.name && state.user.name !== 'Alex') {
                 saveUserData(userId).catch(() => {});
@@ -189,7 +189,7 @@ async function loadUserData(userId) {
         
         return { success: true, data: data };
     } catch (error) {
-        console.error('? Erro ao carregar dados:', error.message);
+        _DEV && console.error('❌ Erro ao carregar dados:', error.message);
         return { success: false, error: error.message };
     }
 }
@@ -211,10 +211,10 @@ async function saveProgress(userId, subject, questionsAnswered, correct, opts = 
             });
         
         if (error) throw error;
-        console.log('? Progresso salvo');
+        _DEV && console.log('✅ Progresso salvo');
         return { success: true };
     } catch (error) {
-        console.error('? Erro ao salvar progresso:', error.message);
+        _DEV && console.error('❌ Erro ao salvar progresso:', error.message);
         return { success: false, error: error.message };
     }
 }
@@ -229,10 +229,10 @@ async function saveBadgeToSupabase(userId, badgeId, badgeName, category) {
                 { onConflict: 'user_id,badge_id', ignoreDuplicates: true }
             );
         if (error) throw error;
-        console.log('? Conquista salva:', badgeId);
+        _DEV && console.log('✅ Conquista salva:', badgeId);
         return { success: true };
     } catch (error) {
-        console.error('? Erro ao salvar conquista:', error.message);
+        _DEV && console.error('❌ Erro ao salvar conquista:', error.message);
         return { success: false, error: error.message };
     }
 }
@@ -247,10 +247,10 @@ async function loadProgressHistory(userId) {
             .order('created_at', { ascending: false });
 
         if (error) throw error;
-        console.log('✅ Histórico carregado:', data.length, 'registros');
+        _DEV && console.log('✅ Histórico carregado:', data.length, 'registros');
         return { success: true, data: data };
     } catch (error) {
-        console.error('❌ Erro ao carregar histórico:', error.message);
+        _DEV && console.error('❌ Erro ao carregar histórico:', error.message);
         return { success: false, error: error.message };
     }
 }
@@ -286,10 +286,10 @@ async function saveClassCode(userId, code) {
             .update({ class_code: code, updated_at: new Date().toISOString() })
             .eq('id', userId);
         if (error) throw error;
-        console.log('✅ class_code salvo:', code);
+        _DEV && console.log('✅ class_code salvo:', code);
         return { success: true };
     } catch (error) {
-        console.error('❌ Erro ao salvar class_code:', error.message);
+        _DEV && console.error('❌ Erro ao salvar class_code:', error.message);
         return { success: false, error: error.message };
     }
 }
@@ -302,10 +302,10 @@ async function enrollInClass(userId, classCode) {
             .update({ enrolled_class_code: classCode, updated_at: new Date().toISOString() })
             .eq('id', userId);
         if (error) throw error;
-        console.log('✅ enrolled_class_code salvo:', classCode);
+        _DEV && console.log('✅ enrolled_class_code salvo:', classCode);
         return { success: true };
     } catch (error) {
-        console.error('❌ Erro ao inscrever em turma:', error.message);
+        _DEV && console.error('❌ Erro ao inscrever em turma:', error.message);
         return { success: false, error: error.message };
     }
 }
@@ -338,10 +338,10 @@ async function getSchoolRanking(school) {
             .limit(20);
         
         if (error) throw error;
-        console.log('? Ranking carregado:', data.length, 'usuários');
+        _DEV && console.log('✅ Ranking carregado:', data.length, 'usuários');
         return { success: true, data: data };
     } catch (error) {
-        console.error('? Erro ao obter ranking:', error.message);
+        _DEV && console.error('❌ Erro ao obter ranking:', error.message);
         return { success: false, error: error.message };
     }
 }
@@ -356,10 +356,10 @@ async function getGlobalTop() {
             .limit(50);
         
         if (error) throw error;
-        console.log('? Top global carregado');
+        _DEV && console.log('✅ Top global carregado');
         return { success: true, data: data };
     } catch (error) {
-        console.error('? Erro ao obter top global:', error.message);
+        _DEV && console.error('❌ Erro ao obter top global:', error.message);
         return { success: false, error: error.message };
     }
 }
@@ -370,7 +370,7 @@ async function getGlobalTop() {
 
 function initializeSupabaseListeners() {
     supabase.auth.onAuthStateChange((event, session) => {
-        console.log('Auth state mudou:', event);
+        _DEV && console.log('Auth state:', event);
 
         // €€ INITIAL_SESSION €€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€
         // Dispara como microtask logo após o cliente Supabase ser criado,
@@ -411,7 +411,7 @@ function initializeSupabaseListeners() {
 
             // Troca de conta: limpa state contaminado de outra sessão
             if (state.user.id && state.user.id !== incomingId) {
-                console.log('Troca de conta detectada - limpando state anterior');
+                _DEV && console.log('Troca de conta detectada - limpando state anterior');
                 localStorage.removeItem('enem_state');
                 state = JSON.parse(JSON.stringify(defaultState));
             }
@@ -518,7 +518,7 @@ function startSyncLoop(userId, interval = 30000) {
 
         // 4. Detectar upgrade de plano via webhook/pagamento externo
         if (planBefore !== 'premium' && state.user?.plan === 'premium') {
-            console.log('… Upgrade para Premium detectado no sync loop!');
+            _DEV && console.log('✅ Upgrade para Premium detectado no sync loop!');
             try { sessionStorage.removeItem('_pendingPayment'); } catch { /* noop */ }
             if (typeof _showPremiumSuccess !== 'undefined') {
                 setTimeout(() => _showPremiumSuccess(), 400);
@@ -548,7 +548,7 @@ document.addEventListener('visibilitychange', () => {
                 if (typeof renderDashboard !== 'undefined') renderDashboard();
                 // Detectar upgrade de plano entre sessões (ex: webhook ativou premium)
                 if (planBefore !== 'premium' && state.user?.plan === 'premium') {
-                    console.log('… Plano atualizado para Premium detectado no retorno de aba!');
+                    _DEV && console.log('✅ Plano atualizado para Premium detectado no retorno de aba!');
                     if (typeof _showPremiumSuccess !== 'undefined') {
                         setTimeout(() => _showPremiumSuccess(), 400);
                     }
@@ -583,13 +583,13 @@ async function loadUserPlan(userId) {
             state.user.plan = plan;
             state.user.planExpiresAt = data.plan_expires_at || null;
             saveState();
-            console.log('? Plano do usuário carregado:', plan);
+        _DEV && console.log('✅ Plano do usuário carregado:', plan);
             // Atualizar UI de forma centralizada sempre que o plano for carregado
             if (typeof _syncPlanUI !== 'undefined') _syncPlanUI();
         }
         return { success: true, plan: data?.plan || 'free' };
     } catch (error) {
-        console.error('? Erro ao carregar plano:', error.message);
+        _DEV && console.error('❌ Erro ao carregar plano:', error.message);
         return { success: false, plan: 'free' };
     }
 }

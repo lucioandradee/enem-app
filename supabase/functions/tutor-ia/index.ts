@@ -19,13 +19,28 @@ const GROQ_MODEL = 'llama-3.3-70b-versatile';
 const SUPABASE_URL  = Deno.env.get('SUPABASE_URL') ?? '';
 const SERVICE_ROLE  = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 
-const MAX_HISTORY   = 20;   // máximo de mensagens no contexto
-const MAX_MSG_LEN   = 2000; // caracteres por mensagem do usuário
+const MAX_HISTORY     = 20;   // máximo de mensagens no contexto
+const MAX_MSG_LEN     = 2000; // caracteres por mensagem do usuário
+const DAILY_MSG_LIMIT = 50;   // mensagens por dia por usuário Premium
 
-const CORS = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+const ALLOWED_ORIGINS = [
+    'https://enemmaster.com.br',
+    'https://www.enemmaster.com.br',
+    'http://localhost:3000',
+    'http://localhost:8080',
+    'http://127.0.0.1:3000',
+];
+
+function getCorsHeaders(req: Request) {
+    const origin = req.headers.get('origin') ?? '';
+    const allowedOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+    return {
+        'Access-Control-Allow-Origin': allowedOrigin,
+        'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Vary': 'Origin',
+    };
+}
 
 const SYSTEM_PROMPT = `Você é o **Professor 24h** do ENEM Master — um especialista completo no ENEM e professor particular dedicado a fazer o aluno ENTENDER de verdade, não apenas receber uma resposta pronta.
 
@@ -242,33 +257,36 @@ INGLÊS/ESPANHOL (nível ENEM):
 - Não dê respostas prontas para questões que pareçam ser de avaliações em andamento (dê orientação, não a resposta direta)
 - Ao citar fórmulas matemáticas ou químicas, escreva-as completas e sem ambiguidade (ex: use × para multiplicação, não *)`;
 
-function json(data: unknown, status = 200) {
+function json(data: unknown, status = 200, cors: Record<string, string> = {}) {
     return new Response(JSON.stringify(data), {
         status,
-        headers: { ...CORS, 'Content-Type': 'application/json' },
+        headers: { ...cors, 'Content-Type': 'application/json' },
     });
 }
 
 Deno.serve(async (req: Request) => {
+    const CORS = getCorsHeaders(req);
+    const respond = (data: unknown, status = 200) => json(data, status, CORS);
+
     if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
     if (req.method !== 'POST') return new Response('Method not allowed', { status: 405, headers: CORS });
 
-    if (!GROQ_KEY) return json({ error: 'Serviço de IA não configurado. Contate o suporte.' }, 503);
+    if (!GROQ_KEY) return respond({ error: 'Serviço de IA não configurado. Contate o suporte.' }, 503);
 
     // ── 1. Verificar autenticação ────────────────────────────────────────────
     const authHeader = req.headers.get('authorization') ?? '';
     const userJwt    = authHeader.replace(/^Bearer\s+/i, '');
-    if (!userJwt || userJwt.length < 20) return json({ error: 'Autenticação necessária.' }, 401);
+    if (!userJwt || userJwt.length < 20) return respond({ error: 'Autenticação necessária.' }, 401);
 
     const adminClient = createClient(SUPABASE_URL, SERVICE_ROLE, { auth: { persistSession: false } });
 
     let userId: string;
     try {
         const { data: { user }, error } = await adminClient.auth.getUser(userJwt);
-        if (error || !user) return json({ error: 'Token inválido ou sessão expirada.' }, 401);
+        if (error || !user) return respond({ error: 'Token inválido ou sessão expirada.' }, 401);
         userId = user.id;
     } catch {
-        return json({ error: 'Erro ao verificar autenticação.' }, 500);
+        return respond({ error: 'Erro ao verificar autenticação.' }, 500);
     }
 
     // ── 2. Verificar plano premium ───────────────────────────────────────────
@@ -278,24 +296,36 @@ Deno.serve(async (req: Request) => {
         .eq('id', userId)
         .single();
 
-    if (profileErr || !profile) return json({ error: 'Perfil não encontrado. Contate o suporte.' }, 404);
+    if (profileErr || !profile) return respond({ error: 'Perfil não encontrado. Contate o suporte.' }, 404);
 
     const isPremium = profile.plan === 'premium' &&
         (!profile.plan_expires_at || new Date(profile.plan_expires_at) > new Date());
 
     if (!isPremium) {
-        return json({ error: 'Tutor IA é exclusivo do plano Premium. Assine para ter acesso.' }, 403);
+        return respond({ error: 'Tutor IA é exclusivo do plano Premium. Assine para ter acesso.' }, 403);
     }
 
-    // ── 3. Validar body ──────────────────────────────────────────────────────
+    // ── 3. Rate limiting diário ──────────────────────────────────────────────
+    const today = new Date().toISOString().slice(0, 10);
+    const { count: msgCount } = await adminClient
+        .from('tutor_logs')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', userId)
+        .gte('created_at', `${today}T00:00:00Z`);
+
+    if ((msgCount ?? 0) >= DAILY_MSG_LIMIT) {
+        return respond({ error: `Limite de ${DAILY_MSG_LIMIT} mensagens por dia atingido. Volte amanhã!` }, 429);
+    }
+
+    // ── 4. Validar body ──────────────────────────────────────────────────────
     let body: { message?: string; history?: Array<{ role: string; content: string }> };
-    try { body = await req.json(); } catch { return json({ error: 'JSON inválido.' }, 400); }
+    try { body = await req.json(); } catch { return respond({ error: 'JSON inválido.' }, 400); }
 
     const { message, history = [] } = body;
     const msgTrimmed = (message ?? '').trim();
 
-    if (!msgTrimmed) return json({ error: 'Mensagem não pode ser vazia.' }, 400);
-    if (msgTrimmed.length > MAX_MSG_LEN) return json({ error: `Mensagem muito longa (máx ${MAX_MSG_LEN} caracteres).` }, 400);
+    if (!msgTrimmed) return respond({ error: 'Mensagem não pode ser vazia.' }, 400);
+    if (msgTrimmed.length > MAX_MSG_LEN) return respond({ error: `Mensagem muito longa (máx ${MAX_MSG_LEN} caracteres).` }, 400);
 
     // Sanitiza e limita histórico
     const safeHistory = history
@@ -303,7 +333,7 @@ Deno.serve(async (req: Request) => {
         .filter(m => m.role === 'user' || m.role === 'assistant')
         .map(m => ({ role: m.role, content: String(m.content).slice(0, 3000) }));
 
-    // ── 4. Chamar Groq ───────────────────────────────────────────────────────
+    // ── 5. Chamar Groq ───────────────────────────────────────────────────────
     const ctrl  = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), 45000);
 
@@ -332,24 +362,29 @@ Deno.serve(async (req: Request) => {
 
         if (!groqRes.ok) {
             void groqRes.json().catch(() => {}); // consome o body para liberar conexão
-            if (groqRes.status === 401) return json({ error: 'Chave de IA inválida. Contate o suporte.' }, 503);
-            if (groqRes.status === 429) return json({ error: 'Serviço de IA sobrecarregado. Tente em 1 minuto.' }, 429);
-            return json({ error: `Erro na IA (${groqRes.status}).` }, 502);
+            if (groqRes.status === 401) return respond({ error: 'Chave de IA inválida. Contate o suporte.' }, 503);
+            if (groqRes.status === 429) return respond({ error: 'Serviço de IA sobrecarregado. Tente em 1 minuto.' }, 429);
+            return respond({ error: `Erro na IA (${groqRes.status}).` }, 502);
         }
 
         const data = await groqRes.json().catch(() => null);
-        if (!data) return json({ error: 'Resposta inválida da IA.' }, 502);
+        if (!data) return respond({ error: 'Resposta inválida da IA.' }, 502);
 
         const reply = data.choices?.[0]?.message?.content ?? '';
-        if (!reply) return json({ error: 'IA não retornou resposta.' }, 502);
+        if (!reply) return respond({ error: 'IA não retornou resposta.' }, 502);
 
-        return json({ reply });
+        // Registrar uso para rate limiting (não crítico — ignora erro)
+        adminClient.from('tutor_logs')
+            .insert({ user_id: userId, created_at: new Date().toISOString() })
+            .catch(() => {});
+
+        return respond({ reply });
 
     } catch (err: unknown) {
         clearTimeout(timer);
         if (err instanceof Error && err.name === 'AbortError')
-            return json({ error: 'Tempo limite excedido. Tente novamente.' }, 504);
+            return respond({ error: 'Tempo limite excedido. Tente novamente.' }, 504);
         const msg = err instanceof Error ? err.message : String(err);
-        return json({ error: `Erro interno: ${msg}` }, 500);
+        return respond({ error: `Erro interno: ${msg}` }, 500);
     }
 });
