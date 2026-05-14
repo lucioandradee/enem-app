@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>App na Tela Inicial — ENEM Master</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:        #0a1929;
+  --teal:      #00b4a6;
+  --teal-dark: #008f84;
+  --gold:      #f5c518;
+  --green:     #22c55e;
+  --text:      #e8f4f8;
+  --text2:     #7a9ab0;
+  --border:    rgba(0,180,166,.15);
+}
+* { margin:0; padding:0; box-sizing:border-box }
+body {
+  background: #020d1a;
+  min-height: 100dvh;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Poppins', sans-serif;
+  overflow: hidden; touch-action: none; user-select: none;
+}
+.card {
+  position: relative;
+  width: min(430px, 100vw);
+  aspect-ratio: 4 / 5;
+  background: var(--bg);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  box-shadow: 0 0 60px rgba(0,180,166,.08);
+}
+
+/* ── Progress ── */
+.progress {
+  position: absolute; top: 0; left: 0;
+  height: 3px; background: linear-gradient(to right, var(--teal), var(--teal-dark));
+  transition: width .4s ease; z-index: 20;
+  box-shadow: 0 0 12px rgba(0,180,166,.5);
+}
+
+/* ── Header ── */
+.hdr {
+  position: absolute; top: 0; left: 0; right: 0;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 13px 20px; z-index: 10;
+  background: linear-gradient(to bottom, rgba(10,25,41,.97) 70%, transparent);
+}
+.brand {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 10px; font-weight: 700; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--teal);
+  background: rgba(0,180,166,.1); border: 1px solid rgba(0,180,166,.28);
+  padding: 5px 11px 5px 7px; border-radius: 20px;
+}
+.brand img { width: 20px; height: 20px; border-radius: 5px; }
+.snum { font-size: 11px; font-weight: 600; color: var(--text2); }
+
+/* ── Slides ── */
+.slides { position: absolute; inset: 0; }
+.slide {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 66px 22px 56px;
+  opacity: 0; pointer-events: none; transition: opacity .35s ease;
+}
+.slide.active { opacity: 1; pointer-events: all; }
+
+/* ── Animations ── */
+@keyframes fadeUp  { from { opacity:0; transform:translateY(24px) } to { opacity:1; transform:translateY(0) } }
+@keyframes scaleIn { from { opacity:0; transform:scale(.72) }       to { opacity:1; transform:scale(1) } }
+@keyframes floatY  { 0%,100% { transform:translateY(0) } 50% { transform:translateY(-9px) } }
+@keyframes pulse   { 0%,100% { opacity:1; transform:scale(1) } 50% { opacity:.75; transform:scale(.93) } }
+@keyframes ctaGlow {
+  0%,100% { box-shadow: 0 0 28px rgba(0,180,166,.38), 0 4px 16px rgba(0,0,0,.5); }
+  50%      { box-shadow: 0 0 54px rgba(0,180,166,.65), 0 4px 16px rgba(0,0,0,.5); }
+}
+.anim { opacity: 0; }
+.slide.active .anim        { animation: fadeUp  .55s cubic-bezier(.16,1,.3,1) forwards; }
+.slide.active .anim.scale  { animation: scaleIn .6s  cubic-bezier(.16,1,.3,1) forwards; }
+.slide.active .anim:nth-child(1) { animation-delay:.05s }
+.slide.active .anim:nth-child(2) { animation-delay:.13s }
+.slide.active .anim:nth-child(3) { animation-delay:.21s }
+.slide.active .anim:nth-child(4) { animation-delay:.29s }
+.slide.active .anim:nth-child(5) { animation-delay:.37s }
+.slide.active .anim:nth-child(6) { animation-delay:.45s }
+.slide.active .anim:nth-child(7) { animation-delay:.53s }
+
+/* ── Nav ── */
+.nav {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 16px 16px;
+  background: linear-gradient(to top, rgba(10,25,41,.97) 70%, transparent);
+  z-index: 10;
+}
+.nbtn {
+  background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.11);
+  border-radius: 50%; width: 34px; height: 34px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--text); font-size: 16px;
+  transition: background .2s, opacity .2s; font-family: inherit;
+}
+.nbtn:hover  { background: rgba(255,255,255,.14); }
+.nbtn:disabled { opacity: .2; cursor: not-allowed; }
+.dots { display: flex; gap: 5px; align-items: center; }
+.dot  { width: 5px; height: 5px; border-radius: 3px; background: rgba(255,255,255,.18); transition: all .3s; cursor: pointer; }
+.dot.active { width: 20px; background: var(--teal); box-shadow: 0 0 8px rgba(0,180,166,.5); }
+
+.hint {
+  position: absolute; bottom: 56px; left: 50%; transform: translateX(-50%);
+  font-size: 10px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase;
+  color: rgba(255,255,255,.16); white-space: nowrap; transition: opacity .5s;
+}
+.hint.gone { opacity: 0; pointer-events: none; }
+
+/* ── Type ── */
+.eye  { font-size: clamp(9px,2.2vw,10px); font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--teal); }
+.ttl  { font-size: clamp(30px,7.5vw,42px); font-weight: 900; line-height: 1.05; text-align: center; color: var(--text); letter-spacing: -1.2px; }
+.hdg  { font-size: clamp(20px,5vw,27px); font-weight: 800; line-height: 1.15; text-align: center; color: var(--text); }
+.sub  { font-size: clamp(12px,3vw,15px); font-weight: 600; line-height: 1.6; text-align: center; color: var(--text2); }
+.sep  { width: 38px; height: 3px; border-radius: 2px; margin: 10px auto; }
+.teal  { color: var(--teal); }
+.gold  { color: var(--gold); }
+.green { color: var(--green); }
+
+/* ── Slide BGs ── */
+#s1 { background: radial-gradient(ellipse at 50% 0%, rgba(0,180,166,.13) 0%, transparent 65%), var(--bg); }
+#s1::after { content:''; position:absolute; top:0;left:0;right:0;height:2px; background:linear-gradient(to right,var(--teal),var(--teal-dark)); }
+#s2 { background: var(--bg); }
+#s3 { background: linear-gradient(170deg, rgba(0,180,166,.07) 0%, transparent 55%), var(--bg); }
+#s4 { background: var(--bg); }
+#s5 { background: var(--bg); }
+#s6 { background: linear-gradient(145deg, #0e2238 0%, #091e35 100%); }
+#s6::before { content:''; position:absolute;inset:0; background:radial-gradient(ellipse at 50% 20%, rgba(0,180,166,.12) 0%, transparent 60%); }
+
+/* ── App icon floating ── */
+.app-icon-float {
+  width: 86px; height: 86px; border-radius: 22px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0,180,166,.4), 0 0 0 3px rgba(0,180,166,.18);
+  animation: floatY 3.5s ease-in-out infinite;
+  flex-shrink: 0;
+}
+.app-icon-float img { width: 100%; height: 100%; display: block; }
+
+/* ── Benefits ── */
+.benefits { display: flex; flex-direction: column; gap: 7px; width: 100%; }
+.brow {
+  display: flex; align-items: center; gap: 11px;
+  background: rgba(0,180,166,.06); border: 1px solid rgba(0,180,166,.13);
+  border-radius: 12px; padding: 10px 13px;
+}
+.brow svg { flex-shrink: 0; opacity: .9; }
+.btext { flex: 1; }
+.btext strong { display: block; font-size: clamp(12px,2.9vw,14px); font-weight: 700; color: var(--text); line-height: 1.2; }
+.btext span   { font-size: clamp(10px,2.4vw,12px); font-weight: 500; color: var(--text2); }
+
+/* ── Platform badge ── */
+.plat-badge {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 5px 14px; border-radius: 30px;
+  font-size: clamp(12px,3vw,13px); font-weight: 800; letter-spacing: .2px;
+}
+.plat-badge.android { background: rgba(34,197,94,.12); border: 1.5px solid rgba(34,197,94,.32); color: var(--green); }
+.plat-badge.ios     { background: rgba(245,197,24,.1);  border: 1.5px solid rgba(245,197,24,.28); color: var(--gold); }
+
+/* ── Step slide: two-column ── */
+.step-slide-inner {
+  display: flex; flex-direction: row; align-items: flex-start;
+  gap: 12px; width: 100%; height: 100%;
+}
+.step-col { flex: 1; display: flex; flex-direction: column; gap: 7px; }
+
+/* ── Step timeline ── */
+.steps { display: flex; flex-direction: column; }
+.step  { display: flex; align-items: flex-start; position: relative; }
+.step:not(:last-child) .sline::after {
+  content: ''; position: absolute;
+  left: 13px; top: 28px; height: 18px;
+  width: 2px; background: rgba(255,255,255,.07);
+}
+.sline { position: relative; display: flex; align-items: center; padding-right: 9px; padding-top: 3px; }
+.snum-c {
+  width: 26px; height: 26px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 800; flex-shrink: 0; z-index: 1;
+}
+.snum-c.android { background: rgba(34,197,94,.15); color: var(--green); border: 1.5px solid rgba(34,197,94,.35); }
+.snum-c.ios     { background: rgba(245,197,24,.13); color: var(--gold);  border: 1.5px solid rgba(245,197,24,.32); }
+.step-body { flex: 1; padding: 3px 0 16px; }
+.step-title { font-size: clamp(11px,2.7vw,13px); font-weight: 700; color: var(--text); line-height: 1.25; }
+.step-hint  { font-size: clamp(9px,2.1vw,10.5px); font-weight: 500; color: var(--text2); margin-top: 2px; line-height: 1.35; }
+.step-tag {
+  display: inline-block; margin-top: 3px;
+  font-size: 9.5px; font-weight: 700;
+  padding: 2px 8px; border-radius: 20px;
+}
+.step-tag.android { background: rgba(34,197,94,.1); border: 1px solid rgba(34,197,94,.22); color: var(--green); }
+.step-tag.ios     { background: rgba(245,197,24,.08); border: 1px solid rgba(245,197,24,.2); color: var(--gold); }
+
+/* ── Result card ── */
+.result-card {
+  width: 100%; border-radius: 12px; padding: 10px 12px;
+  display: flex; align-items: center; gap: 10px;
+}
+.result-card.android { background: rgba(34,197,94,.08); border: 1.5px solid rgba(34,197,94,.22); }
+.result-card.ios     { background: rgba(245,197,24,.07); border: 1.5px solid rgba(245,197,24,.2); }
+.result-card p { font-size: clamp(11px,2.6vw,12.5px); font-weight: 600; color: var(--text); line-height: 1.45; }
+
+/* ── Phone mockup ── */
+.phone-mockup-wrap {
+  flex-shrink: 0; width: 112px;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+}
+.phone-mock {
+  width: 108px;
+  background: #050d1a;
+  border: 2px solid rgba(0,180,166,.22);
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow:
+    0 16px 48px rgba(0,0,0,.7),
+    0 0 0 1px rgba(0,180,166,.07),
+    0 0 30px rgba(0,180,166,.1);
+  position: relative;
+}
+.phone-notch {
+  height: 11px; background: #050d1a;
+  display: flex; align-items: center; justify-content: center;
+}
+.phone-notch::after {
+  content: ''; width: 26px; height: 3px;
+  background: rgba(255,255,255,.1); border-radius: 2px;
+}
+.phone-screen-inner {
+  background: linear-gradient(155deg, #0d2236 0%, #071628 100%);
+  padding: 7px 7px 4px;
+}
+/* 3×3 icon grid */
+.icon-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px;
+}
+.ic {
+  width: 100%; aspect-ratio: 1; border-radius: 7px;
+  background: rgba(255,255,255,.06);
+}
+.ic.em {
+  background: #0a1929;
+  box-shadow: 0 0 14px rgba(0,180,166,.6);
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+  animation: pulse 2.2s ease-in-out infinite;
+}
+.ic.em img { width: 100%; height: 100%; border-radius: 7px; display: block; }
+/* labels row under grid */
+.icon-labels {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-top: 3px;
+}
+.il { height: 9px; } /* blank spacer */
+.il.em {
+  text-align: center;
+  font-size: 5.5px; font-weight: 700; color: rgba(255,255,255,.65);
+  white-space: nowrap; overflow: hidden;
+}
+/* bottom row icons (row 3) */
+.phone-row3 { margin-top: 5px; }
+/* dock */
+.phone-dock {
+  display: flex; gap: 5px; padding: 5px 7px 6px;
+  background: rgba(255,255,255,.03);
+  border-top: 1px solid rgba(255,255,255,.05);
+}
+.dock-ic { flex: 1; height: 20px; border-radius: 5px; background: rgba(255,255,255,.07); }
+
+.phone-caption {
+  font-size: 9px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+  color: var(--teal); opacity: .7; text-align: center;
+}
+
+/* ── CTA ── */
+.cta-h { font-size: clamp(26px,6.5vw,38px); font-weight: 900; text-align: center; color: var(--text); line-height: 1.05; letter-spacing: -1px; }
+.feat-list { display: flex; flex-direction: column; gap: 6px; width: 100%; margin-top: 12px; }
+.feat-item { display: flex; align-items: center; gap: 8px; font-size: clamp(11px,2.7vw,13px); font-weight: 600; color: var(--text2); }
+.feat-dot  { width: 6px; height: 6px; border-radius: 50%; background: var(--teal); flex-shrink: 0; }
+.cta-btn {
+  margin-top: 16px; display: block;
+  background: linear-gradient(135deg, var(--teal), var(--teal-dark));
+  color: #fff; font-family: 'Poppins', sans-serif;
+  font-size: clamp(13px,3.3vw,16px); font-weight: 800;
+  padding: 13px 28px; border-radius: 50px; border: none;
+  cursor: pointer; text-align: center; text-decoration: none;
+  animation: ctaGlow 2.5s ease-in-out infinite; letter-spacing: .3px;
+}
+.cta-url { font-size: clamp(10px,2.3vw,12px); font-weight: 600; color: var(--text2); text-align: center; margin-top: 7px; }
+.cta-url span { color: var(--teal); }
+</style>
+</head>
+<body>
+<div class="card" id="card">
+  <div class="progress" id="prog"></div>
+
+  <div class="hdr">
+    <div class="brand">
+      <img src="../icon.svg" alt="ENEM Master">
+      ENEM Master
+    </div>
+    <div class="snum" id="snum">1 / 6</div>
+  </div>
+
+  <div class="slides">
+
+    <!-- ── S1 · Hook ── -->
+    <div class="slide active" id="s1">
+      <div class="app-icon-float anim scale">
+        <img src="../icon.svg" alt="ENEM Master">
+      </div>
+      <div style="height:14px"></div>
+      <p class="eye anim">dica que poucos sabem</p>
+      <h1 class="ttl anim" style="margin-top:8px">O ENEM Master<br>fica na tela<br>inicial do seu<br><span class="teal">celular.</span></h1>
+      <div class="sep anim" style="background:var(--teal);box-shadow:0 0 10px rgba(0,180,166,.5)"></div>
+      <p class="sub anim">Nada de procurar o link toda vez.<br>Um toque e já era. 👇</p>
+    </div>
+
+    <!-- ── S2 · Problema ── -->
+    <div class="slide" id="s2">
+      <p class="eye anim">a situação de quase todo mundo</p>
+      <div style="height:10px"></div>
+      <div class="anim" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:18px 16px;width:100%;text-align:center">
+        <div style="font-size:34px;margin-bottom:10px">😅</div>
+        <p style="font-size:clamp(14px,3.5vw,17px);font-weight:700;color:var(--text);line-height:1.5">"Toda hora que vou estudar fico procurando o link no histórico do navegador..."</p>
+        <p style="font-size:clamp(11px,2.7vw,13px);font-weight:500;color:var(--text2);margin-top:8px">Isso te soou familiar?</p>
+      </div>
+      <div style="height:16px"></div>
+      <p class="hdg anim">Tem um jeito muito<br><span class="teal">mais simples.</span></p>
+      <div style="height:8px"></div>
+      <p class="sub anim">Adiciona o app na tela inicial —<br>funciona igual qualquer outro aplicativo.</p>
+    </div>
+
+    <!-- ── S3 · Benefícios ── -->
+    <div class="slide" id="s3">
+      <p class="eye anim">por que vale muito a pena</p>
+      <p class="hdg anim" style="margin:8px 0 12px">Na tela inicial,<br>você <span class="teal">estuda mais.</span></p>
+      <div class="benefits">
+        <div class="brow anim">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#00b4a6" stroke-width="2"/><path d="M12 6v6l4 2" stroke="#00b4a6" stroke-width="2" stroke-linecap="round"/></svg>
+          <div class="btext">
+            <strong>1 toque e você já está estudando</strong>
+            <span>Sem navegador, sem busca, sem delay</span>
+          </div>
+        </div>
+        <div class="brow anim">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="5" y="2" width="14" height="20" rx="3" stroke="#00b4a6" stroke-width="2"/><path d="M12 18h.01" stroke="#00b4a6" stroke-width="2" stroke-linecap="round"/></svg>
+          <div class="btext">
+            <strong>Tela cheia, sem barra de URL</strong>
+            <span>Igual a um app da loja — experiência completa</span>
+          </div>
+        </div>
+        <div class="brow anim">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="#00b4a6" stroke-width="2" stroke-linecap="round"/><path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="#00b4a6" stroke-width="2" stroke-linecap="round"/></svg>
+          <div class="btext">
+            <strong>Notificações de estudo funcionam</strong>
+            <span>Streak, metas e lembretes diários ativos</span>
+          </div>
+        </div>
+        <div class="brow anim">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" stroke="#00b4a6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <div class="btext">
+            <strong>O ícone te lembra de estudar</strong>
+            <span>Ver o app todo dia cria o hábito de vez</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── S4 · Android ── -->
+    <div class="slide" id="s4">
+      <div class="step-slide-inner">
+
+        <!-- Left: steps -->
+        <div class="step-col">
+          <!-- header -->
+          <div style="display:flex;align-items:center;gap:8px" class="anim" style="animation-delay:.04s">
+            <div class="plat-badge android">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M6 18v2a1 1 0 0 0 2 0v-2M16 18v2a1 1 0 0 0 2 0v-2" stroke="#22c55e" stroke-width="2" stroke-linecap="round"/><rect x="2" y="8" width="20" height="10" rx="3" stroke="#22c55e" stroke-width="2"/><path d="M8 2l2 4M16 2l-2 4" stroke="#22c55e" stroke-width="2" stroke-linecap="round"/></svg>
+              Android
+            </div>
+            <span style="font-size:11px;font-weight:600;color:var(--text2)">Chrome</span>
+          </div>
+
+          <!-- steps -->
+          <div class="steps">
+            <div class="step anim" style="animation-delay:.1s">
+              <div class="sline"><div class="snum-c android">1</div></div>
+              <div class="step-body">
+                <p class="step-title">Abra o Chrome e acesse</p>
+                <span class="step-tag android">enemmaster.com.br</span>
+              </div>
+            </div>
+            <div class="step anim" style="animation-delay:.18s">
+              <div class="sline"><div class="snum-c android">2</div></div>
+              <div class="step-body">
+                <p class="step-title">Toque nos 3 pontinhos <span style="color:var(--text2)">⋮</span></p>
+                <p class="step-hint">Canto superior direito</p>
+              </div>
+            </div>
+            <div class="step anim" style="animation-delay:.26s">
+              <div class="sline"><div class="snum-c android">3</div></div>
+              <div class="step-body">
+                <p class="step-title">Toque em <span style="color:var(--green)">"Adicionar à<br>tela inicial"</span></p>
+              </div>
+            </div>
+            <div class="step anim" style="animation-delay:.34s">
+              <div class="sline"><div class="snum-c android">4</div></div>
+              <div class="step-body">
+                <p class="step-title">Confirme em <span style="color:var(--green)">"Adicionar"</span></p>
+                <p class="step-hint">Ícone aparece na tela inicial 🎉</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- result -->
+          <div class="result-card android anim" style="animation-delay:.42s">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" stroke="#22c55e" stroke-width="2" stroke-linecap="round"/><path d="M22 4L12 14.01l-3-3" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <p>Feito! Aparece igual<br>a qualquer outro app.</p>
+          </div>
+        </div>
+
+        <!-- Right: phone mockup -->
+        <div class="phone-mockup-wrap anim" style="animation-delay:.08s;padding-top:4px">
+          <div class="phone-mock">
+            <div class="phone-notch"></div>
+            <div class="phone-screen-inner">
+              <!-- row 1 -->
+              <div class="icon-grid">
+                <div class="ic"></div>
+                <div class="ic"></div>
+                <div class="ic"></div>
+              </div>
+              <div class="icon-labels">
+                <div class="il"></div><div class="il"></div><div class="il"></div>
+              </div>
+              <!-- row 2: gray | ENEM Master | gray -->
+              <div class="icon-grid" style="margin-top:5px">
+                <div class="ic"></div>
+                <div class="ic em"><img src="../icon.svg" alt="ENEM Master"></div>
+                <div class="ic"></div>
+              </div>
+              <div class="icon-labels">
+                <div class="il"></div>
+                <div class="il em">ENEM Master</div>
+                <div class="il"></div>
+              </div>
+              <!-- row 3 -->
+              <div class="icon-grid" style="margin-top:5px">
+                <div class="ic"></div>
+                <div class="ic"></div>
+                <div class="ic"></div>
+              </div>
+              <div class="icon-labels">
+                <div class="il"></div><div class="il"></div><div class="il"></div>
+              </div>
+            </div>
+            <div class="phone-dock">
+              <div class="dock-ic"></div>
+              <div class="dock-ic"></div>
+              <div class="dock-ic"></div>
+            </div>
+          </div>
+          <p class="phone-caption">resultado</p>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── S5 · iPhone ── -->
+    <div class="slide" id="s5">
+      <div class="step-slide-inner">
+
+        <!-- Left: steps -->
+        <div class="step-col">
+          <!-- header -->
+          <div style="display:flex;align-items:center;gap:8px" class="anim" style="animation-delay:.04s">
+            <div class="plat-badge ios">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><rect x="5" y="2" width="14" height="20" rx="3" stroke="#f5c518" stroke-width="2"/><path d="M12 18h.01" stroke="#f5c518" stroke-width="2.5" stroke-linecap="round"/></svg>
+              iPhone
+            </div>
+            <div style="display:flex;align-items:center;gap:5px;background:rgba(245,197,24,.08);border:1px solid rgba(245,197,24,.22);border-radius:8px;padding:3px 8px">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" stroke="#f5c518" stroke-width="2"/><line x1="12" y1="9" x2="12" y2="13" stroke="#f5c518" stroke-width="2" stroke-linecap="round"/><line x1="12" y1="17" x2="12.01" y2="17" stroke="#f5c518" stroke-width="2.5" stroke-linecap="round"/></svg>
+              <span style="font-size:9.5px;font-weight:700;color:var(--gold)">Só no Safari</span>
+            </div>
+          </div>
+
+          <!-- steps -->
+          <div class="steps">
+            <div class="step anim" style="animation-delay:.1s">
+              <div class="sline"><div class="snum-c ios">1</div></div>
+              <div class="step-body">
+                <p class="step-title">Abra o <span style="color:var(--gold)">Safari</span> e acesse</p>
+                <span class="step-tag ios">enemmaster.com.br</span>
+              </div>
+            </div>
+            <div class="step anim" style="animation-delay:.18s">
+              <div class="sline"><div class="snum-c ios">2</div></div>
+              <div class="step-body">
+                <p class="step-title">Toque no botão Compartilhar
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" style="vertical-align:middle;margin-left:2px"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13" stroke="#f5c518" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </p>
+                <p class="step-hint">Barra inferior do Safari</p>
+              </div>
+            </div>
+            <div class="step anim" style="animation-delay:.26s">
+              <div class="sline"><div class="snum-c ios">3</div></div>
+              <div class="step-body">
+                <p class="step-title">Toque em <span style="color:var(--gold)">"Adicionar à<br>Tela de Início"</span></p>
+              </div>
+            </div>
+            <div class="step anim" style="animation-delay:.34s">
+              <div class="sline"><div class="snum-c ios">4</div></div>
+              <div class="step-body">
+                <p class="step-title">Toque em <span style="color:var(--gold)">"Adicionar"</span></p>
+                <p class="step-hint">Ícone aparece na tela inicial 🎉</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- result -->
+          <div class="result-card ios anim" style="animation-delay:.42s">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" stroke="#f5c518" stroke-width="2" stroke-linecap="round"/><path d="M22 4L12 14.01l-3-3" stroke="#f5c518" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <p>Abre em tela cheia<br>como app da App Store.</p>
+          </div>
+        </div>
+
+        <!-- Right: phone mockup -->
+        <div class="phone-mockup-wrap anim" style="animation-delay:.08s;padding-top:4px">
+          <div class="phone-mock">
+            <div class="phone-notch"></div>
+            <div class="phone-screen-inner">
+              <!-- row 1 -->
+              <div class="icon-grid">
+                <div class="ic"></div>
+                <div class="ic"></div>
+                <div class="ic"></div>
+              </div>
+              <div class="icon-labels">
+                <div class="il"></div><div class="il"></div><div class="il"></div>
+              </div>
+              <!-- row 2 -->
+              <div class="icon-grid" style="margin-top:5px">
+                <div class="ic"></div>
+                <div class="ic em"><img src="../icon.svg" alt="ENEM Master"></div>
+                <div class="ic"></div>
+              </div>
+              <div class="icon-labels">
+                <div class="il"></div>
+                <div class="il em">ENEM Master</div>
+                <div class="il"></div>
+              </div>
+              <!-- row 3 -->
+              <div class="icon-grid" style="margin-top:5px">
+                <div class="ic"></div>
+                <div class="ic"></div>
+                <div class="ic"></div>
+              </div>
+              <div class="icon-labels">
+                <div class="il"></div><div class="il"></div><div class="il"></div>
+              </div>
+            </div>
+            <div class="phone-dock">
+              <div class="dock-ic"></div>
+              <div class="dock-ic"></div>
+              <div class="dock-ic"></div>
+            </div>
+          </div>
+          <p class="phone-caption">resultado</p>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── S6 · CTA ── -->
+    <div class="slide" id="s6">
+      <div class="anim scale" style="margin-bottom:12px;width:52px;height:52px;border-radius:14px;overflow:hidden;box-shadow:0 4px 20px rgba(0,180,166,.35)">
+        <img src="../icon.svg" alt="ENEM Master" style="width:100%;height:100%;display:block">
+      </div>
+      <p class="eye anim" style="color:var(--teal)">agora é oficial</p>
+      <p class="cta-h anim" style="margin-top:8px">Você tem o app.<br>Agora vai até<br><span class="teal">a aprovação.</span></p>
+      <div class="feat-list anim">
+        <div class="feat-item"><div class="feat-dot"></div>Questões reais do INEP com correção por IA</div>
+        <div class="feat-item"><div class="feat-dot"></div>Simulado ENEM completo: 90 questões, 5h30min</div>
+        <div class="feat-item"><div class="feat-dot"></div>Relatório de erros por disciplina e assunto</div>
+        <div class="feat-item"><div class="feat-dot"></div>Tutor IA + correção de redação (Premium)</div>
+      </div>
+      <a class="cta-btn anim" href="https://enemmaster.com.br">Abrir o ENEM Master agora →</a>
+      <p class="cta-url anim"><span>enemmaster.com.br</span> · gratuito para começar</p>
+    </div>
+
+  </div><!-- /slides -->
+
+  <div class="hint" id="hint">← deslize →</div>
+
+  <div class="nav">
+    <button class="nbtn" id="prev">&#8249;</button>
+    <div class="dots" id="dots"></div>
+    <button class="nbtn" id="next">&#8250;</button>
+  </div>
+</div>
+
+<script>
+(function () {
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const prog   = document.getElementById('prog');
+  const snum   = document.getElementById('snum');
+  const dotsEl = document.getElementById('dots');
+  const hint   = document.getElementById('hint');
+  const prev   = document.getElementById('prev');
+  const next   = document.getElementById('next');
+  let cur = 0, n = slides.length, hintHidden = false;
+
+  slides.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i === 0 ? ' active' : '');
+    d.addEventListener('click', () => go(i));
+    dotsEl.appendChild(d);
+  });
+
+  function go(to) {
+    if (to < 0 || to >= n || to === cur) return;
+    slides[cur].classList.remove('active');
+    const tgt = slides[to];
+    tgt.querySelectorAll('.anim').forEach(el => {
+      const delay = el.style.animationDelay;
+      el.style.animation = 'none';
+      el.style.opacity = '0';
+      el._savedDelay = delay;
+    });
+    cur = to;
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      tgt.querySelectorAll('.anim').forEach(el => {
+        el.style.animation = '';
+        if (el._savedDelay) el.style.animationDelay = el._savedDelay;
+        el.style.opacity = '';
+      });
+      tgt.classList.add('active');
+      updateUI();
+    }));
+    if (!hintHidden) { hintHidden = true; hint.classList.add('gone'); }
+  }
+
+  function updateUI() {
+    prog.style.width = ((cur + 1) / n * 100) + '%';
+    snum.textContent = (cur + 1) + ' / ' + n;
+    prev.disabled = cur === 0;
+    next.disabled = cur === n - 1;
+    document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === cur));
+  }
+
+  prev.addEventListener('click', () => go(cur - 1));
+  next.addEventListener('click', () => go(cur + 1));
+
+  let tx = 0;
+  const card = document.getElementById('card');
+  card.addEventListener('touchstart', e => { tx = e.changedTouches[0].screenX; }, { passive: true });
+  card.addEventListener('touchend', e => {
+    const dx = tx - e.changedTouches[0].screenX;
+    if (Math.abs(dx) > 45) go(cur + (dx > 0 ? 1 : -1));
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight') go(cur + 1);
+    if (e.key === 'ArrowLeft')  go(cur - 1);
+  });
+
+  updateUI();
+})();
+</script>
+</body>
+</html>
