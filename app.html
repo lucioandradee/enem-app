@@ -1053,7 +1053,10 @@
                         <p class="push-notif-title">Notificações Push</p>
                         <p class="push-notif-sub" id="push-notif-status">Ative para lembretes de estudo diários</p>
                     </div>
-                    <button class="push-notif-btn" id="push-notif-btn" onclick="requestPushPermission()">Ativar</button>
+                    <div style="display:flex;gap:8px;flex-shrink:0">
+                        <button class="push-notif-btn" id="push-notif-btn" onclick="requestPushPermission()">Ativar</button>
+                        <button class="push-notif-btn" id="push-test-btn" onclick="sendTestNotification()" style="display:none;background:#1e3a5f;font-size:12px">Testar</button>
+                    </div>
                 </div>
 
                 <!-- Security Section -->

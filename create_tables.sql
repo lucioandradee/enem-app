@@ -122,7 +122,13 @@ CREATE TABLE IF NOT EXISTS push_subscriptions (
 CREATE INDEX IF NOT EXISTS push_sub_user ON push_subscriptions (user_id);
 ALTER TABLE push_subscriptions ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "service_role_only" ON push_subscriptions;
-CREATE POLICY "service_role_only" ON push_subscriptions USING (false);
+-- Usuários autenticados podem gerenciar sua própria subscrição.
+-- O service_role (Edge Functions) ignora RLS por padrão.
+DROP POLICY IF EXISTS "user_can_upsert_push_sub" ON push_subscriptions;
+CREATE POLICY "user_can_upsert_push_sub" ON push_subscriptions
+  FOR ALL
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
 
 -- ─── Tabela: tutor_logs (rate limiting Tutor IA) ─────
 CREATE TABLE IF NOT EXISTS tutor_logs (

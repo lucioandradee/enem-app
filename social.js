@@ -143,21 +143,49 @@ function _scheduleDailyStudyReminder() {
     }
 }
 
+async function sendTestNotification() {
+    if (!('serviceWorker' in navigator)) {
+        _showQuickToast('Seu navegador não suporta Service Worker');
+        return;
+    }
+    if (Notification.permission !== 'granted') {
+        _showQuickToast('Ative as notificações primeiro nas Configurações');
+        return;
+    }
+    try {
+        const reg = await navigator.serviceWorker.ready;
+        await reg.showNotification('🔔 ENEM Master — Teste', {
+            body: 'Notificações funcionando! Você receberá lembretes às 8h e 20h.',
+            icon: '/icon-192.png',
+            badge: '/icon-192.png',
+            tag: 'enem-test',
+            data: { url: '/app' },
+        });
+        _showQuickToast('✅ Notificação disparada!');
+    } catch (err) {
+        _showQuickToast('Erro ao disparar notificação');
+        console.error('sendTestNotification:', err);
+    }
+}
+
 function _renderPushNotifCard() {
     const btn      = document.getElementById('push-notif-btn');
     const statusEl = document.getElementById('push-notif-status');
+    const testBtn  = document.getElementById('push-test-btn');
     if (!btn || !statusEl || !('Notification' in window)) return;
 
     if (Notification.permission === 'granted') {
         statusEl.textContent = '✅ Lembretes de estudo ativados! (8h e 20h)';
         btn.textContent = 'Ativado ✓';
         btn.disabled = true;
+        if (testBtn) testBtn.style.display = 'inline-block';
         _subscribePush(); // garante assinatura atualizada
     } else if (Notification.permission === 'denied') {
         statusEl.textContent = 'Bloqueado — ative nas configurações do navegador';
         btn.textContent = 'Bloqueado';
         btn.disabled = true;
         btn.style.background = '#6b7280';
+        if (testBtn) testBtn.style.display = 'none';
     }
 }
 
