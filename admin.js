@@ -74,25 +74,25 @@ function isExpired(dateStr) {
 
 function planBadge(plan, expiresAt) {
     if (plan === 'premium') {
-        if (isExpired(expiresAt)) return '<span class="badge badge-error">  Expirado</span>';
-        return '<span class="badge badge-premium">П‘‘ Premium</span>';
+        if (isExpired(expiresAt)) return '<span class="badge badge-error">⚠ Expirado</span>';
+        return '<span class="badge badge-premium">👑 Premium</span>';
     }
     return '<span class="badge badge-free">Free</span>';
 }
 
 function resultBadge(result) {
     const map = {
-        success: '<span class="badge badge-success">“ sucesso</span>',
-        pending: '<span class="badge badge-pending">³ pendente</span>',
-        error:   '<span class="badge badge-error">— erro</span>',
+        success: '<span class="badge badge-success">✓ sucesso</span>',
+        pending: '<span class="badge badge-pending">⏳ pendente</span>',
+        error:   '<span class="badge badge-error">✗ erro</span>',
     };
     return map[String(result || '').toLowerCase()]
         || `<span class="badge badge-info">${escapedHtml(result)}</span>`;
 }
 
 function actionBadge(action) {
-    if (action === 'activate')   return '<span class="badge badge-success" style="font-size:10px">‘ ativar</span>';
-    if (action === 'deactivate') return '<span class="badge badge-error"   style="font-size:10px">“ cancelar</span>';
+    if (action === 'activate')   return '<span class="badge badge-success" style="font-size:10px">↑ ativar</span>';
+    if (action === 'deactivate') return '<span class="badge badge-error"   style="font-size:10px">↓ cancelar</span>';
     return '<span class="badge badge-free" style="font-size:10px">- skip</span>';
 }
 
@@ -136,7 +136,7 @@ function _refreshLastUpdatedText() {
 
 setInterval(_refreshLastUpdatedText, 15_000);
 
-// ?"??"? Barra de progresso do prϿ½ximo refresh ?"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"?
+// ?"??"? Barra de progresso do pr�ximo refresh ?"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"?
 let _countdownStart = Date.now();
 
 function _tickCountdown() {
@@ -168,7 +168,7 @@ async function adminLogin() {
     }
 
     btn.disabled     = true;
-    btnTxt.innerHTML = '<span class="spinner" style="width:14px;height:14px;border-width:2px"></span> Entrando¦';
+    btnTxt.innerHTML = '<span class="spinner" style="width:14px;height:14px;border-width:2px"></span> Entrando…';
 
     try {
         const { data, error } = await supabase.auth.signInWithPassword({ email, password });
@@ -193,7 +193,7 @@ async function adminLogout() {
     document.getElementById('gate').style.display = 'flex';
     document.getElementById('gate-email').value   = '';
     document.getElementById('gate-pass').value    = '';
-}
+}   
 
 document.addEventListener('DOMContentLoaded', () => {
     ['gate-email', 'gate-pass'].forEach(id => {
@@ -282,11 +282,11 @@ function setupRealtime() {
                 setTimeout(() => liveDot.classList.remove('live-pulse'), 1000);
             }
             if (ev.plan_action === 'activate' && ev.result === 'success') {
-                showToast(`ПŽ‰ Nova ativacao: ${escapedHtml(ev.buyer_email)} via ${escapedHtml(ev.gateway)}`, 'success');
+                showToast(`🎉 Nova ativacao: ${escapedHtml(ev.buyer_email)} via ${escapedHtml(ev.gateway)}`, 'success');
             } else if (ev.plan_action === 'deactivate' && ev.result === 'success') {
                 showToast(`Cancelamento: ${escapedHtml(ev.buyer_email)}`, 'info');
             } else if (ev.result === 'error') {
-                showToast(` ϸ Webhook com erro: ${escapedHtml(ev.buyer_email || ev.gateway)}`, 'error');
+                showToast(`⚠️ Webhook com erro: ${escapedHtml(ev.buyer_email || ev.gateway)}`, 'error');
             }
             loadWebhookLogs();
             loadStats();
@@ -330,7 +330,7 @@ async function loadStats() {
     const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
     const startOfToday = new Date(new Date().setHours(0, 0, 0, 0)).toISOString();
 
-    // ?"??"? UsuϿ½rios ?"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"?
+    // ?"??"? Usu�rios ?"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"?
     try {
         const [
             { count: total   },
@@ -463,7 +463,7 @@ async function loadSubscriptionMetrics() {
 }
 
 // ?.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.?
-// USUϿ½RIOS
+// USU�RIOS
 // ?.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.??.?
 
 function setUserFilter(filter, el) {
@@ -505,7 +505,7 @@ function _renderUsers() {
         const expired = isExpired(u.plan_expires_at);
         const isPrem  = u.plan === 'premium';
         const expHtml = u.plan_expires_at
-            ? `<span style="color:${expired ? 'var(--red)' : 'var(--text-2)'};font-size:12px">${expired ? '  ' : ''}${formatDate(u.plan_expires_at)}</span>`
+            ? `<span style="color:${expired ? 'var(--red)' : 'var(--text-2)'};font-size:12px">${expired ? '⚠ ' : ''}${formatDate(u.plan_expires_at)}</span>`
             : '<span style="color:var(--text-3)">-</span>';
 
         return `<tr>
@@ -518,7 +518,7 @@ function _renderUsers() {
               <button class="btn btn-success btn-sm"
                 onclick="activateUser('${escapedHtml(u.email)}', 30)"
                 title="${isPrem ? 'Renovar +30 dias' : 'Ativar 30 dias'}">
-                ${isPrem ? 'º Renovar' : '“ Ativar'}
+                ${isPrem ? '↺ Renovar' : '✓ Ativar'}
               </button>
               ${isPrem ? `<button class="btn btn-danger btn-sm" onclick="removeUser('${escapedHtml(u.email)}')" title="Remover premium">?o.</button>` : ''}
             </div>
@@ -636,7 +636,7 @@ async function activateUser(email, days) {
     if (error) {
         showToast(`Erro: ${error.message}`, 'error');
     } else {
-        showToast(`“ Premium ativado para ${email}`, 'success');
+        showToast(`✓ Premium ativado para ${email}`, 'success');
         loadUsers();
         loadStats();
     }
@@ -652,7 +652,7 @@ async function removeUser(email) {
     if (error) {
         showToast(`Erro: ${error.message}`, 'error');
     } else {
-        showToast(`“ Premium removido de ${email}`, 'success');
+        showToast(`✓ Premium removido de ${email}`, 'success');
         loadUsers();
         loadStats();
     }
@@ -686,7 +686,7 @@ async function manualActivate() {
 
         if (error) throw error;
 
-        showToast(`“ Premium ativado por ${days} dias para ${email}`, 'success');
+        showToast(`✓ Premium ativado por ${days} dias para ${email}`, 'success');
         emailInput.value = '';
         daysInput.value  = '30';
         loadUsers();
@@ -696,7 +696,7 @@ async function manualActivate() {
         showToast(`Erro: ${err.message}`, 'error');
     } finally {
         btn.disabled       = false;
-        btnTxt.textContent = '“ Ativar Premium';
+        btnTxt.textContent = '✓ Ativar Premium';
     }
 }
 
