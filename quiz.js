@@ -21,17 +21,25 @@ function renderQuizSetup() {
     // Renderizar filtro de tópico
     renderTopicFilter();
 
-    // Banner de limite diário — só para usuários do plano Grátis
+    // Banner de limite diário/mensal — só para usuários do plano Grátis
     const remaining = getRemainingQuestions();
+    const remainingMonthly = (typeof getRemainingQuestionsMonthly === 'function')
+        ? getRemainingQuestionsMonthly() : Infinity;
     const limitEl = document.getElementById('quiz-plan-limit');
     if (limitEl) {
         if (!isPremium()) {
-            if (remaining <= 0) {
+            if (remainingMonthly <= 0) {
+                // Limite mensal atingido — prioridade máxima
+                limitEl.innerHTML = '🔥 Limite mensal atingido — <button class="link-inline" onclick="navigate(\'plans\')">Desbloquear Premium</button>';
+                limitEl.className = 'quiz-limit-banner limit-reached';
+            } else if (remaining <= 0) {
                 limitEl.innerHTML = '🔒 Limite diário atingido — <button class="link-inline" onclick="navigate(\'plans\')">Assinar Premium</button>';
                 limitEl.className = 'quiz-limit-banner limit-reached';
             } else {
                 const word = remaining === 1 ? 'questão restante' : 'questões restantes';
-                limitEl.textContent = `⚡ Plano Grátis: ${remaining} ${word} hoje`;
+                const monthlyUsed = (typeof getMonthlyQuestionsUsed === 'function') ? getMonthlyQuestionsUsed() : 0;
+                const monthlyLimit = (typeof PLANS !== 'undefined') ? PLANS.free.monthlyLimit : 70;
+                limitEl.innerHTML = `⚡ Plano Grátis: ${remaining} ${word} hoje &nbsp;·&nbsp; <span style="opacity:.75">${monthlyUsed}/${monthlyLimit} este mês</span>`;
                 limitEl.className = 'quiz-limit-banner limit-ok' + (remaining <= 3 ? ' limit-low' : '');
             }
             limitEl.style.display = '';
@@ -40,9 +48,9 @@ function renderQuizSetup() {
         }
     }
 
-    // Desabilitar botão de início se o usuário atingiu o limite
+    // Desabilitar botão de início se o usuário atingiu algum limite
     const startBtn = document.getElementById('start-quiz-btn');
-    if (startBtn) startBtn.disabled = !isPremium() && remaining <= 0;
+    if (startBtn) startBtn.disabled = !isPremium() && (remaining <= 0 || remainingMonthly <= 0);
 
     // Check API status
     checkAPIAvailability();
@@ -150,6 +158,15 @@ async function initQuizFromSetup(forceLocal = false) {
     if (!isPremium() && remaining <= 0) {
         showFeaturePaywall('dailyLimit');
         return;
+    }
+
+    // Verificar limite mensal do plano gratuito
+    if (!isPremium() && typeof getRemainingQuestionsMonthly === 'function') {
+        const remainingMonthly = getRemainingQuestionsMonthly();
+        if (remainingMonthly <= 0) {
+            showFeaturePaywall('monthlyLimit');
+            return;
+        }
     }
 
     // Limitar a quantidade de questões ao menor entre o pedido e o restante do plano

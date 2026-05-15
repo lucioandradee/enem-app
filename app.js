@@ -17,6 +17,7 @@ const PLANS = {
     free: {
         name: 'Grátis',
         dailyLimit: 10,          // questões por dia
+        monthlyLimit: 70,        // questões por mês
         maxQuizSize: 10,         // tamanho máximo do simulado
         features: {
             enemMode:  false,    // simulado ENEM completo (90q / 5h30min)
@@ -58,6 +59,10 @@ const PAYWALL_MESSAGES = {
         title: 'Limite diário atingido 🔒',
         body:  'Você atingiu o limite de hoje. Seus concorrentes continuam estudando. 🔥 Por R$0,65/dia, estude sem limites.',
     },
+    monthlyLimit: {
+        title: 'Tudo certo! 🔥',
+        body:  'Você já utilizou todas as questões disponíveis no plano gratuito deste mês. Sua evolução está acima da média — continue estudando sem limites com o Premium.',
+    },
 };
 
 // Retorna o plano atual do usuário
@@ -76,7 +81,26 @@ function getRemainingQuestions() {
     return Math.max(0, plan.dailyLimit - countToday);
 }
 
-// Registra N questões respondidas hoje
+// Retorna a chave do mês atual (ex: "2026-5")
+function _getMonthKey() {
+    const d = new Date();
+    return `${d.getFullYear()}-${d.getMonth() + 1}`;
+}
+
+// Retorna quantas questões o usuário usou este mês
+function getMonthlyQuestionsUsed() {
+    const monthKey = _getMonthKey();
+    return (state.user.questoesMesData === monthKey)
+        ? (state.user.questoesMes || 0) : 0;
+}
+
+// Retorna quantas questões o usuário ainda pode responder este mês
+function getRemainingQuestionsMonthly() {
+    if (isPremium()) return Infinity;
+    return Math.max(0, PLANS.free.monthlyLimit - getMonthlyQuestionsUsed());
+}
+
+// Registra N questões respondidas hoje e no mês
 function registerQuestionsUsed(n) {
     const today = new Date().toDateString();
     if (state.user.questoesHojeData !== today) {
@@ -84,6 +108,16 @@ function registerQuestionsUsed(n) {
         state.user.questoesHojeData = today;
     }
     state.user.questoesHoje = (state.user.questoesHoje || 0) + n;
+
+    // Contador mensal (apenas para plano gratuito)
+    if (!isPremium()) {
+        const monthKey = _getMonthKey();
+        if (state.user.questoesMesData !== monthKey) {
+            state.user.questoesMes = 0;
+            state.user.questoesMesData = monthKey;
+        }
+        state.user.questoesMes = (state.user.questoesMes || 0) + n;
+    }
 }
 
 // =====================================================
@@ -161,6 +195,14 @@ let _lastPaywallFeature = null;
 /** Exibe o paywall para uma feature usando os textos centralizados em PAYWALL_MESSAGES */
 function showFeaturePaywall(feature) {
     _lastPaywallFeature = feature;
+
+    // Limite mensal: modal dedicado com visual de celebração
+    if (feature === 'monthlyLimit') {
+        _showMonthlyLimitModal();
+        _trackEvent('paywall_shown', { feature });
+        return;
+    }
+
     const days = _daysToENEM();
     const urgencyPrefix = days > 0 ? `O ENEM é em ${days} dias. ` : '';
     const featuresWithUrgency = ['enemMode', 'largeQuiz'];
@@ -171,6 +213,39 @@ function showFeaturePaywall(feature) {
         : msg.body;
     showPaywall(msg.title, body);
     _trackEvent('paywall_shown', { feature });
+}
+
+/** Exibe o modal exclusivo de limite mensal */
+function _showMonthlyLimitModal() {
+    const modal = document.getElementById('monthly-limit-modal');
+    if (!modal) {
+        // Fallback para paywall genérico se o modal não existir no HTML
+        const msg = PAYWALL_MESSAGES.monthlyLimit;
+        showPaywall(msg.title, msg.body);
+        return;
+    }
+
+    // Preencher a estatística do usuário
+    const used  = getMonthlyQuestionsUsed();
+    const limit = PLANS.free.monthlyLimit;
+    const statEl = document.getElementById('mlm-stat');
+    if (statEl) statEl.textContent = `${used}/${limit}`;
+
+    // Urgência ENEM
+    const urgEl = document.getElementById('mlm-urgency');
+    if (urgEl) {
+        const days = _daysToENEM();
+        urgEl.textContent = days > 0 ? `⏰ ENEM 2026 em ${days} dias — cada dia conta!` : '';
+    }
+
+    modal.classList.add('active');
+}
+
+/** Fecha o modal de limite mensal */
+function closeMonthlyLimitModal() {
+    const modal = document.getElementById('monthly-limit-modal');
+    if (modal) modal.classList.remove('active');
+    if (typeof _trackEvent === 'function') _trackEvent('paywall_dismissed', { feature: 'monthlyLimit' });
 }
 
 /** Retorna o número de dias até o ENEM (data configurada centralmente) */
@@ -251,6 +326,8 @@ const defaultState = {
         plan: 'free',           // 'free' | 'premium'
         questoesHoje: 0,        // questões respondidas hoje (controle de limite)
         questoesHojeData: '',   // data do contador (ex: "Mon Mar 23 2026")
+        questoesMes: 0,         // questões respondidas este mês (controle de limite mensal)
+        questoesMesData: '',    // chave do mês (ex: "2026-5")
         lastStudyDate: '',      // data do último estudo, para cálculo de streak
         avatarColor: '',        // gradiente CSS escolhido pelo usuário
         goalNotifDateDaily: '', // última data em que notificou meta diária concluída
@@ -978,6 +1055,7 @@ function renderDashboard() {
     _renderScorePrediction();
     _renderWeakSpotAlert();
     _renderWrappedBanner();
+    _renderMonthlyProgress();
     _renderPremiumPreviewBanner();
     _renderEssayDiscoveryCard();
     _renderWelcomeOfferReminder();
@@ -1004,6 +1082,57 @@ function renderDashboard() {
             }
         }).catch(() => {});
     }
+}
+
+function _renderMonthlyProgress() {
+    const widget = document.getElementById('monthly-progress-widget');
+    if (!widget) return;
+
+    // Premium não tem limite — ocultar widget
+    if (isPremium()) {
+        widget.style.display = 'none';
+        return;
+    }
+
+    const used  = getMonthlyQuestionsUsed();
+    const limit = PLANS.free.monthlyLimit;
+    const pct   = Math.min(100, Math.round((used / limit) * 100));
+    const left  = Math.max(0, limit - used);
+
+    widget.style.display = 'block';
+
+    // Cor dinâmica conforme uso
+    const color = pct >= 100 ? '#ef4444' : pct >= 80 ? '#f59e0b' : '#00b4a6';
+
+    // Mensagem de status
+    let statusMsg, statusClass;
+    if (pct >= 100) {
+        statusMsg = 'Limite mensal atingido · Faça upgrade para continuar';
+        statusClass = 'mpl-status-danger';
+    } else if (pct >= 80) {
+        statusMsg = `Apenas ${left} quest\u00f5es restantes este m\u00eas`;
+        statusClass = 'mpl-status-warn';
+    } else {
+        statusMsg = `${left} quest\u00f5es restantes este m\u00eas`;
+        statusClass = 'mpl-status-ok';
+    }
+
+    widget.innerHTML = `
+        <div class="mpl-header">
+            <div class="mpl-label-wrap">
+                <span class="mpl-icon">📊</span>
+                <span class="mpl-label">Quest\u00f5es do m\u00eas</span>
+            </div>
+            <span class="mpl-counter" style="color:${color}">${used}<span class="mpl-limit">/${limit}</span></span>
+        </div>
+        <div class="mpl-bar-track">
+            <div class="mpl-bar-fill" style="width:${pct}%;background:${color}"></div>
+        </div>
+        <div class="mpl-footer">
+            <span class="mpl-status ${statusClass}">${statusMsg}</span>
+            ${pct >= 70 ? `<button class="mpl-upgrade-btn" onclick="navigate('plans')">Ver Premium \u2192</button>` : ''}
+        </div>
+    `;
 }
 
 function _renderPremiumPreviewBanner() {
