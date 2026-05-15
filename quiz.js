@@ -589,9 +589,13 @@ function confirmAnswer() {
             if (!user) return;
             answerQuestionSecure(user.id, _qId, isCorrect).then(res => {
                 if (!res.success && res.errorCode === 'DAILY_LIMIT') {
-                    // Limite atingido — impedir prosseguimento
+                    // Limite atingido — celebração antes do CTA premium
                     stopTimer();
-                    if (typeof showPaywall !== 'undefined' && typeof PAYWALL_MESSAGES !== 'undefined') {
+                    if (typeof showDailyLimitCelebration !== 'undefined') {
+                        showDailyLimitCelebration();
+                    } else if (typeof showFeaturePaywall !== 'undefined') {
+                        showFeaturePaywall('dailyLimit');
+                    } else if (typeof showPaywall !== 'undefined' && typeof PAYWALL_MESSAGES !== 'undefined') {
                         showPaywall(PAYWALL_MESSAGES.dailyLimit.title, PAYWALL_MESSAGES.dailyLimit.body);
                     }
                 }

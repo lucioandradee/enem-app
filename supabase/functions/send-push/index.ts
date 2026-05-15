@@ -1,6 +1,8 @@
 ﻿// send-push — Edge Function
-// Envia Web Push para todos os assinantes ativos.
-// Chamada pelo pg_cron às 8h e 20h (horário de Brasília).
+// Envia Web Push para assinantes. Chamada pelo pg_cron e pelo admin.
+// Suporta: type = 'morning' | 'evening' | 'custom'
+// Suporta: audience = 'all' | 'free' | 'premium'
+// Suporta: campaign_id para registrar resultado em notification_campaigns
 
 // @deno-types="npm:@types/web-push"
 import webpush from 'npm:web-push';
@@ -23,43 +25,82 @@ const EVENING_MSGS = [
   { title: 'Saudade de você por aqui 🥹', body: 'Faz tempo que você não aparece. Volta lá, tem novidades no ENEM Master!' },
 ];
 
-function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function pick<T>(arr: T[]): T { return arr[Math.floor(Math.random() * arr.length)]; }
 
 Deno.serve(async (req) => {
   if (req.method !== 'POST') return new Response('Method Not Allowed', { status: 405 });
   const auth = req.headers.get('Authorization') || '';
   if (!auth.startsWith('Bearer ')) return new Response('Unauthorized', { status: 401 });
 
-  const SUPABASE_URL  = Deno.env.get('SUPABASE_URL');
-  const SERVICE_ROLE  = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-  const VAPID_PUBLIC  = Deno.env.get('VAPID_PUBLIC_KEY');
-  const VAPID_PRIVATE = Deno.env.get('VAPID_PRIVATE_KEY');
+  const SUPABASE_URL  = Deno.env.get('SUPABASE_URL')!;
+  const SERVICE_ROLE  = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+  const VAPID_PUBLIC  = Deno.env.get('VAPID_PUBLIC_KEY')!;
+  const VAPID_PRIVATE = Deno.env.get('VAPID_PRIVATE_KEY')!;
 
   webpush.setVapidDetails('mailto:contato@enemmaster.com.br', VAPID_PUBLIC, VAPID_PRIVATE);
 
-  let body = {};
+  let body: Record<string, any> = {};
   try { body = await req.json(); } catch {}
-  const type = body.type === 'morning' ? 'morning' : 'evening';
+
+  const type       = (body.type as string)     || 'evening'; // 'morning' | 'evening' | 'custom'
+  const audience   = (body.audience as string) || 'all';     // 'all' | 'free' | 'premium'
+  const customTitle = (body.title as string)   || '';
+  const customBody  = (body.body  as string)   || '';
+  const campaignId  = (body.campaign_id as string) || null;
 
   const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
-  const { data: subs, error } = await admin.from('push_subscriptions').select('user_id, subscription').eq('active', true);
+
+  // Busca todas as subscriptions ativas
+  const { data: subs, error } = await admin
+    .from('push_subscriptions')
+    .select('user_id, subscription')
+    .eq('active', true);
+
   if (error) return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { 'Content-Type': 'application/json' } });
 
-  const userIds = (subs || []).map((r) => r.user_id);
-  const { data: users } = userIds.length ? await admin.from('users').select('id, name').in('id', userIds) : { data: [] };
-  const nameMap = Object.fromEntries((users || []).map((u) => [u.id, (u.name || 'estudante').split(' ')[0]]));
+  const userIds = (subs || []).map((r: any) => r.user_id);
+  if (!userIds.length) {
+    if (campaignId) await admin.from('notification_campaigns').update({ status: 'sent', sent_count: 0, sent_at: new Date().toISOString() }).eq('id', campaignId).catch(() => {});
+    return new Response(JSON.stringify({ sent: 0, failed: 0, expired: 0, errors: [] }), { headers: { 'Content-Type': 'application/json' } });
+  }
+
+  // Busca dados do usuário (nome + plano) para filtrar por audiência
+  const { data: users } = await admin.from('users').select('id, name, plan, plan_expires_at').in('id', userIds);
+  const userMap: Record<string, any> = Object.fromEntries((users || []).map((u: any) => [u.id, u]));
+
+  const now = new Date().toISOString();
+  const filteredSubs = (subs || []).filter((row: any) => {
+    const u = userMap[row.user_id];
+    if (!u) return audience === 'all';
+    const isPremium = u.plan === 'premium' && (!u.plan_expires_at || u.plan_expires_at > now);
+    if (audience === 'premium') return isPremium;
+    if (audience === 'free')    return !isPremium;
+    return true;
+  });
 
   let sent = 0, failed = 0;
-  const expired = [], errors = [];
+  const expired: string[] = [];
+  const errors:  string[] = [];
 
-  for (const row of (subs || [])) {
-    const msg = pick(type === 'morning' ? MORNING_MSGS : EVENING_MSGS);
-    const title = msg.title.replace('{nome}', nameMap[row.user_id] || 'estudante');
-    const payload = JSON.stringify({ title, body: msg.body, icon: '/icon-192.png', tag: 'enem-' + type, url: '/app' });
+  for (const row of filteredSubs) {
+    const u    = userMap[row.user_id];
+    const nome = ((u?.name || 'estudante') as string).split(' ')[0];
+
+    let title: string, msgBody: string;
+    if (type === 'custom') {
+      title   = customTitle.replace('{nome}', nome);
+      msgBody = customBody.replace('{nome}', nome);
+    } else {
+      const msg = pick(type === 'morning' ? MORNING_MSGS : EVENING_MSGS);
+      title   = msg.title.replace('{nome}', nome);
+      msgBody = msg.body;
+    }
+
+    const payload = JSON.stringify({ title, body: msgBody, icon: '/icon-192.png', tag: 'enem-' + type, url: '/app' });
     try {
       await webpush.sendNotification(row.subscription, payload);
       sent++;
-    } catch (err) {
+    } catch (err: any) {
       if (err?.statusCode === 410 || err?.statusCode === 404) expired.push(row.user_id);
       failed++;
       errors.push((String(err?.statusCode || '') + ' ' + String(err?.message || err)).trim().slice(0, 200));
@@ -67,5 +108,14 @@ Deno.serve(async (req) => {
   }
 
   if (expired.length > 0) await admin.from('push_subscriptions').delete().in('user_id', expired);
+
+  // Atualiza campanha se fornecida
+  if (campaignId) {
+    await admin.from('notification_campaigns')
+      .update({ status: 'sent', sent_count: sent, sent_at: new Date().toISOString() })
+      .eq('id', campaignId)
+      .catch(() => {});
+  }
+
   return new Response(JSON.stringify({ sent, failed, expired: expired.length, errors }), { headers: { 'Content-Type': 'application/json' } });
 });

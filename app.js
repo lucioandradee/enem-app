@@ -203,6 +203,13 @@ function showFeaturePaywall(feature) {
         return;
     }
 
+    // Limite diário: celebração + CTA premium
+    if (feature === 'dailyLimit') {
+        showDailyLimitCelebration();
+        _trackEvent('paywall_shown', { feature });
+        return;
+    }
+
     const days = _daysToENEM();
     const urgencyPrefix = days > 0 ? `O ENEM é em ${days} dias. ` : '';
     const featuresWithUrgency = ['enemMode', 'largeQuiz'];
@@ -246,6 +253,65 @@ function closeMonthlyLimitModal() {
     const modal = document.getElementById('monthly-limit-modal');
     if (modal) modal.classList.remove('active');
     if (typeof _trackEvent === 'function') _trackEvent('paywall_dismissed', { feature: 'monthlyLimit' });
+}
+
+/**
+ * Celebração de conquista quando o usuário free atinge o limite diário.
+ * Exibe um modal estilo achievement antes de direcionar ao Premium.
+ */
+function showDailyLimitCelebration() {
+    const limit      = PLANS.free.dailyLimit;
+    const firstName  = (state.user?.name || 'você').split(' ')[0];
+    const days       = _daysToENEM();
+    const urgencyTxt = days > 0 ? `O ENEM é em <strong>${days} dias</strong>. ` : '';
+
+    // Remove modal anterior se existir
+    const old = document.getElementById('daily-limit-celebration-modal');
+    if (old) old.remove();
+
+    const modal = document.createElement('div');
+    modal.id        = 'daily-limit-celebration-modal';
+    modal.className = 'modal-overlay active';
+    modal.innerHTML = `
+      <div class="modal-box" style="max-width:380px;text-align:center;padding:32px 28px 24px">
+        <div style="font-size:52px;margin-bottom:8px;animation:bounceIn .5s both">🏆</div>
+        <h2 style="font-size:20px;font-weight:800;margin-bottom:6px">${firstName}, você foi incrível hoje!</h2>
+        <p style="color:var(--text-2);font-size:14px;line-height:1.5;margin-bottom:20px">
+          Completou as <strong>${limit} questões</strong> do plano gratuito — isso te coloca entre os
+          <strong style="color:var(--teal)">10% mais dedicados</strong> da plataforma! 🎉
+        </p>
+        <div style="background:var(--surface-2);border:1px solid var(--border-2);border-radius:12px;padding:16px;margin-bottom:20px;text-align:left">
+          <div style="font-size:12px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Com o Premium você terá:</div>
+          <div style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--text)">
+            <span>✅ Questões ilimitadas todos os dias</span>
+            <span>✅ Simulados completos do ENEM</span>
+            <span>✅ Correção de redação com IA</span>
+            <span>✅ Tutor IA 24h para suas dúvidas</span>
+          </div>
+        </div>
+        <p style="font-size:12px;color:var(--text-3);margin-bottom:16px">${urgencyTxt}Por apenas <strong style="color:var(--green)">R$0,65/dia</strong>, estude sem limites.</p>
+        <button onclick="_onDailyLimitCTAClick()" class="btn btn-primary" style="width:100%;font-size:15px;padding:13px">
+          🚀 Quero o Premium agora
+        </button>
+        <button onclick="_closeDailyLimitModal()" style="margin-top:10px;background:none;border:none;color:var(--text-3);font-size:13px;cursor:pointer;font-family:inherit">
+          Continuar amanhã
+        </button>
+      </div>`;
+
+    document.body.appendChild(modal);
+}
+
+function _onDailyLimitCTAClick() {
+    _closeDailyLimitModal();
+    if (typeof showPaywall !== 'undefined') {
+        showPaywall('Bora pro Premium! 🚀', 'Por R$0,65/dia você estuda sem limites, com simulados, redação com IA e tutor 24h.');
+    }
+}
+
+function _closeDailyLimitModal() {
+    const modal = document.getElementById('daily-limit-celebration-modal');
+    if (modal) { modal.classList.remove('active'); setTimeout(() => modal.remove(), 300); }
+    if (typeof _trackEvent === 'function') _trackEvent('paywall_dismissed', { feature: 'dailyLimit' });
 }
 
 /** Retorna o número de dias até o ENEM (data configurada centralmente) */

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
@@ -718,6 +718,51 @@
     }
     .filter-chip.active { background: var(--teal-dim); border-color: var(--teal-glow); color: var(--teal); }
 
+    /* ── Notification Builder ───────────────────────────────── */
+    .notif-builder { padding: 20px 24px; display: flex; flex-direction: column; gap: 16px; }
+    .notif-builder .field-input { width: 100%; }
+    .notif-builder textarea.field-input { resize: vertical; min-height: 80px; font-family: inherit; }
+    .audience-pills { display: flex; gap: 8px; flex-wrap: wrap; }
+    .audience-pill {
+      padding: 6px 14px; border-radius: 100px; font-size: 12px; font-weight: 600;
+      border: 1px solid var(--border-2); background: transparent; color: var(--text-2);
+      cursor: pointer; font-family: inherit; transition: all .15s;
+    }
+    .audience-pill.active { border-color: var(--teal-glow); background: var(--teal-dim); color: var(--teal); }
+    .char-count { font-size: 11px; color: var(--text-3); text-align: right; margin-top: 2px; }
+    .char-count.warn { color: var(--amber); }
+    .char-count.over { color: var(--red); }
+    .notif-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .notif-result {
+      margin-top: 4px; padding: 10px 14px; border-radius: var(--radius-sm);
+      font-size: 13px; display: none;
+    }
+    .notif-result.success { background: var(--green-dim); color: var(--green); border: 1px solid rgba(52,211,153,.25); }
+    .notif-result.error   { background: var(--red-dim);   color: var(--red);   border: 1px solid rgba(255,77,106,.25); }
+    /* Templates */
+    .notif-templates { padding: 0 24px 20px; display: flex; flex-direction: column; gap: 8px; }
+    .template-label { font-size: 11px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: .6px; margin-bottom: 4px; }
+    .template-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; }
+    .template-btn {
+      text-align: left; padding: 10px 14px; border-radius: var(--radius-sm);
+      background: var(--surface-2); border: 1px solid var(--border-2);
+      color: var(--text); cursor: pointer; font-family: inherit; font-size: 12px;
+      transition: border-color .15s, background .15s; line-height: 1.4;
+    }
+    .template-btn:hover { border-color: var(--teal-glow); background: var(--teal-dim); }
+    .template-btn strong { display: block; font-size: 13px; margin-bottom: 2px; }
+    .template-btn span { color: var(--text-2); }
+    .template-sep { border: none; border-top: 1px solid var(--border); margin: 8px 0; }
+    /* Notif History */
+    .notif-hist-empty { padding: 32px 24px; text-align: center; color: var(--text-3); font-size: 13px; }
+    .notif-audience-badge {
+      display: inline-flex; align-items: center; padding: 2px 8px;
+      border-radius: 100px; font-size: 10px; font-weight: 700;
+    }
+    .aud-all     { background: var(--teal-dim);  color: var(--teal); }
+    .aud-free    { background: var(--surface-2); color: var(--text-3); border: 1px solid var(--border-2); }
+    .aud-premium { background: var(--amber-dim); color: var(--amber); }
+
     /* ── Responsive ──────────────────────────────────── */
     @media (max-width: 768px) {
       .topbar { padding: 0 16px; }
@@ -895,6 +940,104 @@
       </div>
     </div>
 
+
+    <!-- ── Seção: Central de Notificações ──────────────── -->
+    <div class="card" id="card-notif">
+      <div class="card-header">
+        <div class="card-title">
+          <div class="icon" style="background:rgba(255,77,106,.12)">🔔</div>
+          <div>
+            <h2>Central de Notificações Push</h2>
+            <p>Construa e dispare notificações para todos ou segmentos específicos</p>
+          </div>
+        </div>
+        <button class="btn-refresh" id="btn-refresh-notif" onclick="loadNotifHistory()">
+          <svg class="refresh-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+          </svg>
+          Atualizar
+        </button>
+      </div>
+      <!-- Construtor -->
+      <div class="notif-builder">
+        <div style="display:grid;grid-template-columns:1fr auto;gap:12px;align-items:start">
+          <div style="flex:1">
+            <label class="field-label" for="notif-title">Título <span style="color:var(--text-3);font-weight:400">(max 50)</span></label>
+            <input id="notif-title" class="field-input" type="text" maxlength="50"
+              placeholder="🔥 Novidade imperdível!"
+              oninput="_notifCharCount('notif-title','notif-tc',50)" />
+            <div class="char-count" id="notif-tc">0/50</div>
+          </div>
+          <div>
+            <label class="field-label">Audiência</label>
+            <div class="audience-pills">
+              <button class="audience-pill active" onclick="setAudience('all',this)">Todos</button>
+              <button class="audience-pill"        onclick="setAudience('free',this)">Free</button>
+              <button class="audience-pill"        onclick="setAudience('premium',this)">👑 Premium</button>
+            </div>
+          </div>
+        </div>
+        <div>
+          <label class="field-label" for="notif-body">Mensagem <span style="color:var(--text-3);font-weight:400">(max 120 — use {nome} para personalizar)</span></label>
+          <textarea id="notif-body" class="field-input" maxlength="120" rows="3"
+            placeholder="Escreva a mensagem..."
+            oninput="_notifCharCount('notif-body','notif-bc',120)"></textarea>
+          <div class="char-count" id="notif-bc">0/120</div>
+        </div>
+        <div class="notif-actions">
+          <button class="btn btn-primary" style="padding:10px 20px;font-size:14px;width:auto" onclick="dispatchNotification()">
+            <span id="notif-btn-txt">🚀 Disparar Agora</span>
+          </button>
+          <span style="color:var(--text-3);font-size:12px" id="notif-sub-count"></span>
+        </div>
+        <div class="notif-result" id="notif-result"></div>
+      </div>
+      <!-- Templates rápidos -->
+      <div class="notif-templates">
+        <hr class="template-sep">
+        <div class="template-label">⚡ Templates rápidos</div>
+        <div class="template-grid">
+          <button class="template-btn" onclick="selectTemplate('limit_cta')">
+            <strong>🏆 Limite free → Premium</strong>
+            <span>Celebra o limite e convida a assinar</span>
+          </button>
+          <button class="template-btn" onclick="selectTemplate('volta')">
+            <strong>🥹 Saudade — re-engajamento</strong>
+            <span>Recupera usuários inativos</span>
+          </button>
+          <button class="template-btn" onclick="selectTemplate('enem_date')">
+            <strong>⏳ ENEM chegando!</strong>
+            <span>Urgência com a data da prova</span>
+          </button>
+          <button class="template-btn" onclick="selectTemplate('ranking')">
+            <strong>📈 Concorrentes estudando</strong>
+            <span>FOMO — veja seu ranking</span>
+          </button>
+          <button class="template-btn" onclick="selectTemplate('novidade')">
+            <strong>📢 Anunciar novidade</strong>
+            <span>Feature ou melhoria no app</span>
+          </button>
+        </div>
+      </div>
+      <!-- Histórico -->
+      <div style="border-top:1px solid var(--border)">
+        <div style="padding:14px 24px 0;font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.6px">Histórico de envios</div>
+        <div class="table-wrap">
+          <table id="notif-hist-table" style="display:none">
+            <thead><tr>
+              <th>Título</th><th>Audiência</th><th>Enviados</th><th>Status</th><th>Disparado</th>
+            </tr></thead>
+            <tbody id="notif-hist-tbody"></tbody>
+          </table>
+        </div>
+        <div class="notif-hist-empty" id="notif-hist-empty">
+          <div style="font-size:28px;margin-bottom:8px">💬</div>
+          <div>Nenhum envio registrado.<br>
+            <span style="font-size:11px;color:var(--text-3)">Execute o SQL da tabela <code style="color:var(--teal)">notification_campaigns</code> no Supabase para ativar o histórico.</span>
+          </div>
+        </div>
+      </div>
+    </div>
     <!-- ── Seção: Usuários Premium ──────────────────── -->
     <div class="card">
       <div class="card-header">

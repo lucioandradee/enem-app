@@ -553,3 +553,24 @@ SELECT cron.schedule(
   $$
 );
 
+
+-- ── Tabela: Campanhas de Notificações Push ───────────────────────
+-- Usada pelo painel admin para registrar histórico de disparos.
+CREATE TABLE IF NOT EXISTS notification_campaigns (
+  id          uuid        DEFAULT gen_random_uuid() PRIMARY KEY,
+  title       text        NOT NULL,
+  body        text        NOT NULL,
+  audience    text        NOT NULL DEFAULT 'all'
+                          CHECK (audience IN ('all', 'free', 'premium')),
+  status      text        NOT NULL DEFAULT 'pending'
+                          CHECK (status IN ('pending', 'sending', 'sent', 'failed')),
+  sent_count  integer     DEFAULT 0,
+  sent_at     timestamptz,
+  created_at  timestamptz DEFAULT now()
+);
+
+ALTER TABLE notification_campaigns ENABLE ROW LEVEL SECURITY;
+
+-- Apenas o service_role pode ler e escrever (admin usa a chave de serviço)
+CREATE POLICY "admin_full_access" ON notification_campaigns
+  USING (true) WITH CHECK (true);

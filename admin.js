@@ -249,6 +249,7 @@ async function loadAll() {
         loadUsers(),
         loadWebhookLogs(),
         loadSubscriptionMetrics(),
+        loadNotifHistory(),
     ]);
     setLastUpdatedNow();
 }
@@ -700,3 +701,194 @@ async function manualActivate() {
     }
 }
 
+
+// ─────────────────────────────────────────────────────────────
+// CENTRAL DE NOTIFICAÇÕES
+// ─────────────────────────────────────────────────────────────
+
+const SUPABASE_FUNC_URL = 'https://nkuiwdolkluetsadauwb.supabase.co/functions/v1/send-push';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5rdWl3ZG9sa2x1ZXRzYWRhdXdiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyMjQ0OTgsImV4cCI6MjA4OTgwMDQ5OH0.xIkowv91_aL-v03HIPtg9Ni6M_rROs7VcZS2qa3PbV4';
+
+let _notifAudience = 'all';
+
+const NOTIF_TEMPLATES = {
+    limit_cta: {
+        audience: 'free',
+        title:    '🏆 Você arrasou hoje, {nome}!',
+        body:     'Completou seu limite diário — isso te coloca no top 10% dos estudantes! Quer continuar? Assine o Premium.',
+    },
+    volta: {
+        audience: 'all',
+        title:    'Saudade de você por aqui 🥹',
+        body:     'Faz tempo que você não aparece. Volta lá, {nome} — tem novidades e seu streak tá esperando você!',
+    },
+    enem_date: {
+        audience: 'all',
+        title:    '⏳ O ENEM está chegando, {nome}!',
+        body:     'Cada questão conta agora. Abre o ENEM Master e garante mais 10 pontos hoje. Você consegue!',
+    },
+    ranking: {
+        audience: 'all',
+        title:    '📈 {nome}, seus concorrentes não param',
+        body:     'Enquanto você lê isso, outros já responderam 5 questões. Não fica pra trás — veja seu ranking agora.',
+    },
+    novidade: {
+        audience: 'all',
+        title:    '📢 Novidade no ENEM Master!',
+        body:     'Melhoramos o app pra você. Abre aqui e confere — tem coisa nova que vai acelerar seus estudos!',
+    },
+};
+
+function setAudience(aud, el) {
+    _notifAudience = aud;
+    document.querySelectorAll('.audience-pill').forEach(b => b.classList.remove('active'));
+    if (el) el.classList.add('active');
+}
+
+function _notifCharCount(inputId, countId, max) {
+    const val = document.getElementById(inputId)?.value || '';
+    const el  = document.getElementById(countId);
+    if (!el) return;
+    const len = val.length;
+    el.textContent = `${len}/${max}`;
+    el.className   = 'char-count' + (len > max * 0.85 ? (len >= max ? ' over' : ' warn') : '');
+}
+
+function selectTemplate(id) {
+    const tpl = NOTIF_TEMPLATES[id];
+    if (!tpl) return;
+
+    const titleEl = document.getElementById('notif-title');
+    const bodyEl  = document.getElementById('notif-body');
+    if (titleEl) { titleEl.value = tpl.title; _notifCharCount('notif-title','notif-tc',50); }
+    if (bodyEl)  { bodyEl.value  = tpl.body;  _notifCharCount('notif-body','notif-bc',120); }
+
+    // Define audiência do template
+    const pills = document.querySelectorAll('.audience-pill');
+    pills.forEach(btn => {
+        const isActive = btn.textContent.toLowerCase().includes(tpl.audience) ||
+                         (tpl.audience === 'all' && btn.textContent.trim() === 'Todos');
+        btn.classList.toggle('active', isActive);
+        if (isActive) _notifAudience = tpl.audience;
+    });
+
+    showToast(`Template "${id.replace('_',' ')}" carregado`, 'info');
+    titleEl?.focus();
+}
+
+async function dispatchNotification() {
+    const title  = (document.getElementById('notif-title')?.value || '').trim();
+    const body   = (document.getElementById('notif-body')?.value  || '').trim();
+    const btn    = document.getElementById('notif-btn-txt');
+    const result = document.getElementById('notif-result');
+
+    if (!title) { showToast('Informe o título da notificação.', 'error'); return; }
+    if (!body)  { showToast('Informe a mensagem.', 'error'); return; }
+
+    if (btn) btn.innerHTML = '<span class="spinner" style="width:13px;height:13px;border-width:2px"></span> Enviando...';
+    if (result) result.style.display = 'none';
+
+    const payload = { type: 'custom', title, body, audience: _notifAudience };
+
+    try {
+        // Salva no histórico antes de enviar (status: sending)
+        let campaignId = null;
+        try {
+            const { data: cam } = await supabase.from('notification_campaigns').insert({
+                title, body, audience: _notifAudience, status: 'sending',
+            }).select('id').single();
+            campaignId = cam?.id || null;
+        } catch {}
+
+        if (campaignId) payload.campaign_id = campaignId;
+
+        const res = await fetch(SUPABASE_FUNC_URL, {
+            method:  'POST',
+            headers: { 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'Content-Type': 'application/json' },
+            body:    JSON.stringify(payload),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+
+        const msg = `✅ Enviado: ${data.sent} notificação(ões)${data.failed > 0 ? ` | ${data.failed} falha(s)` : ''}`;
+        if (result) {
+            result.className = 'notif-result success';
+            result.textContent = msg;
+            result.style.display = 'block';
+        }
+        showToast(msg, 'success');
+
+        // Atualiza histórico se gravou no DB
+        if (campaignId && data.sent === 0) {
+            await supabase.from('notification_campaigns').update({ status: 'sent', sent_count: 0 }).eq('id', campaignId).catch(() => {});
+        }
+        loadNotifHistory();
+
+    } catch (err) {
+        if (result) {
+            result.className = 'notif-result error';
+            result.textContent = `Erro: ${escapedHtml(err.message)}`;
+            result.style.display = 'block';
+        }
+        showToast('Erro ao enviar: ' + err.message, 'error');
+    } finally {
+        if (btn) btn.innerHTML = '🚀 Disparar Agora';
+    }
+}
+
+async function loadNotifHistory() {
+    const tbody   = document.getElementById('notif-hist-tbody');
+    const table   = document.getElementById('notif-hist-table');
+    const emptyEl = document.getElementById('notif-hist-empty');
+    const btn     = document.getElementById('btn-refresh-notif');
+    if (!tbody) return;
+
+    if (btn) { btn.disabled = true; btn.classList.add('spinning'); }
+
+    try {
+        const { data, error } = await supabase
+            .from('notification_campaigns')
+            .select('id, title, audience, sent_count, status, created_at, sent_at')
+            .order('created_at', { ascending: false })
+            .limit(20);
+
+        if (error) {
+            // Tabela não existe ainda
+            if (error.code === '42P01' || error.message?.includes('does not exist')) {
+                emptyEl.style.display = 'block';
+                if (table) table.style.display = 'none';
+                return;
+            }
+            throw error;
+        }
+
+        if (!data || data.length === 0) {
+            emptyEl.style.display = 'block';
+            if (table) table.style.display = 'none';
+            return;
+        }
+
+        emptyEl.style.display = 'none';
+        if (table) table.style.display = 'table';
+
+        const audLabels = { all: '<span class="notif-audience-badge aud-all">Todos</span>', free: '<span class="notif-audience-badge aud-free">Free</span>', premium: '<span class="notif-audience-badge aud-premium">👑 Premium</span>' };
+        const statusLabels = { sending: '<span class="badge badge-pending">enviando…</span>', sent: '<span class="badge badge-success">✓ Enviado</span>', failed: '<span class="badge badge-error">✗ Falha</span>' };
+
+        tbody.innerHTML = data.map(row => `<tr>
+          <td style="max-width:240px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${escapedHtml(row.title)}">${escapedHtml(row.title)}</td>
+          <td>${audLabels[row.audience] || escapedHtml(row.audience)}</td>
+          <td style="color:var(--green);font-weight:700;text-align:center">${row.sent_count ?? '—'}</td>
+          <td>${statusLabels[row.status] || escapedHtml(row.status)}</td>
+          <td class="mono" style="font-size:11px;color:var(--text-3)">${formatRelative(row.sent_at || row.created_at)}</td>
+        </tr>`).join('');
+
+    } catch (err) {
+        if (tbody) tbody.innerHTML = `<tr><td colspan="5" style="color:var(--red);text-align:center;padding:16px">Erro: ${escapedHtml(err.message)}</td></tr>`;
+        if (table) table.style.display = 'table';
+        if (emptyEl) emptyEl.style.display = 'none';
+    } finally {
+        if (btn) { btn.disabled = false; btn.classList.remove('spinning'); }
+    }
+}
