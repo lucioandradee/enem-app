@@ -1136,8 +1136,17 @@
 
 <!-- Supabase CDN -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<!-- Config -->
-<script src="supabase-config.js"></script>
+<!-- Inicialização Supabase para o admin (independente do app.js/supabase-config.js) -->
+<script>
+  (function () {
+    const SUPABASE_URL     = 'https://nkuiwdolkluetsadauwb.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5rdWl3ZG9sa2x1ZXRzYWRhdXdiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyMjQ0OTgsImV4cCI6MjA4OTgwMDQ5OH0.xIkowv91_aL-v03HIPtg9Ni6M_rROs7VcZS2qa3PbV4';
+    const lib = window.supabase; // SDK do CDN (tem createClient)
+    window.supabase = lib.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: { persistSession: true, autoRefreshToken: true, storageKey: 'sb-admin-auth-token' }
+    });
+  })();
+</script>
 <!-- Admin logic -->
 <script src="admin.js"></script>
 
