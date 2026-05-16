@@ -153,11 +153,8 @@
     }
     .navbar-logo-icon {
       width: 36px; height: 36px;
-      background: linear-gradient(135deg, var(--teal), #007a6e);
       border-radius: 10px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 18px;
-      box-shadow: 0 0 18px rgba(0,201,184,.35);
+      object-fit: contain;
     }
     .navbar-logo-text { font-size: 17px; font-weight: 800; letter-spacing: -.3px; }
     .navbar-actions   { display: flex; align-items: center; gap: 12px; }
@@ -568,9 +565,8 @@
     }
     .footer-logo-icon {
       width: 32px; height: 32px;
-      background: linear-gradient(135deg, var(--teal), #007a6e);
-      border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 16px;
-      box-shadow: 0 0 14px rgba(0,201,184,.25);
+      border-radius: 9px;
+      object-fit: contain;
     }
     .footer-tagline { font-size: 13px; color: var(--text-2); }
     .footer-links   { display: flex; gap: 24px; flex-wrap: wrap; justify-content: center; }
@@ -977,7 +973,7 @@
   <nav class="navbar" aria-label="Navegação principal">
     <div class="navbar-inner">
       <a href="/" class="navbar-logo" aria-label="ENEM Master — Voltar ao início">
-        <div class="navbar-logo-icon" aria-hidden="true"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></div>
+        <img src="/icon.svg" alt="" class="navbar-logo-icon" aria-hidden="true" width="36" height="36">
         <span class="navbar-logo-text">ENEM Master</span>
       </a>
       <div class="navbar-actions">
@@ -1604,7 +1600,7 @@
   <div class="container">
     <div class="footer-inner">
       <div class="footer-logo">
-        <div class="footer-logo-icon" aria-hidden="true"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></div>
+        <img src="/icon.svg" alt="" class="footer-logo-icon" aria-hidden="true" width="32" height="32">
         <span>ENEM Master</span>
       </div>
       <p class="footer-tagline">Estude, Evolua, Conquiste.</p>
