@@ -35,8 +35,9 @@
 
 .mpl-footer {
   display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  flex-wrap: wrap;
 }
-.mpl-status     { font-size: 11px; font-weight: 600; line-height: 1.4; }
+.mpl-status     { font-size: 11px; font-weight: 600; line-height: 1.4; min-width: 0; flex: 1; }
 .mpl-status-ok   { color: var(--text-muted); }
 .mpl-status-warn { color: #f59e0b; }
 .mpl-status-danger { color: #ef4444; }

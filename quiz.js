@@ -39,7 +39,7 @@ function renderQuizSetup() {
                 const word = remaining === 1 ? 'questão restante' : 'questões restantes';
                 const monthlyUsed = (typeof getMonthlyQuestionsUsed === 'function') ? getMonthlyQuestionsUsed() : 0;
                 const monthlyLimit = (typeof PLANS !== 'undefined') ? PLANS.free.monthlyLimit : 70;
-                limitEl.innerHTML = `⚡ Plano Grátis: ${remaining} ${word} hoje &nbsp;·&nbsp; <span style="opacity:.75">${monthlyUsed}/${monthlyLimit} este mês</span>`;
+                limitEl.innerHTML = `⚡ <strong>${remaining} ${word} hoje</strong> <span style="opacity:.7;display:inline-block;margin-left:4px">${monthlyUsed}/${monthlyLimit} este mês</span>`;
                 limitEl.className = 'quiz-limit-banner limit-ok' + (remaining <= 3 ? ' limit-low' : '');
             }
             limitEl.style.display = '';
