@@ -7,6 +7,15 @@
 
 const _DEV = typeof location !== 'undefined' && location.hostname === 'localhost';
 
+// Impede flash de conteúdo antes da verificação de sessão concluir
+let _authInitComplete = false;
+function _hideAuthLoading() {
+    if (_authInitComplete) return;
+    _authInitComplete = true;
+    var _alo = document.getElementById('auth-loading');
+    if (_alo) _alo.remove();
+}
+
 // =====================================================
 // STATE
 // =====================================================
@@ -889,6 +898,7 @@ const screensWithNav = ['home', 'ranking', 'achievements', 'profile', 'conteudo'
 const screensWithoutNav = ['quiz', 'quiz-setup', 'result', 'settings', 'support', 'notifications', 'review', 'onboarding', 'login', 'landing', 'plans', 'checkout', 'privacy', 'terms', 'redacao', 'analise', 'study-plan', 'teacher'];
 
 function navigate(screenName) {
+    _hideAuthLoading(); // garante remoção do overlay em qualquer navegação
     // Conteúdo é exclusivo para usuários Premium
     if (screenName === 'conteudo' && !isPremium()) {
         const days = _daysToENEM();
@@ -2087,6 +2097,7 @@ function init() {
                 document.getElementById('screen-login').classList.add('active');
                 if (_initNav) _initNav.style.display = 'none';
                 state.currentScreen = 'login';
+                _hideAuthLoading();
             }
         }, 20000);
         return; // aguarda onAuthStateChange → SIGNED_IN → navigate('home')
@@ -2145,6 +2156,7 @@ function init() {
         if (_initNav) _initNav.style.display = 'none';
         state.currentScreen = 'landing';
         renderLanding();
+        _hideAuthLoading();
         return;
     }
 
@@ -2153,6 +2165,7 @@ function init() {
         document.getElementById('screen-login').classList.add('active');
         if (nav) nav.style.display = 'none';
         state.currentScreen = 'login';
+        _hideAuthLoading(); // login pronto: remove overlay
         const emailEl = document.getElementById('login-email');
         if (emailEl && state.user.email && state.user.email !== 'alex@estudo.com') {
             emailEl.value = state.user.email;
@@ -2208,6 +2221,7 @@ function init() {
                     typeof loadUserPlan !== 'undefined' ? loadUserPlan(user.id) : Promise.resolve(),
                 ]).catch(() => {}).then(() => {
                     document.getElementById('screen-home').classList.add('active');
+                    _hideAuthLoading(); // sessão confirmada: remove overlay e mostra home
                     state.currentScreen = 'home';
                     nav.style.display = 'flex';
                     updateNavActive('home');
@@ -2227,7 +2241,7 @@ function init() {
                 // aguardávamos getCurrentUser() (que pode demorar por rede lenta),
                 // o handler SIGNED_IN já navegou para home. Não sobrescrever.
                 const _homeAlreadyActive = document.getElementById('screen-home')?.classList.contains('active');
-                if (state.user.id || _homeAlreadyActive) return;
+                if (state.user.id || _homeAlreadyActive) { _hideAuthLoading(); return; }
 
                 // Onboarding: usuário novo SEM dados locais, vindo de qualquer CTA
                 // (exceto quando explicitamente quer fazer login com ?ref=login).
@@ -2236,16 +2250,19 @@ function init() {
                     document.getElementById('screen-onboarding').classList.add('active');
                     nav.style.display = 'none';
                     state.currentScreen = 'onboarding';
+                    _hideAuthLoading();
                 } else if (!_forceLogin && !state.onboardingDone && !isReturningUser) {
                     // Usuário novo → mostrar login (entrada principal)
                     document.getElementById('screen-login').classList.add('active');
                     nav.style.display = 'none';
                     state.currentScreen = 'login';
+                    _hideAuthLoading();
                 } else if (_paymentReturn) {
                     // Retorno do gateway: mostrar login com banner de sucesso
                     document.getElementById('screen-login').classList.add('active');
                     nav.style.display = 'none';
                     state.currentScreen = 'login';
+                    _hideAuthLoading();
                     // Pré-preencher e-mail pendente e exibir banner de confirmação
                     try {
                         const _pendingEmail = sessionStorage.getItem('_pendingEmail') || '';
@@ -2264,6 +2281,7 @@ function init() {
                     document.getElementById('screen-login').classList.add('active');
                     nav.style.display = 'none';
                     state.currentScreen = 'login';
+                    _hideAuthLoading();
                     const emailEl = document.getElementById('login-email');
                     if (emailEl && state.user.email && state.user.email !== 'alex@estudo.com') {
                         emailEl.value = state.user.email;
@@ -2276,9 +2294,11 @@ function init() {
                 document.getElementById('screen-login').classList.add('active');
                 nav.style.display = 'none';
                 state.currentScreen = 'login';
+                _hideAuthLoading();
             } else {
                 state.currentScreen = 'home';
                 document.getElementById('screen-home').classList.add('active');
+                _hideAuthLoading();
                 nav.style.display = 'flex';
                 updateNavActive('home');
                 renderDashboard();
@@ -2293,10 +2313,12 @@ function init() {
         document.getElementById('screen-login').classList.add('active');
         nav.style.display = 'none';
         state.currentScreen = 'login';
+        _hideAuthLoading();
         return;
     }
     state.currentScreen = 'home';
     document.getElementById('screen-home').classList.add('active');
+    _hideAuthLoading();
     nav.style.display = 'flex';
     updateNavActive('home');
     renderDashboard();

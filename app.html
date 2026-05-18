@@ -88,6 +88,11 @@
     <!-- ===================== APP WRAPPER ===================== -->
     <div id="app">
 
+        <!-- Auth loading overlay — previne flash de conteúdo antes da verificação de sessão -->
+        <div id="auth-loading" aria-hidden="true" style="position:fixed;inset:0;background:#0a1929;z-index:99999;display:flex;align-items:center;justify-content:center">
+          <svg width="44" height="44" viewBox="0 0 44 44" fill="none"><circle cx="22" cy="22" r="18" stroke="#1a3a52" stroke-width="4"/><circle cx="22" cy="22" r="18" stroke="#00b4a6" stroke-width="4" stroke-dasharray="28 84" stroke-linecap="round"><animateTransform attributeName="transform" type="rotate" from="0 22 22" to="360 22 22" dur="0.75s" repeatCount="indefinite"/></circle></svg>
+        </div>
+
         <!-- ===================== SCREEN: DASHBOARD ===================== -->
         <section id="screen-home" class="screen">
             <div class="screen-scroll">

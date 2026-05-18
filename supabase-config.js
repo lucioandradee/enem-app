@@ -476,6 +476,9 @@ function initializeSupabaseListeners() {
             // (SIGNED_IN pode disparar antes de DOMContentLoaded quando há #access_token na URL)
             const _doNavigateHome = () => {
                 if (typeof navigate === 'undefined') return; // app.js ainda não carregou
+                // TOKEN_REFRESHED durante a inicialização: aguarda init() determinar a tela correta
+                // SIGNED_IN explícito sempre prossegue (usuário acabou de fazer login)
+                if (typeof _authInitComplete !== 'undefined' && !_authInitComplete && event === 'TOKEN_REFRESHED') return;
                 // Limpa o ?code= da URL agora que o SDK já processou (não antes!)
                 if (window.location.search.indexOf('code=') !== -1) {
                     window.history.replaceState({}, document.title, window.location.pathname);
@@ -484,7 +487,7 @@ function initializeSupabaseListeners() {
                 const _homeEl = document.getElementById('screen-home');
                 const _homeActive = _homeEl && _homeEl.classList.contains('active');
                 if (_authScreens.includes(state.currentScreen) || !state.currentScreen || !_homeActive) {
-                    navigate('home');
+                    navigate('home'); // navigate() já chama _hideAuthLoading()
                 }
                 if (typeof startSyncLoop !== 'undefined') startSyncLoop(incomingId);
             };
