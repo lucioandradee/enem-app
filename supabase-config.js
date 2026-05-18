@@ -87,9 +87,21 @@ async function logoutUser() {
 // Usa getSession() primeiro (lê do localStorage, sem rede) ” essencial para mobile/PWA
 async function getCurrentUser() {
     try {
-        // Caminho rápido: sessão local ” sem requisição de rede, funciona offline
+        // Caminho rápido: sessão local — sem requisição de rede, funciona offline
         const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) return session.user;
+        if (session?.user) {
+            // Verificar se o access_token ainda é válido (não expirado)
+            const now = Math.floor(Date.now() / 1000);
+            const expiresAt = session.expires_at;
+            if (!expiresAt || expiresAt > now) {
+                return session.user; // token válido localmente
+            }
+            // Token expirado: valida com o servidor antes de confiar na sessão
+            if (!navigator.onLine) return null;
+            const { data: gd, error: ge } = await supabase.auth.getUser();
+            if (ge || !gd?.user) return null;
+            return gd.user;
+        }
         // Sem sessão local: se estiver online, tenta validar com o servidor
         if (!navigator.onLine) return null;
         const { data, error } = await supabase.auth.getUser();
