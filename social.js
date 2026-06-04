@@ -15,7 +15,7 @@ function _getCountdownMotivation(days) {
 }
 
 function renderENEMCountdown() {
-    const ENEM_DATE = new Date('2026-11-08T13:00:00'); // 1º dia ENEM 2026
+    const ENEM_DATE = new Date('2026-11-08T13:00:00-03:00'); // 1º dia ENEM 2026
     const widget    = document.getElementById('enem-countdown');
     if (!widget) return;
 

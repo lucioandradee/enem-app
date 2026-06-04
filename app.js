@@ -324,7 +324,7 @@ function _closeDailyLimitModal() {
 }
 
 /** Retorna o número de dias até o ENEM (data configurada centralmente) */
-const ENEM_DATE = new Date('2026-11-03T08:00:00-03:00');
+const ENEM_DATE = new Date('2026-11-08T13:00:00-03:00');
 
 function _daysToENEM() {
     const diff = Math.ceil((ENEM_DATE - new Date()) / (1000 * 60 * 60 * 24));
@@ -929,12 +929,12 @@ function navigate(screenName) {
 
     nextEl.classList.add('active');
 
+    const leavingScreen = state.currentScreen; // captura antes de atualizar
     state.currentScreen = screenName;
     saveState();
 
     // Cleanup de timers ao sair de telas específicas
-    const leaving = state.currentScreen;
-    if (leaving === 'ranking' && typeof _rankingAutoRefreshTimer !== 'undefined' && _rankingAutoRefreshTimer) {
+    if (leavingScreen === 'ranking' && typeof _rankingAutoRefreshTimer !== 'undefined' && _rankingAutoRefreshTimer) {
         clearInterval(_rankingAutoRefreshTimer);
         _rankingAutoRefreshTimer = null;
     }
